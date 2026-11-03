@@ -96,13 +96,55 @@
     "askWhatsapp": "Ask about this part"
   },
   "home": {
-    "eyebrow": "Industrial sewing machine parts",
-    "title": "Find the part. Keep the line running.",
-    "lead": "Needles, hooks, loopers, feed dogs, presser feet, motors and control boxes for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special.",
-    "searchHint": "Try a part number like <code>B1101-012-000</code> — spaces and dashes don't matter.",
-    "or": "or",
+    "eyebrow": "Industrial sewing machine parts · Dhaka",
+    "title": "Type the part number. Keep the line running.",
+    "lead": "Needles, hooks, loopers, feed dogs, presser feet, motors and control boxes for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special — listed under their OEM part numbers.",
+    "searchPlaceholder": "Part number, e.g. B1830-227-000",
+    "searchNote": "Spaces, dashes and old numbers are matched too.",
+    "examples": "Try",
+    "finderTitle": "Know the machine, not the number?",
+    "finderBody": "Pick the brand on the machine plate, then the model — straight to its compatible parts.",
+    "lineDown": "Line down?",
     "whatsappCta": "Send a photo on WhatsApp",
-    "callCta": "Call now",
+    "callCta": "Call",
+    "rfqCta": "Request a quote",
+    "offline": "Live catalogue is temporarily unavailable — search and WhatsApp still work.",
+    "scene": {
+      "title": "From the machine to the part",
+      "lead": "A lockstitch hook assembly, taken apart the way a parts book shows it. Every numbered part is a category we stock, listed under its OEM part number.",
+      "listLabel": "Parts in the drawing",
+      "figTitle": "Lockstitch hook assembly",
+      "figSub": "Typical single-needle lockstitch · exploded view",
+      "figAria": "Exploded technical drawing of a lockstitch hook assembly: 1 rotary hook, 2 bobbin case, 3 bobbin, 4 feed dog, 5 presser foot, 6 needle.",
+      "scale": "NTS",
+      "step": "Part",
+      "browse": "Browse",
+      "count": "{count, plural, =0 {Browse} one {# part} other {# parts}}",
+      "parts": {
+        "hook": "Rotary hook",
+        "bobbinCase": "Bobbin case",
+        "bobbin": "Bobbin",
+        "feedDog": "Feed dog",
+        "presserFoot": "Presser foot",
+        "needle": "Needle"
+      },
+      "notes": {
+        "hook": "Catches the needle thread to form each stitch. A worn point means skipped stitches.",
+        "bobbinCase": "Holds the bobbin; its spring sets the lower-thread tension.",
+        "bobbin": "Carries the lower thread. Must match the hook type.",
+        "feedDog": "Moves the fabric between stitches. Tooth pitch suits the fabric weight.",
+        "presserFoot": "Holds the fabric on the feed dog — standard, compensating or special.",
+        "needle": "System and size (e.g. DB×1 #14) must match machine and fabric."
+      },
+      "search": {
+        "hook": "rotary hook",
+        "bobbinCase": "bobbin case",
+        "bobbin": "bobbin",
+        "feedDog": "feed dog",
+        "presserFoot": "presser foot",
+        "needle": "needle"
+      }
+    },
     "machinesHeading": "Shop by machine brand",
     "machinesSub": "Pick the brand on your machine plate, then the model.",
     "machinesAll": "All machine brands",
@@ -111,17 +153,126 @@
     "categoriesSub": "Every part listed with its OEM part number.",
     "categoriesAll": "All categories",
     "parts": "{count, plural, =0 {—} one {# part} other {# parts}}",
-    "rfqHeading": "Have a list of parts?",
-    "rfqBody": "Add parts to your quote list as you browse, or send us your list — 5 lines or 200. Upload an Excel sheet or a photo of the old part and we reply with a formal quote.",
-    "rfqCta": "Request a quote",
-    "trust": {
-      "partNumbers": "Correct OEM part numbers",
-      "dispatch": "Dispatch from Dhaka",
-      "payment": "Cash on delivery, bKash, Nagad",
-      "invoice": "VAT invoice on request"
+    "featuredHeading": "Featured parts",
+    "featuredSub": "From the catalogue, with live stock. Add any line to your quote list.",
+    "featuredCaption": "Featured parts with part number and stock",
+    "featuredAll": "Browse all parts",
+    "quote": {
+      "heading": "How quoting works",
+      "sub": "Prices depend on quantity and delivery, so every order gets a formal quote.",
+      "steps": {
+        "1": {
+          "title": "Add parts to your list",
+          "body": "Search or browse and tap Add to quote. Part numbers and quantities collect on one list.",
+          "spec": "In · part no. / model"
+        },
+        "2": {
+          "title": "Send the list — or a photo",
+          "body": "Submit the list with your company details, or send an Excel sheet or a photo of the old part on WhatsApp.",
+          "spec": "In · list / xlsx / photo"
+        },
+        "3": {
+          "title": "Formal quote, usually same day",
+          "body": "We check stock and reply with a formal quote. VAT invoice against your BIN on request.",
+          "spec": "Out · quote → invoice"
+        }
+      },
+      "cta": "Request a quote",
+      "whatsapp": "Send a photo on WhatsApp"
     },
-    "offline": "Live catalogue is temporarily unavailable — search and WhatsApp still work.",
-    "indexTitle": "Parts index"
+    "trust": {
+      "heading": "Before you order",
+      "sub": "How we work, in plain terms.",
+      "address": "Shop",
+      "addressFallback": "Dhaka, Bangladesh",
+      "phone": "Phone / WhatsApp",
+      "delivery": "Delivery",
+      "deliveryBody": "Dispatched from Dhaka by courier to anywhere in Bangladesh, or collect from us. Ask on WhatsApp for the time to your area.",
+      "payment": "Payment",
+      "cod": "Cash on delivery",
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "bank": "Bank transfer",
+      "invoice": "VAT invoice (BIN) on request",
+      "gradesHeading": "Genuine or compatible?",
+      "genuine": "Made or approved by the machine maker, under the original part number. Best for electronics, timing parts and anything under warranty.",
+      "compatible": "Made to the OEM dimensions by a specialist maker. Same fit and part number, often easier to get.",
+      "gradesNote": "Every listing says which one it is.",
+      "about": "About us"
+    }
+  },
+  "about": {
+    "_note": "EDITABLE PLACEHOLDER COPY — replace with the owner's own words. Keep it factual: no founding year, client names or figures unless they are true and can be shown.",
+    "metaTitle": "About us",
+    "metaDescription": "Rakib Enterprise is based in Dhaka and supplies genuine and compatible spare parts for industrial sewing machines to garment factories, workshops and mechanics — with formal quotes, VAT invoices and delivery.",
+    "eyebrow": "About Rakib Enterprise",
+    "title": "Spare parts for the machines that keep garment lines running.",
+    "lead": "Based in Dhaka, we supply spare parts for industrial sewing machines to garment factories, maintenance teams, workshops and mechanics.",
+    "story": {
+      "p1": "When a machine stops, a line stops. Our work is getting the right part to the floor quickly — the correct part number, for the right machine, genuine or a compatible part made to the same specification.",
+      "p2": "We work from part numbers, machine models and photos of the old part. If we are not sure a part fits, we ask before we quote."
+    },
+    "factsLabel": "At a glance",
+    "facts": {
+      "base": "Based in",
+      "baseValue": "Dhaka, Bangladesh",
+      "machines": "Machine brands listed",
+      "types": "Part types",
+      "grades": "Grades",
+      "gradesValue": "Genuine · Compatible"
+    },
+    "stockHeading": "What we stock",
+    "stockSub": "Parts for these machine brands, by part type — all searchable by part number.",
+    "machinesLabel": "Machine brands",
+    "typesLabel": "Part types",
+    "brandsLabel": "Parts brands",
+    "genuineTag": "Genuine",
+    "compatibleTag": "Compatible",
+    "policyHeading": "Genuine, OEM and compatible",
+    "policySub": "You always know which one you are buying.",
+    "policy": {
+      "genuineTitle": "Genuine / OEM",
+      "genuineBody": "Made or approved by the machine manufacturer and sold under the original part number. We recommend these for electronics, timing parts and machines under warranty.",
+      "compatibleTitle": "Compatible",
+      "compatibleBody": "Made by specialist manufacturers to the OEM dimensions and part number — needles, hooks, feed dogs, knives. Same fit, often easier to get.",
+      "labelTitle": "Clearly labelled",
+      "labelBody": "Every listing shows the parts brand, the grade and the OEM part number. Quotes state the same, line by line."
+    },
+    "processHeading": "How we work with factories",
+    "processSub": "From the first message to the part on the machine.",
+    "process": {
+      "1": {
+        "title": "Send what you have",
+        "body": "A part number, a list, an Excel sheet or a photo of the old part — on WhatsApp, by phone or through the quote form.",
+        "spec": "Enquiry"
+      },
+      "2": {
+        "title": "We identify the part",
+        "body": "We match it to the OEM part number and your machine model, and say whether genuine, compatible or both are available.",
+        "spec": "Part no. · machine model"
+      },
+      "3": {
+        "title": "Formal quote",
+        "body": "A written quote with prices, quantities and delivery time — usually the same day.",
+        "spec": "Quote"
+      },
+      "4": {
+        "title": "Order and invoice",
+        "body": "Confirm the quote. We issue a VAT invoice against your BIN on request. Pay by bank transfer, bKash, Nagad or cash on delivery.",
+        "spec": "VAT invoice · BIN"
+      },
+      "5": {
+        "title": "Dispatch from Dhaka",
+        "body": "Packed with the part number on every bag and sent by courier, or ready for collection.",
+        "spec": "Delivery"
+      }
+    },
+    "contactHeading": "Talk to us",
+    "contactBody": "Send a part number or a photo of the old part and we will tell you what fits.",
+    "whatsappCta": "Message us on WhatsApp",
+    "callCta": "Call",
+    "rfqCta": "Request a quote",
+    "contactLink": "All contact details"
   },
   "parts": {
     "needle": "Needles",

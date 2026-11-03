@@ -107,8 +107,8 @@ export function Header({ settings }: { settings: SiteSettings }) {
         </div>
       </div>
 
-      {/* Mobile search row */}
-      <div className="re-shell pb-3 md:hidden">
+      {/* Mobile search row — hidden on Home, whose hero search takes its place. */}
+      <div className="re-shell pb-3 md:hidden [body:has([data-hero-search])_&]:hidden">
         <SearchInput
           action={searchAction}
           label={t("header.searchLabel")}
