@@ -22,6 +22,28 @@ Buyers:
 
 Mostly mobile, mid-range Android, 4G. WhatsApp is the primary channel.
 
+## Sales model — QUOTE-FIRST (enterprise RFQ), prices hidden by default
+
+Prices are internal (used by the admin POS/billing). The public site is a
+**quote-request catalogue**:
+- Default: **no prices anywhere** on the site, in JSON-LD, or in any public
+  API response. The primary CTA is **"Add to quote"** → a persistent
+  **Quote list** (header + mobile bar show its count) → **Request quote**
+  (`/rfq`, line items prefilled from the list, plus company/contact/BIN/files).
+  WhatsApp "ask about this part" is the secondary CTA.
+- Switchable later without code changes:
+  - SiteSettings `sales_mode`: `quote_only` (default) | `mixed`.
+  - Product `sales_mode`: `inherit` (default) | `quote_only` | `direct`.
+  - A product is **direct** (price shown + Add to cart + checkout) only when
+    the effective mode is `direct`. The backend omits `price`, `compare_at_price`
+    and price tiers for non-direct products and rejects them in cart/checkout.
+- UI must handle both per product: `price: null` → "Price on request" +
+  Add to quote; `price` present → price + Add to cart (+ Add to quote for bulk).
+- Cart/checkout pages exist but are hidden from nav while no product is direct
+  (bootstrap tells the frontend `direct_orders_enabled`).
+- Structured data: Product without `offers` for quote-only items (no fake
+  prices); Offer with price only for direct items.
+
 ## Design system — "Spec Sheet" (industrial catalogue) + local voice
 
 Derived from the logo (black R with red bar, red E, blue swoosh). Think Juki
