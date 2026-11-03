@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <title>Rakib Enterprise</title>
+  <!-- Hanger hook -->
+  <path d="M100 28c-4 0-7 3-7 7v9" stroke="#0E1A3A" stroke-width="4" stroke-linecap="round"/>
+  <!-- Hanger triangle -->
+  <path d="M100 48 L58 82 Q56 84 58 86 L142 86 Q144 84 142 82 Z" stroke="#0E1A3A" stroke-width="5" stroke-linejoin="round"/>
+  <!-- Rising arrow (gold) -->
+  <path d="M58 162 L96 118 L118 140 L158 84" stroke="#C9A14A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M158 84 L136 80 M158 84 L154 106" stroke="#C9A14A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- RE monogram -->
+  <text x="100" y="172" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="44" fill="#0E1A3A" letter-spacing="2">RE</text>
+</svg>

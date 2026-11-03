@@ -1,0 +1,430 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   RAKIB ENTERPRISE — Brand Tokens & Design System
+   Palette: Oxford Navy / Antique Gold / Bone Cream / Ink Black
+   ========================================================================= */
+
+:root {
+  /* Brand */
+  --jmn-navy: #0E1A3A;
+  --jmn-navy-deep: #070F24;
+  --jmn-navy-soft: #1C2A54;
+  --jmn-gold: #C9A14A;
+  --jmn-gold-bright: #E4BD5E;
+  --jmn-gold-soft: #E8D5A4;
+  --jmn-cream: #F7F3EC;
+  --jmn-bone: #EFE8DB;
+  --jmn-ink: #0A0A0A;
+  --jmn-ash: #6B6B6B;
+  --jmn-line: rgba(14, 26, 58, 0.08);
+
+  /* Semantic */
+  --background: var(--jmn-cream);
+  --foreground: var(--jmn-ink);
+  --surface: #ffffff;
+  --surface-alt: var(--jmn-bone);
+  --accent: var(--jmn-gold);
+  --accent-on: var(--jmn-navy);
+
+  /* Type scale (clamp) */
+  --fs-display: clamp(3.5rem, 10vw, 9.5rem);
+  --fs-h1: clamp(2.5rem, 6vw, 5rem);
+  --fs-h2: clamp(2rem, 4vw, 3.5rem);
+  --fs-h3: clamp(1.5rem, 2.4vw, 2rem);
+  --fs-body: 1rem;
+  --fs-small: 0.8125rem;
+
+  /* Motion */
+  --ease-emph: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --shell-max: 1440px;
+  --gutter: clamp(1rem, 3vw, 2.5rem);
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 22px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-navy: var(--jmn-navy);
+  --color-navy-deep: var(--jmn-navy-deep);
+  --color-navy-soft: var(--jmn-navy-soft);
+  --color-gold: var(--jmn-gold);
+  --color-gold-bright: var(--jmn-gold-bright);
+  --color-gold-soft: var(--jmn-gold-soft);
+  --color-cream: var(--jmn-cream);
+  --color-bone: var(--jmn-bone);
+  --color-ink: var(--jmn-ink);
+  --color-ash: var(--jmn-ash);
+  --color-surface: var(--surface);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+}
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  background: var(--background);
+  color: var(--foreground);
+  scroll-behavior: auto;  /* Lenis takes over */
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* Inter for Latin, Hind Siliguri as the Bangla fallback so glyphs render
+     correctly on bn pages. The browser picks per-script automatically. */
+  font-family: var(--font-inter), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+}
+
+/* When the SPA flips to Bangla, lead with the Bangla font for everything —
+   tighter tracking is also undone since Bangla doesn't want negative spacing. */
+html[data-locale="bn"] body {
+  font-family: var(--font-bangla), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-fraunces), var(--font-bangla), "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+}
+
+::selection {
+  background: var(--jmn-navy);
+  color: var(--jmn-gold);
+}
+
+/* Right-side slide-in for form drawers (ResourceForm, CreateProductModal,
+   StockEditDrawer, ManualAdjustDrawer, AddressDialog…). 220ms is quick
+   enough that fast operators don't notice it as a wait. */
+@keyframes jmn-drawer-in {
+  from { transform: translateX(100%); opacity: 0.4; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.jmn-drawer-in {
+  animation: jmn-drawer-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* =========================================================================
+   Utilities & Effects
+   ========================================================================= */
+
+.font-display { font-family: var(--font-fraunces), serif; }
+.font-sans { font-family: var(--font-inter), sans-serif; }
+
+.shell {
+  max-width: var(--shell-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Editorial grain — layered on top of hero sections */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.85'/%3E%3C/svg%3E");
+}
+
+.grain-subtle::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Magnetic button — gets animated via framer-motion */
+.btn-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: var(--jmn-navy);
+  color: var(--jmn-cream);
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  overflow: hidden;
+  transition: color 0.4s var(--ease-out-expo);
+  isolation: isolate;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--jmn-gold);
+  transform: translateY(102%);
+  transition: transform 0.5s var(--ease-out-expo);
+  z-index: -1;
+}
+
+.btn-primary:hover {
+  color: var(--jmn-navy);
+}
+
+.btn-primary:hover::before {
+  transform: translateY(0);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background 0.35s var(--ease-out-expo), color 0.35s var(--ease-out-expo);
+}
+.btn-ghost:hover {
+  background: currentColor;
+}
+.btn-ghost:hover > * {
+  color: var(--jmn-cream);
+}
+
+/* Link underline-grow */
+.link-swipe {
+  position: relative;
+  display: inline-block;
+}
+.link-swipe::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -2px;
+  width: 100%; height: 1px;
+  background: currentColor;
+  transform-origin: right;
+  transform: scaleX(0);
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.link-swipe:hover::after {
+  transform-origin: left;
+  transform: scaleX(1);
+}
+
+/* Marquee */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x 40s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+/* Reveal container */
+.mask-reveal {
+  overflow: hidden;
+  display: inline-block;
+  line-height: 1.05;
+  padding-bottom: 0.1em;
+}
+
+/* Fancy number counter font tabular */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Hide scrollbar on horizontal drag rails */
+.rail {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+
+/* Generic scrollbar-hide utility — keeps scroll behavior, removes the visual
+   bar. Used by the admin sidebar so the chunky default browser scrollbar
+   doesn't show on long nav lists. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Subtle thin scrollbar — for content areas where you do want a visible track. */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+/* Divider gold line */
+.hr-gold {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--jmn-gold) 50%, transparent);
+}
+
+/* Aspect helpers */
+.aspect-portrait { aspect-ratio: 3 / 4; }
+.aspect-editorial { aspect-ratio: 4 / 5; }
+.aspect-banner { aspect-ratio: 21 / 9; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .marquee-track { animation: none; }
+}
+
+/* =========================================================================
+   react-phone-number-input — brand override.
+   The library ships its own CSS (dotted underline + stark borders); we
+   re-skin it to match the brand's bottom-border input style used in the
+   checkout / account forms (`bg-transparent border-b border-navy/20`).
+   ========================================================================= */
+
+.jmn-phone-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* py-2.5 ≈ 10px / 10px to match the sibling <input className={INPUT}> */
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--jmn-navy) 20%, transparent);
+  transition: border-color 200ms ease;
+}
+.jmn-phone-field:focus-within {
+  border-bottom-color: var(--jmn-navy);
+}
+
+/* Country selector — a quiet flag + chevron. No background, no border so
+   it visually melts into the underline like the rest of the form. */
+.jmn-phone-field .PhoneInputCountry {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+}
+.jmn-phone-field .PhoneInputCountryIcon {
+  width: 20px;
+  height: 14px;
+  border-radius: 1px;
+  overflow: hidden;
+  box-shadow: none;
+  background: transparent;
+}
+.jmn-phone-field .PhoneInputCountryIcon--border,
+.jmn-phone-field .PhoneInputCountryIcon img {
+  box-shadow: none;
+  background: transparent;
+}
+.jmn-phone-field .PhoneInputCountrySelectArrow {
+  width: 5px;
+  height: 5px;
+  margin-left: 1px;
+  border-style: solid;
+  border-color: var(--jmn-navy);
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+  opacity: 0.45;
+}
+
+/* The phone <input> — inherit everything from the surrounding form so it
+   looks identical to the sibling text inputs. */
+.jmn-phone-field .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  /* inherit the page's body font + size — don't introduce a new scale */
+  font: inherit;
+  color: var(--jmn-navy);
+}
+.jmn-phone-field .PhoneInputInput::placeholder {
+  color: color-mix(in srgb, var(--jmn-ink) 35%, transparent);
+}
+
+/* Native <select> sitting on top of the flag — invisible, click-through. */
+.jmn-phone-field .PhoneInputCountrySelect {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Compact variant — admin forms on white background where a boxed input
+   is the house style instead of the underline. */
+.jmn-phone-field.jmn-phone-compact {
+  padding: 0 12px;
+  height: 36px;
+  border: 1px solid var(--jmn-line, color-mix(in srgb, var(--jmn-navy) 12%, transparent));
+  border-bottom: 1px solid var(--jmn-line, color-mix(in srgb, var(--jmn-navy) 12%, transparent));
+  border-radius: 6px;
+  background: white;
+}
+.jmn-phone-field.jmn-phone-compact:focus-within {
+  border-color: var(--jmn-navy);
+  border-bottom-color: var(--jmn-navy);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--jmn-navy) 8%, transparent);
+}
+.jmn-phone-field.jmn-phone-compact .PhoneInputInput {
+  font-size: 14px;
+}

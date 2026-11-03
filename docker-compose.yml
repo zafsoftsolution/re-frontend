@@ -1,0 +1,35 @@
+# ── Rakib Enterprise — FRONTEND stack ────────────────────────────────────────
+# Next.js. Published on host :9085. Talks to the backend stack over the shared
+# network `rakib-enterprise-net`.
+#
+# One-time (if not already created by the backend stack):
+#   docker network create rakib-enterprise-net
+#
+# Start the backend stack first (../backend), then from this folder:
+#   docker compose up --build
+#
+name: rakib-enterprise-frontend
+
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        # Inlined into the browser bundle — reachable from the user's browser.
+        NEXT_PUBLIC_DJANGO_API_URL: "https://api.rakibenterprise-bd.com/api/auth"
+        NEXT_PUBLIC_DJANGO_BACKEND: "https://api.rakibenterprise-bd.com"
+    image: rakib-enterprise-frontend:latest
+    container_name: rakib-enterprise-frontend
+    environment:
+      # Used by server-side rendering to reach the backend over the shared
+      # Docker network (service name `backend` on port 9086).
+      INTERNAL_DJANGO_BACKEND: "http://backend:9086"
+    ports:
+      - "9085:9085"
+    networks:
+      - rakib-enterprise-net
+    restart: unless-stopped
+
+networks:
+  rakib-enterprise-net:
+    external: true

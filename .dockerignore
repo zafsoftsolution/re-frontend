@@ -1,0 +1,18 @@
+node_modules
+.next
+.git
+.github
+.gitignore
+npm-debug.log*
+yarn-error.log*
+tsconfig.tsbuildinfo
+next-env.d.ts
+Dockerfile
+.dockerignore
+docker-compose*.yml
+DEPLOYMENT.md
+README.md
+# Never bake env files into the image — build args / runtime env supply values.
+.env
+.env*
+!.env.example

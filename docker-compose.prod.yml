@@ -1,0 +1,42 @@
+# ── Rakib Enterprise — FRONTEND stack (production, prebuilt image) ──────────
+# Used on the VPS by the GitHub Actions deploy job (see DEPLOYMENT.md).
+# container_name, host port 9085 and network MUST match docker-compose.yml so
+# the existing Nginx Proxy Manager proxy host keeps working.
+# Pulls the image built by CI from GHCR instead of building locally.
+#
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Rollback:  IMAGE_TAG=sha-abc1234 docker compose -f docker-compose.prod.yml up -d
+#
+# Requires the shared network (normally created by the backend stack):
+#   docker network create rakib-enterprise-net
+name: rakib-enterprise-frontend
+
+services:
+  frontend:
+    image: ghcr.io/zafsoftsolution/re-frontend:${IMAGE_TAG:-latest}
+    container_name: rakib-enterprise-frontend
+    # Server-only runtime vars (JMN_JWT_SECRET, ...) live in ./.env.local on the
+    # server (already present there; never committed). Optional so a missing
+    # file doesn't break `up`. Needs docker compose >= 2.24.
+    env_file:
+      - path: .env.local
+        required: false
+    environment:
+      # SSR reaches the backend over the shared Docker network.
+      INTERNAL_DJANGO_BACKEND: ${INTERNAL_DJANGO_BACKEND:-http://backend:9086}
+    ports:
+      - "9085:9085"
+    networks:
+      - rakib-enterprise-net
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  rakib-enterprise-net:
+    external: true
