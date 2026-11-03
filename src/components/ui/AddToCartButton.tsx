@@ -17,6 +17,7 @@ export function AddToCartButton({
   productSlug,
   partNumber,
   name,
+  qty = 1,
   size = "md",
   className,
 }: {
@@ -25,6 +26,7 @@ export function AddToCartButton({
   productSlug: string;
   partNumber: string;
   name: string;
+  qty?: number;
   size?: ButtonSize;
   className?: string;
 }) {
@@ -35,7 +37,7 @@ export function AddToCartButton({
     <button
       type="button"
       onClick={() => {
-        addToCart({ productSlug, partNumber, name, unitPrice: price });
+        addToCart({ productSlug, partNumber, name, unitPrice: price, qty });
         setAdded(true);
         setTimeout(() => setAdded(false), 1600);
       }}

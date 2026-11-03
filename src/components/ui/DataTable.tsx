@@ -15,6 +15,11 @@ export interface Column<T> {
   primary?: boolean;
   /** Hide this column on mobile cards. */
   hideOnMobile?: boolean;
+  /** Mobile cards only (e.g. a thumbnail that sits in its own desktop column). */
+  hideOnDesktop?: boolean;
+  /** On mobile, render the value across the full card width without a label
+   *  (action buttons). */
+  mobileFull?: boolean;
 }
 
 /**
@@ -42,6 +47,7 @@ export function DataTable<T>({
   }
   const primary = columns.find((c) => c.primary);
   const rest = columns.filter((c) => !c.primary && !c.hideOnMobile);
+  const desktop = columns.filter((c) => !c.hideOnDesktop);
 
   return (
     <div className={className}>
@@ -50,7 +56,7 @@ export function DataTable<T>({
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
           <tr className="border-b border-re-ink">
-            {columns.map((c) => (
+            {desktop.map((c) => (
               <th
                 key={c.key}
                 scope="col"
@@ -64,7 +70,7 @@ export function DataTable<T>({
         <tbody>
           {rows.map((row) => (
             <tr key={rowKey(row)} className="border-b border-re-steel-200 transition-colors hover:bg-re-steel-50">
-              {columns.map((c) => (
+              {desktop.map((c) => (
                 <td
                   key={c.key}
                   className={cn(
@@ -87,12 +93,18 @@ export function DataTable<T>({
           <li key={rowKey(row)} className="py-3">
             {primary && <div className="mb-2 font-semibold">{primary.cell(row)}</div>}
             <dl className="grid grid-cols-[minmax(6.5rem,auto)_1fr] gap-x-3 gap-y-1.5 text-[0.9375rem]">
-              {rest.map((c) => (
-                <div key={c.key} className="contents">
-                  <dt className="re-label self-center">{c.header}</dt>
-                  <dd className={cn("min-w-0", c.mono && "re-mono")}>{c.cell(row)}</dd>
-                </div>
-              ))}
+              {rest.map((c) =>
+                c.mobileFull ? (
+                  <dd key={c.key} className="col-span-2 mt-1 min-w-0">
+                    {c.cell(row)}
+                  </dd>
+                ) : (
+                  <div key={c.key} className="contents">
+                    <dt className="re-label self-center">{c.header}</dt>
+                    <dd className={cn("min-w-0", c.mono && "re-mono")}>{c.cell(row)}</dd>
+                  </div>
+                ),
+              )}
             </dl>
           </li>
         ))}
