@@ -29,18 +29,19 @@ export default function AdminStock() {
   const [editing, setEditing] = useState<StockLevel | null>(null);
   const toast = useToast();
 
-  const load = async () => {
-    setError(null);
-    try {
-      const data = await djangoAdmin.stockLevels.list();
-      const items =
-        (data as PaginatedResponse<StockLevel>).results ??
-        (data as unknown as StockLevel[]);
-      setRows(items);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  };
+  // State is only set in promise callbacks so the mount effect can call
+  // this without a synchronous setState (react-hooks/set-state-in-effect).
+  const load = () =>
+    djangoAdmin.stockLevels.list().then(
+      (data) => {
+        setError(null);
+        const items =
+          (data as PaginatedResponse<StockLevel>).results ??
+          (data as unknown as StockLevel[]);
+        setRows(items);
+      },
+      (e) => setError((e as Error).message),
+    );
 
   useEffect(() => {
     load();

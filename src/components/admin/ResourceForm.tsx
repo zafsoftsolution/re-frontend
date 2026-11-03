@@ -164,8 +164,9 @@ export default function ResourceForm({
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [submitting, setSubmitting] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
-  const restoredFromDraftRef = useRef<boolean>(
-    !!draftKey && readDraft(draftKey) !== null,
+  // State (not a ref) because the header renders it.
+  const [restoredFromDraft, setRestoredFromDraft] = useState<boolean>(
+    () => !!draftKey && readDraft(draftKey) !== null,
   );
   const toast = useToast();
 
@@ -193,7 +194,7 @@ export default function ResourceForm({
     setErrors({});
     setGlobalError(null);
     clearDraft(draftKey);
-    restoredFromDraftRef.current = false;
+    setRestoredFromDraft(false);
     // Re-write an empty marker so refresh still re-opens the modal.
     if (draftKey) {
       writeDraft(draftKey, {
@@ -339,7 +340,7 @@ export default function ResourceForm({
           <div>
             <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-1">
               {mode === "edit" ? "Edit" : "New"}
-              {restoredFromDraftRef.current && (
+              {restoredFromDraft && (
                 <span className="ml-2 text-amber-700 font-medium">
                   · Draft restored
                 </span>

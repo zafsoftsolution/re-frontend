@@ -89,17 +89,17 @@ export default function AdminOrderCreate({
   // ── Customer ────────────────────────────────────────────────────────────────
   const [customer, setCustomer] = useState<AdminUserShape | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
-  const [customerResults, setCustomerResults] = useState<AdminUserShape[]>([]);
+  const [fetchedCustomers, setCustomerResults] = useState<AdminUserShape[]>([]);
+  // Empty search → no results, derived rather than reset from the effect
+  // (react-hooks/set-state-in-effect).
+  const customerResults = customerSearch.trim() ? fetchedCustomers : [];
   const [customerOpen, setCustomerOpen] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
 
   // Lookup customers (debounced)
   useEffect(() => {
-    if (!customerSearch.trim()) {
-      setCustomerResults([]);
-      return;
-    }
+    if (!customerSearch.trim()) return;
     const t = setTimeout(async () => {
       try {
         const data = await djangoAdmin.users.list({
@@ -119,15 +119,13 @@ export default function AdminOrderCreate({
 
   // ── Items ──────────────────────────────────────────────────────────────────
   const [productSearch, setProductSearch] = useState("");
-  const [productResults, setProductResults] = useState<AdminProduct[]>([]);
+  const [fetchedProducts, setProductResults] = useState<AdminProduct[]>([]);
+  const productResults = productSearch.trim() ? fetchedProducts : [];
   const [productSearching, setProductSearching] = useState(false);
   const [lines, setLines] = useState<OrderLine[]>([]);
 
   useEffect(() => {
-    if (!productSearch.trim()) {
-      setProductResults([]);
-      return;
-    }
+    if (!productSearch.trim()) return;
     const t = setTimeout(async () => {
       setProductSearching(true);
       try {

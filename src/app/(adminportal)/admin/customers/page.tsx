@@ -24,21 +24,24 @@ export default function AdminCustomers() {
   const [active, setActive] = useState<AdminUserShape | null>(null);
   const toast = useToast();
 
-  const load = async () => {
-    setError(null);
-    try {
-      const data = await djangoAdmin.users.list({
+  // State is only set in promise callbacks so the mount effect can call
+  // this without a synchronous setState (react-hooks/set-state-in-effect).
+  const load = () =>
+    djangoAdmin.users
+      .list({
         account_type: "customer",
         ordering: "-date_joined",
-      });
-      const rows =
-        (data as unknown as PaginatedResponse<AdminUserShape>).results ??
-        (data as unknown as AdminUserShape[]);
-      setUsers(rows);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  };
+      })
+      .then(
+        (data) => {
+          setError(null);
+          const rows =
+            (data as unknown as PaginatedResponse<AdminUserShape>).results ??
+            (data as unknown as AdminUserShape[]);
+          setUsers(rows);
+        },
+        (e) => setError((e as Error).message),
+      );
 
   useEffect(() => {
     load();

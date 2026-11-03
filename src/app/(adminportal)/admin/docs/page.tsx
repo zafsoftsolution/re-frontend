@@ -2078,14 +2078,14 @@ function SectionExports() {
         <Table
           head={["Page", "Endpoint", "Filename"]}
           rows={[
-            [<Path>/admin/orders</Path>, <Path>/api/inventory/orders/export.csv/</Path>, "orders.csv"],
-            [<Path>/admin/products</Path>, <Path>/api/site/products/export.csv/</Path>, "products.csv"],
-            [<Path>/admin/customers</Path>, <Path>/api/auth/users/export.csv/</Path>, "customers.csv"],
-            [<Path>/admin/purchase-orders</Path>, <Path>/api/inventory/purchase-orders/export.csv/</Path>, "purchase-orders.csv"],
-            [<Path>/admin/stock</Path>, <Path>/api/inventory/stock-levels/export.csv/</Path>, "stock-levels.csv"],
-            [<Path>/admin/returns (Sales)</Path>, <Path>/api/inventory/order-returns/export.csv/</Path>, "order-returns.csv"],
-            [<Path>/admin/returns (Purchase)</Path>, <Path>/api/inventory/purchase-returns/export.csv/</Path>, "purchase-returns.csv"],
-            [<Path>/admin (Dashboard)</Path>, "client-built", "dashboard-YYYY-MM-DD.csv"],
+            [<Path key="page">/admin/orders</Path>, <Path key="endpoint">/api/inventory/orders/export.csv/</Path>, "orders.csv"],
+            [<Path key="page">/admin/products</Path>, <Path key="endpoint">/api/site/products/export.csv/</Path>, "products.csv"],
+            [<Path key="page">/admin/customers</Path>, <Path key="endpoint">/api/auth/users/export.csv/</Path>, "customers.csv"],
+            [<Path key="page">/admin/purchase-orders</Path>, <Path key="endpoint">/api/inventory/purchase-orders/export.csv/</Path>, "purchase-orders.csv"],
+            [<Path key="page">/admin/stock</Path>, <Path key="endpoint">/api/inventory/stock-levels/export.csv/</Path>, "stock-levels.csv"],
+            [<Path key="page">/admin/returns (Sales)</Path>, <Path key="endpoint">/api/inventory/order-returns/export.csv/</Path>, "order-returns.csv"],
+            [<Path key="page">/admin/returns (Purchase)</Path>, <Path key="endpoint">/api/inventory/purchase-returns/export.csv/</Path>, "purchase-returns.csv"],
+            [<Path key="page">/admin (Dashboard)</Path>, "client-built", "dashboard-YYYY-MM-DD.csv"],
           ]}
         />
       </SubSection>

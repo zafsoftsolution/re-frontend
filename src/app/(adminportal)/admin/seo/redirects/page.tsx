@@ -59,18 +59,22 @@ export default function RedirectsPage() {
   const [creatingStatus, setCreatingStatus] = useState<301 | 302>(301);
   const [creating, setCreating] = useState(false);
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const data = await djangoAdmin.redirects.list({ page_size: 200 });
-      setRows(
-        (data as PaginatedResponse<RedirectShape>).results ??
-          (data as unknown as RedirectShape[]),
-      );
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, []);
+  // State is only set in promise callbacks so the effect can call this
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  const load = useCallback(
+    () =>
+      djangoAdmin.redirects.list({ page_size: 200 }).then(
+        (data) => {
+          setError(null);
+          setRows(
+            (data as PaginatedResponse<RedirectShape>).results ??
+              (data as unknown as RedirectShape[]),
+          );
+        },
+        (e) => setError((e as Error).message),
+      ),
+    [],
+  );
 
   useEffect(() => {
     load();

@@ -166,14 +166,23 @@ function ProductQuickSearch({
   // the dropdown empty (and hidden) when the box first gains focus.
   const trimmed = query.trim();
 
-  useEffect(() => {
-    if (trimmed.length === 0) {
+  // Typing flips `loading` / clears results in `changeQuery` (an event
+  // handler); the effect only sets state from the debounced callback
+  // (react-hooks/set-state-in-effect).
+  function changeQuery(next: string) {
+    setQuery(next);
+    const nextTrimmed = next.trim();
+    if (nextTrimmed.length === 0) {
       setResults(null);
       setLoading(false);
-      return;
+    } else if (nextTrimmed !== trimmed) {
+      setLoading(true);
     }
+  }
+
+  useEffect(() => {
+    if (trimmed.length === 0) return;
     let cancelled = false;
-    setLoading(true);
     const timer = setTimeout(async () => {
       try {
         const data = await djangoAdmin.products.list({
@@ -205,8 +214,7 @@ function ProductQuickSearch({
 
   function commit(p: ProductLite) {
     onPick(p);
-    setQuery("");
-    setResults(null);
+    changeQuery("");
     inputRef.current?.focus();
   }
 
@@ -223,8 +231,7 @@ function ProductQuickSearch({
       const pick = results[highlighted];
       if (pick) commit(pick);
     } else if (e.key === "Escape") {
-      setQuery("");
-      setResults(null);
+      changeQuery("");
     }
   }
 
@@ -244,7 +251,7 @@ function ProductQuickSearch({
         <input
           ref={inputRef}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => changeQuery(e.target.value)}
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={onKeyDown}
@@ -256,7 +263,7 @@ function ProductQuickSearch({
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setQuery("")}
+            onClick={() => changeQuery("")}
             className="text-ink/45 hover:text-navy"
             aria-label="Clear"
           >
@@ -467,14 +474,14 @@ export default function NewPurchaseOrderPage() {
   }, []);
 
   // When supplier changes, default currency + payment terms.
-  useEffect(() => {
-    if (!supplierId || !suppliers) return;
-    const s = suppliers.find((x) => x.id === supplierId);
+  function changeSupplier(nextId: string) {
+    setSupplierId(nextId);
+    const s = nextId ? suppliers?.find((x) => x.id === nextId) : undefined;
     if (s) {
       setCurrency(s.default_currency || "BDT");
       setPaymentTerms(s.payment_terms_days ?? 30);
     }
-  }, [supplierId, suppliers]);
+  }
 
   // Add via product picker — auto-merge same product+variant.
   const addProduct = useCallback((p: ProductLite) => {
@@ -784,7 +791,7 @@ export default function NewPurchaseOrderPage() {
               <Field label="Supplier" required>
                 <select
                   value={supplierId}
-                  onChange={(e) => setSupplierId(e.target.value)}
+                  onChange={(e) => changeSupplier(e.target.value)}
                   className="input"
                 >
                   <option value="">— Choose —</option>

@@ -76,25 +76,26 @@ export default function ReturnsPage() {
   const [salesActive, setSalesActive] = useState<OrderReturnShape | null>(null);
   const [purchaseActive, setPurchaseActive] = useState<PurchaseReturnShape | null>(null);
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      if (side === "sales") {
-        const data = await djangoAdmin.orderReturns.list({ page_size: 100 });
+  // State is only set in promise callbacks so the effect can call this
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  const load = useCallback(() => {
+    const onError = (e: unknown) => setError((e as Error).message);
+    if (side === "sales") {
+      return djangoAdmin.orderReturns.list({ page_size: 100 }).then((data) => {
+        setError(null);
         setSales(
           (data as PaginatedResponse<OrderReturnShape>).results ??
             (data as unknown as OrderReturnShape[]),
         );
-      } else {
-        const data = await djangoAdmin.purchaseReturns.list({ page_size: 100 });
-        setPurchase(
-          (data as PaginatedResponse<PurchaseReturnShape>).results ??
-            (data as unknown as PurchaseReturnShape[]),
-        );
-      }
-    } catch (e) {
-      setError((e as Error).message);
+      }, onError);
     }
+    return djangoAdmin.purchaseReturns.list({ page_size: 100 }).then((data) => {
+      setError(null);
+      setPurchase(
+        (data as PaginatedResponse<PurchaseReturnShape>).results ??
+          (data as unknown as PurchaseReturnShape[]),
+      );
+    }, onError);
   }, [side]);
 
   useEffect(() => {

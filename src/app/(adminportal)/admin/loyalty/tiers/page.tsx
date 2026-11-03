@@ -19,13 +19,15 @@ export default function AdminLoyaltyTiers() {
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
-  async function load() {
-    try {
-      const data = await djangoAdmin.loyalty.tiers.list();
-      setTiers((data as { results: TierConfigShape[] }).results ?? (data as unknown as TierConfigShape[]));
-    } catch (e) {
-      setError((e as Error).message);
-    }
+  function load() {
+    return djangoAdmin.loyalty.tiers.list().then(
+      (data) =>
+        setTiers(
+          (data as { results: TierConfigShape[] }).results ??
+            (data as unknown as TierConfigShape[]),
+        ),
+      (e) => setError((e as Error).message),
+    );
   }
 
   useEffect(() => {

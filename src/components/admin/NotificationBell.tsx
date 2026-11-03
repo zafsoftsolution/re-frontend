@@ -41,7 +41,6 @@ import {
 } from "lucide-react";
 import {
   djangoAdmin,
-  type NotificationEventCode,
   type NotificationShape,
   type PaginatedResponse,
 } from "@/lib/django-admin";
@@ -99,14 +98,18 @@ export default function NotificationBell() {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // ── Polling: cheap unread_count endpoint runs forever in the background.
-  const refreshCount = useCallback(async () => {
-    try {
-      const data = await djangoAdmin.notifications.unreadCount();
-      setUnread(data.count);
-    } catch {
-      // Silent — a 401 on logout shouldn't spam the console.
-    }
-  }, []);
+  // State is only set in the promise callback so the effect can call this
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  const refreshCount = useCallback(
+    () =>
+      djangoAdmin.notifications.unreadCount().then(
+        (data) => setUnread(data.count),
+        () => {
+          // Silent — a 401 on logout shouldn't spam the console.
+        },
+      ),
+    [],
+  );
   useEffect(() => {
     refreshCount();
     const id = setInterval(refreshCount, POLL_MS);

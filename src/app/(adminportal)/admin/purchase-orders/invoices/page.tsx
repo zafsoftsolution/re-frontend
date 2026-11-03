@@ -73,32 +73,34 @@ export default function PurchaseInvoicesPage() {
 
   const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const query: Parameters<typeof djangoAdmin.purchaseOrders.invoices>[0] = {
-        page_size: 100,
-      };
-      if (tab === "unpaid" || tab === "partial" || tab === "paid") {
-        query.payment_status = tab as PurchasePaymentStatus;
-      } else if (tab === "overdue") {
-        query.overdue = "1";
-      }
-      if (supplierFilter) query.supplier = supplierFilter;
-      if (search.trim()) query.search = search.trim();
-
-      const [list, due] = await Promise.all([
-        djangoAdmin.purchaseOrders.invoices(query),
-        djangoAdmin.purchaseOrders.supplierDues(),
-      ]);
-      setRows(
-        (list as PaginatedResponse<PurchaseOrderListShape>).results ??
-          (list as unknown as PurchaseOrderListShape[]),
-      );
-      setDues(due);
-    } catch (e) {
-      setError((e as Error).message);
+  // State is only set in promise callbacks so the effect can call this without a
+  // synchronous setState (react-hooks/set-state-in-effect).
+  const load = useCallback(() => {
+    const query: Parameters<typeof djangoAdmin.purchaseOrders.invoices>[0] = {
+      page_size: 100,
+    };
+    if (tab === "unpaid" || tab === "partial" || tab === "paid") {
+      query.payment_status = tab as PurchasePaymentStatus;
+    } else if (tab === "overdue") {
+      query.overdue = "1";
     }
+    if (supplierFilter) query.supplier = supplierFilter;
+    if (search.trim()) query.search = search.trim();
+
+    return Promise.all([
+      djangoAdmin.purchaseOrders.invoices(query),
+      djangoAdmin.purchaseOrders.supplierDues(),
+    ]).then(
+      ([list, due]) => {
+        setError(null);
+        setRows(
+          (list as PaginatedResponse<PurchaseOrderListShape>).results ??
+            (list as unknown as PurchaseOrderListShape[]),
+        );
+        setDues(due);
+      },
+      (e) => setError((e as Error).message),
+    );
   }, [tab, supplierFilter, search]);
 
   useEffect(() => {
@@ -648,15 +650,17 @@ function InvoiceDrawer({
     }
   }
 
-  const load = useCallback(async () => {
-    setLoadError(null);
-    try {
-      const data = await djangoAdmin.purchaseOrders.get(poId);
-      setPo(data);
-    } catch (e) {
-      setLoadError((e as Error).message);
-    }
-  }, [poId]);
+  const load = useCallback(
+    () =>
+      djangoAdmin.purchaseOrders.get(poId).then(
+        (data) => {
+          setLoadError(null);
+          setPo(data);
+        },
+        (e) => setLoadError((e as Error).message),
+      ),
+    [poId],
+  );
 
   useEffect(() => {
     load();

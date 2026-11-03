@@ -97,49 +97,54 @@ export default function NotificationsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const [error, setError] = useState<string | null>(null);
+
+  // State is only set in promise callbacks so effects can call this without
+  // a synchronous setState (react-hooks/set-state-in-effect).
   const load = useCallback(
-    async (resetPage = false) => {
-      setError(null);
+    (resetPage = false) => {
       const targetPage = resetPage ? 1 : page;
-      try {
-        const data = await djangoAdmin.notifications.list({
+      return djangoAdmin.notifications
+        .list({
           page: targetPage,
           page_size: PAGE_SIZE,
           event: eventFilter || undefined,
           ordering: "-queued_at",
-        });
-        const next = (data as PaginatedResponse<NotificationShape>).results ?? [];
-        setRows((prev) => (resetPage || targetPage === 1 ? next : [...prev, ...next]));
-        setTotal((data as PaginatedResponse<NotificationShape>).count ?? next.length);
-        setHasMore(!!(data as PaginatedResponse<NotificationShape>).next);
-        if (resetPage) setPage(1);
-      } catch (e) {
-        setError((e as Error).message);
-      } finally {
-        setLoading(false);
-      }
+        })
+        .then(
+          (data) => {
+            setError(null);
+            const next = (data as PaginatedResponse<NotificationShape>).results ?? [];
+            setRows((prev) => (resetPage || targetPage === 1 ? next : [...prev, ...next]));
+            setTotal((data as PaginatedResponse<NotificationShape>).count ?? next.length);
+            setHasMore(!!(data as PaginatedResponse<NotificationShape>).next);
+            if (resetPage) setPage(1);
+          },
+          (e) => setError((e as Error).message),
+        )
+        .finally(() => setLoading(false));
     },
     [page, eventFilter],
   );
 
-  const [error, setError] = useState<string | null>(null);
-
-  // Re-load whenever the event filter changes (resets to page 1).
+  // Re-load whenever the event filter changes (resets to page 1). The
+  // filter's onChange flips `loading` on.
   useEffect(() => {
-    setLoading(true);
     load(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventFilter]);
 
   // Keep the badge in sync with the page.
-  const refreshUnread = useCallback(async () => {
-    try {
-      const data = await djangoAdmin.notifications.unreadCount();
-      setUnreadCount(data.count);
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const refreshUnread = useCallback(
+    () =>
+      djangoAdmin.notifications.unreadCount().then(
+        (data) => setUnreadCount(data.count),
+        () => {
+          /* ignore */
+        },
+      ),
+    [],
+  );
   useEffect(() => {
     refreshUnread();
   }, [refreshUnread, rows]);
@@ -326,9 +331,10 @@ export default function NotificationsPage() {
 
         <select
           value={eventFilter}
-          onChange={(e) =>
-            setEventFilter(e.target.value as NotificationEventCode)
-          }
+          onChange={(e) => {
+            setLoading(true);
+            setEventFilter(e.target.value as NotificationEventCode);
+          }}
           className="h-9 px-3 rounded-md bg-[#FAFAFA] text-sm text-navy outline-none"
         >
           <option value="">All events</option>

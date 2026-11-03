@@ -139,25 +139,33 @@ const columns: Column<PurchaseOrderListShape>[] = [
 export default function AdminPurchaseOrders() {
   const [rows, setRows] = useState<PurchaseOrderListShape[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const toast = useToast();
 
-  async function load() {
-    setError(null);
+  // State is only set in promise callbacks so the mount effect can call
+  // this without a synchronous setState (react-hooks/set-state-in-effect).
+  // `refreshing` starts true for the initial fetch.
+  function fetchRows() {
+    return djangoAdmin.purchaseOrders
+      .list({ page_size: 100 })
+      .then(
+        (data) => {
+          setError(null);
+          setRows(data.results);
+        },
+        (e) => setError((e as Error).message),
+      )
+      .finally(() => setRefreshing(false));
+  }
+
+  function load() {
     setRefreshing(true);
-    try {
-      const data = await djangoAdmin.purchaseOrders.list({ page_size: 100 });
-      setRows(data.results);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setRefreshing(false);
-    }
+    return fetchRows();
   }
 
   useEffect(() => {
-    load();
+    fetchRows();
   }, []);
 
   const tab = TABS.find((t) => t.key === activeTab) ?? TABS[0];

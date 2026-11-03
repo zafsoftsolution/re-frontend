@@ -101,41 +101,49 @@ export default function ResourceManager<T extends Record<string, unknown>>({
     [singular, title],
   );
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const data = await client.list();
-      const items = Array.isArray(data) ? data : data.results;
-      setRows(items);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [client]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // After rows load, restore an in-progress draft if there is one. This
-  // makes a refresh during editing non-destructive: the modal pops back
-  // open with the typed values.
-  useEffect(() => {
-    if (rows === null) return;
-    if (creating || editing) return;          // already open, don't double-restore
-    // Look for a "create" draft first (no suffix), then any "edit:<id>".
-    if (hasDraft(`${draftKeyBase}:create`)) {
-      setCreating(true);
-      return;
-    }
-    for (const row of rows) {
-      const key = `${draftKeyBase}:edit:${rowKey(row)}`;
-      if (hasDraft(key)) {
-        setEditing(row);
+  // On the initial load (and whenever the client changes), restore an
+  // in-progress draft if there is one. This makes a refresh during editing
+  // non-destructive: the modal pops back open with the typed values. Manual
+  // reloads skip it — the modal clears its draft on close anyway.
+  const restoreDraft = useCallback(
+    (items: T[]) => {
+      // Look for a "create" draft first (no suffix), then any "edit:<id>".
+      if (hasDraft(`${draftKeyBase}:create`)) {
+        setCreating(true);
         return;
       }
-    }
+      for (const row of items) {
+        const key = `${draftKeyBase}:edit:${rowKey(row)}`;
+        if (hasDraft(key)) {
+          setEditing(row);
+          return;
+        }
+      }
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, draftKeyBase]);
+    [draftKeyBase],
+  );
+
+  // State is only set in promise callbacks so the effect can call this
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  const fetchRows = useCallback(
+    (restore: boolean) =>
+      client.list().then(
+        (data) => {
+          const items = Array.isArray(data) ? data : data.results;
+          setError(null);
+          setRows(items);
+          if (restore) restoreDraft(items);
+        },
+        (e) => setError((e as Error).message),
+      ),
+    [client, restoreDraft],
+  );
+  const load = useCallback(() => fetchRows(false), [fetchRows]);
+
+  useEffect(() => {
+    fetchRows(true);
+  }, [fetchRows]);
 
   const canCreate = (!!fields || !!renderForm) && !!client.create;
   const canEdit = (!!fields || !!renderForm) && !!client.update;

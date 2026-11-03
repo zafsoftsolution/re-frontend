@@ -57,15 +57,19 @@ export default function SeoAuditPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<IssueTab>("missing_seo_title");
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const res = await djangoAdmin.seo.audit();
-      setData(res);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, []);
+  // State is only set in promise callbacks so the effect can call this
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  const load = useCallback(
+    () =>
+      djangoAdmin.seo.audit().then(
+        (res) => {
+          setError(null);
+          setData(res);
+        },
+        (e) => setError((e as Error).message),
+      ),
+    [],
+  );
 
   useEffect(() => {
     load();

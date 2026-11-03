@@ -49,7 +49,7 @@ export default function AdminLoyaltyTransactions() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [reason, setReason] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAdjust, setShowAdjust] = useState(false);
 
@@ -58,27 +58,34 @@ export default function AdminLoyaltyTransactions() {
     [total],
   );
 
-  async function load() {
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await djangoAdmin.loyalty.transactions.list({
+  // State is only set in promise callbacks so the effect below can call it
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  function fetchRows() {
+    return djangoAdmin.loyalty.transactions
+      .list({
         search: search || undefined,
         reason: reason || undefined,
         page,
         page_size: PAGE_SIZE,
-      });
-      setRows(res.results);
-      setTotal(res.count);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
+      })
+      .then(
+        (res) => {
+          setError(null);
+          setRows(res.results);
+          setTotal(res.count);
+        },
+        (e) => setError((e as Error).message),
+      )
+      .finally(() => setBusy(false));
+  }
+
+  function load() {
+    setBusy(true);
+    return fetchRows();
   }
 
   useEffect(() => {
-    load();
+    fetchRows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, reason]);
 
@@ -138,6 +145,7 @@ export default function AdminLoyaltyTransactions() {
           <select
             value={reason}
             onChange={(e) => {
+              setBusy(true);
               setPage(1);
               setReason(e.target.value);
             }}
@@ -241,7 +249,10 @@ export default function AdminLoyaltyTransactions() {
               </span>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setBusy(true);
+                    setPage((p) => Math.max(1, p - 1));
+                  }}
                   disabled={page <= 1}
                   className="h-8 w-8 grid place-items-center rounded-md hover:bg-[#F4F5F7] disabled:opacity-30 disabled:hover:bg-transparent"
                 >
@@ -251,7 +262,10 @@ export default function AdminLoyaltyTransactions() {
                   {page} / {totalPages}
                 </span>
                 <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => {
+                    setBusy(true);
+                    setPage((p) => Math.min(totalPages, p + 1));
+                  }}
                   disabled={page >= totalPages}
                   className="h-8 w-8 grid place-items-center rounded-md hover:bg-[#F4F5F7] disabled:opacity-30 disabled:hover:bg-transparent"
                 >

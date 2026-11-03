@@ -92,17 +92,20 @@ export default function PurchaseOrderDetail({
   const [busy, setBusy] = useState<string | null>(null);
   const [returnOpen, setReturnOpen] = useState(false);
 
-  async function load() {
-    setError(null);
-    setLoading(true);
-    try {
-      const data = await djangoAdmin.purchaseOrders.get(id);
-      setPo(data);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
+  // State is only set in promise callbacks so the effect can call this
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  // `loading` starts true and only gates the first paint (`loading && !po`).
+  function load() {
+    return djangoAdmin.purchaseOrders
+      .get(id)
+      .then(
+        (data) => {
+          setError(null);
+          setPo(data);
+        },
+        (e) => setError((e as Error).message),
+      )
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {

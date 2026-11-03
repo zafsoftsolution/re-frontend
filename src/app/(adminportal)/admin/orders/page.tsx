@@ -72,18 +72,19 @@ export default function AdminOrders() {
   const [creating, setCreating] = useState(false);
   const toast = useToast();
 
-  const load = async () => {
-    setError(null);
-    try {
-      const data = await djangoAdmin.orders.list({ ordering: "-placed_at" });
-      const rows =
-        (data as unknown as PaginatedResponse<AdminOrder>).results ??
-        (data as unknown as AdminOrder[]);
-      setOrders(rows);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  };
+  // State is only set in promise callbacks so the mount effect can call
+  // this without a synchronous setState (react-hooks/set-state-in-effect).
+  const load = () =>
+    djangoAdmin.orders.list({ ordering: "-placed_at" }).then(
+      (data) => {
+        setError(null);
+        const rows =
+          (data as unknown as PaginatedResponse<AdminOrder>).results ??
+          (data as unknown as AdminOrder[]);
+        setOrders(rows);
+      },
+      (e) => setError((e as Error).message),
+    );
 
   useEffect(() => {
     load();

@@ -72,14 +72,16 @@ export default function FinancialsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<TopTab>("byRevenue");
 
-  async function load() {
-    setError(null);
-    try {
-      const res = await djangoAdmin.financials.summary(days);
-      setData(res);
-    } catch (e) {
-      setError((e as Error).message);
-    }
+  // State is only set in promise callbacks so the effect can call this
+  // without a synchronous setState (react-hooks/set-state-in-effect).
+  function load() {
+    return djangoAdmin.financials.summary(days).then(
+      (res) => {
+        setError(null);
+        setData(res);
+      },
+      (e) => setError((e as Error).message),
+    );
   }
 
   useEffect(() => {
