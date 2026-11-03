@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ChevronDown, Download, FileText, Loader2, Plus, RefreshCw, X } from "lucide-react";
 import { djangoAdmin, type PaginatedResponse } from "@/lib/django-admin";
@@ -41,6 +42,10 @@ interface AdminOrder {
   }>;
   timeline: Array<{ id: string; status: string; note: string; at: string }>;
   placed_at: string;
+  /** "web" | "admin" | "rfq" | "" */
+  source?: string;
+  /** Set when the order was converted from a quote request. */
+  quote?: { id: string; reference: string } | null;
 }
 
 const STATUS_OPTIONS = [
@@ -88,6 +93,17 @@ export default function AdminOrders() {
 
   useEffect(() => {
     load();
+    // Deep link from a converted quote: /admin/orders?order=<number>.
+    const wanted = new URLSearchParams(window.location.search).get("order");
+    if (wanted) {
+      djangoAdmin.orders
+        .list({ search: wanted })
+        .then((r) => {
+          const hit = (r.results as AdminOrder[]).find((o) => o.order_number === wanted);
+          if (hit) setActive(hit);
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const filtered = useMemo(() => {
@@ -103,7 +119,14 @@ export default function AdminOrders() {
       sortable: true,
       accessor: (o) => o.order_number,
       render: (o) => (
-        <span className="font-medium text-navy">{o.order_number}</span>
+        <span className="inline-flex items-center gap-2">
+          <span className="font-medium text-navy part-no">{o.order_number}</span>
+          {o.source === "rfq" && (
+            <span className="text-[10px] font-semibold tracking-[0.12em] uppercase px-1.5 py-0.5 bg-re-ink text-white" title={o.quote ? `From quote ${o.quote.reference}` : "From a quote"}>
+              RFQ
+            </span>
+          )}
+        </span>
       ),
     },
     {
@@ -415,6 +438,14 @@ function OrderDrawer({
             <p className="text-xs text-ink/55 mt-1">
               Placed {formatDate(order.placed_at)} · {order.customer_email}
             </p>
+            {order.quote && (
+              <Link
+                href={`/admin/rfq/${order.quote.id}`}
+                className="mt-1 inline-block text-[13px] text-re-blue-text hover:underline"
+              >
+                From quote <span className="part-no">{order.quote.reference}</span> →
+              </Link>
+            )}
           </div>
           <button
             onClick={onClose}

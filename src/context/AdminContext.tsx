@@ -2,16 +2,18 @@
 
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import type { AdminUser } from "@/types/admin";
 import {
   djangoAdmin,
-  readCachedUser,
+  sessionSnapshot,
+  subscribeSession,
   type AdminUserShape,
 } from "@/lib/django-admin";
 
@@ -71,35 +73,52 @@ function mapAdmin(user: AdminUserShape): AdminUser {
   };
 }
 
-export function AdminProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AdminState>({ admin: null, loading: true });
+const serverSnapshot = () => null;
 
-  const persist = useCallback((shape: AdminUserShape | null) => {
-    setState({ admin: shape ? mapAdmin(shape) : null, loading: false });
-  }, []);
+export function AdminProvider({ children }: { children: ReactNode }) {
+  // Stored session (tokens + cached user) as an external store: null while
+  // server-rendering / hydrating, "" when signed out, "1|<json>" otherwise.
+  const snapshot = useSyncExternalStore(subscribeSession, sessionSnapshot, serverSnapshot);
+  // Has /auth/me/ confirmed the stored session in this page load?
+  const [verified, setVerified] = useState<"pending" | "ok" | "failed">("pending");
+  const hasToken = !!snapshot;
 
   useEffect(() => {
-    if (!djangoAdmin.hasSession()) {
-      setState({ admin: null, loading: false });
-      return;
-    }
-    // Paint cached identity instantly, then verify with the server.
-    const cached = readCachedUser();
-    if (cached) persist(cached);
-
-    djangoAdmin
-      .me()
-      .then(persist)
-      .catch(() => {
+    if (!hasToken) return;
+    let cancelled = false;
+    // me() refreshes the cached user (→ snapshot) on success.
+    djangoAdmin.me().then(
+      () => !cancelled && setVerified("ok"),
+      () => {
+        if (cancelled) return;
         djangoAdmin.logout().catch(() => {});
-        setState({ admin: null, loading: false });
-      });
-  }, [persist]);
+        setVerified("failed");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [hasToken]);
+
+  const state = useMemo<AdminState>(() => {
+    if (snapshot === null) return { admin: null, loading: true };
+    if (!snapshot || verified === "failed") return { admin: null, loading: false };
+    const raw = snapshot.slice(2);
+    let shape: AdminUserShape | null = null;
+    try {
+      shape = raw ? (JSON.parse(raw) as AdminUserShape) : null;
+    } catch {
+      shape = null;
+    }
+    // Paint the cached identity instantly; without one, wait for /me.
+    if (!shape) return { admin: null, loading: verified === "pending" };
+    return { admin: mapAdmin(shape), loading: false };
+  }, [snapshot, verified]);
 
   const login: AdminContextType["login"] = async (email, password) => {
     try {
-      const user = await djangoAdmin.login(email, password);
-      persist(user);
+      await djangoAdmin.login(email, password); // stores tokens + user → snapshot
+      setVerified("ok");
       return { ok: true };
     } catch (err) {
       const msg = (err as Error)?.message ?? "Sign-in failed";
@@ -108,14 +127,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Tokens are cleared after the blacklist call; the snapshot follows.
     djangoAdmin.logout().catch(() => {});
-    setState({ admin: null, loading: false });
+    setVerified("pending");
   };
 
   const refresh = async () => {
     try {
-      const user = await djangoAdmin.me();
-      persist(user);
+      await djangoAdmin.me(); // re-caches the user → snapshot
     } catch {
       /* token might just be expired between calls */
     }

@@ -1173,20 +1173,49 @@ function getRefresh(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(REFRESH_KEY);
 }
+/** Same-tab change signal for the session store (storage events only fire
+ *  in *other* tabs). */
+export const SESSION_EVENT = "jmn:admin-session";
+function emitSession(): void {
+  window.dispatchEvent(new Event(SESSION_EVENT));
+}
+
 function setTokens(access: string, refresh: string): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(ACCESS_KEY, access);
   localStorage.setItem(REFRESH_KEY, refresh);
+  emitSession();
 }
 function clearTokens(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
+  emitSession();
 }
 export function cacheUser(user: AdminUserShape): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  emitSession();
+}
+
+/**
+ * External-store view of the stored session for useSyncExternalStore:
+ * "" when signed out, otherwise "1|<cached user json>". A string keeps the
+ * snapshot referentially stable between reads.
+ */
+export function sessionSnapshot(): string {
+  const token = localStorage.getItem(ACCESS_KEY);
+  if (!token) return "";
+  return "1|" + (localStorage.getItem(USER_KEY) ?? "");
+}
+export function subscribeSession(cb: () => void): () => void {
+  window.addEventListener("storage", cb);
+  window.addEventListener(SESSION_EVENT, cb);
+  return () => {
+    window.removeEventListener("storage", cb);
+    window.removeEventListener(SESSION_EVENT, cb);
+  };
 }
 export function readCachedUser(): AdminUserShape | null {
   if (typeof window === "undefined") return null;
@@ -1551,18 +1580,23 @@ export const djangoAdmin = {
   },
 
   async logout(): Promise<void> {
+    // Clear locally first so the UI signs out immediately, then blacklist
+    // the refresh token server-side with the captured credentials.
     const refresh = getRefresh();
+    const access = getAccess();
+    clearTokens();
     if (refresh) {
       try {
         await request("/auth/logout/", {
           method: "POST",
           body: JSON.stringify({ refresh }),
+          anon: true,
+          headers: access ? { Authorization: `Bearer ${access}` } : undefined,
         });
       } catch {
-        /* clear tokens regardless */
+        /* already signed out locally */
       }
     }
-    clearTokens();
   },
 
   // ── Storefront resources (admin gets all statuses)

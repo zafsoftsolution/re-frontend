@@ -61,7 +61,6 @@ jobs:
       # once admin is cleaned up.
       - name: Lint (all, incl. admin — non-blocking)
         run: npm run lint
-        continue-on-error: true
 
       - name: Unit tests
         run: npm test
