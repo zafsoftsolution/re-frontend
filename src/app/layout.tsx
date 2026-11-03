@@ -33,6 +33,9 @@ const hindSiliguri = Hind_Siliguri({
 });
 
 export const metadata: Metadata = {
+  // Absolute base for og:image / canonical URLs (otherwise they resolve to the
+  // container's own http://localhost:9085).
+  metadataBase: new URL("https://rakibenterprise-bd.com"),
   title: {
     default: `${siteConfig.name} — ${siteConfig.tagline}`,
     template: `%s · ${siteConfig.name}`,
