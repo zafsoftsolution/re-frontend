@@ -151,9 +151,9 @@ const NAV: { section: string; items: NavItem[] }[] = [
     ],
   },
   {
-    section: "Storefront",
+    section: "Site",
     items: [
-      { label: "Homepage", href: "/admin/homepage", icon: Home,
+      { label: "Home page", href: "/admin/homepage", icon: Home,
         permission: "marketing.homepage.manage" },
     ],
   },

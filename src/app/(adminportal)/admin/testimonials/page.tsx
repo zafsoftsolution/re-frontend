@@ -23,7 +23,7 @@ interface Testimonial extends Record<string, unknown> {
 const columns: Column<Testimonial>[] = [
   {
     key: "guest",
-    header: "Guest",
+    header: "Factory / buyer",
     sortable: true,
     accessor: (t) => t.name,
     render: (t) => (
@@ -93,22 +93,23 @@ const columns: Column<Testimonial>[] = [
 export default function AdminTestimonials() {
   return (
     <ResourceManager<Testimonial>
-      eyebrow="Content"
-      title="Testimonials"
-      description="Curated quotes for the storefront."
+      eyebrow="Trust"
+      title="Customer factories"
+      singular="customer testimonial"
+      description="Garment factories and workshops we supply — their quotes appear in the site's trust section. Role = position (e.g. Maintenance manager), Location = factory name / area."
       client={djangoAdmin.testimonials as CrudClient<Testimonial>}
       rowKey={(t) => t.id}
-      rowLabel={(t) => `${t.name}'s testimonial`}
+      rowLabel={(t) => `${t.name} testimonial`}
       columns={columns}
-      searchPlaceholder="Search testimonials…"
+      searchPlaceholder="Search factories or quotes…"
       searchAccessor={(t) => `${t.name} ${t.location} ${t.quote}`}
       initialValues={{ rating: 5, is_published: true }}
       fields={[
-        { name: "name", label: "Name", type: "text", required: true },
+        { name: "name", label: "Contact / factory name", type: "text", required: true, placeholder: "Abdul Karim" },
         { name: "rating", label: "Rating", type: "number", required: true, hint: "1–5" },
-        { name: "role", label: "Role", type: "text" },
-        { name: "location", label: "Location", type: "text" },
-        { name: "image", label: "Portrait", type: "imageUrl", full: true },
+        { name: "role", label: "Position", type: "text", placeholder: "Maintenance manager" },
+        { name: "location", label: "Factory / area", type: "text", placeholder: "XYZ Knit Composite, Gazipur" },
+        { name: "image", label: "Logo or photo", type: "imageUrl", full: true },
         { name: "date", label: "Date", type: "date", required: true },
         { name: "quote", label: "Quote", type: "textarea", required: true, full: true, rows: 5 },
         { name: "is_verified", label: "Verified", type: "boolean" },
