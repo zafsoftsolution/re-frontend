@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "siteName": "Rakib Enterprise",
+    "title": "Rakib Enterprise — Industrial sewing machine spare parts, Dhaka",
+    "description": "Genuine and compatible spare parts for industrial garment sewing machines — needles, hooks, loopers, feed dogs, presser feet, bobbin cases, servo motors and control boxes for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special. Search by part number, order on WhatsApp.",
+    "tagline": "Sewing machine spare parts"
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "mainNav": "Main navigation",
+    "mobileNav": "Quick actions",
+    "breadcrumb": "Breadcrumb",
+    "close": "Close",
+    "openMenu": "Open menu",
+    "home": "Rakib Enterprise home"
+  },
+  "nav": {
+    "machines": "Machines",
+    "categories": "Categories",
+    "brands": "Brands",
+    "rfq": "Quote list",
+    "rfqLong": "Request a quote",
+    "guides": "Guides",
+    "contact": "Contact",
+    "home": "Home",
+    "search": "Search",
+    "cart": "Cart"
+  },
+  "header": {
+    "searchLabel": "Search parts",
+    "searchPlaceholder": "Part no., model or part name",
+    "searchSubmit": "Search",
+    "call": "Call",
+    "callUs": "Call {phone}",
+    "rfqItems": "Quote list: {count, plural, =0 {empty} one {# item} other {# items}}",
+    "language": "Language",
+    "switchTo": "বাংলা",
+    "switchToShort": "বাং",
+    "switchToLabel": "View this page in Bangla",
+    "topline": "Spare parts for industrial sewing machines · Dhaka",
+    "cartItems": "Cart: {count, plural, =0 {empty} one {# item} other {# items}}"
+  },
+  "mobileBar": {
+    "search": "Search",
+    "brands": "Brands",
+    "rfq": "Quote",
+    "whatsapp": "WhatsApp"
+  },
+  "footer": {
+    "about": "Spare parts for industrial garment sewing machines. Genuine and compatible parts, correct part numbers, dispatched from Dhaka.",
+    "contactHeading": "Contact",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "whatsappCta": "Message us on WhatsApp",
+    "email": "Email",
+    "address": "Address",
+    "addressFallback": "Dhaka, Bangladesh",
+    "catalogueHeading": "Catalogue",
+    "policiesHeading": "Policies",
+    "shipping": "Shipping & delivery",
+    "returns": "Returns",
+    "payment": "Payment",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "paymentHeading": "We accept",
+    "paymentMethods": "Cash on delivery · bKash · Nagad · Bank transfer",
+    "about_link": "About us",
+    "delivery": "Delivery areas",
+    "rights": "© {year} Rakib Enterprise. All rights reserved."
+  },
+  "ui": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyPartNumber": "Copy part number {value}",
+    "partNumber": "Part no.",
+    "stock": {
+      "in_stock": "In stock",
+      "low_stock": "Low stock",
+      "out_of_stock": "Out of stock",
+      "on_request": "On request",
+      "discontinued": "Discontinued"
+    },
+    "badge": {
+      "genuine": "Genuine",
+      "oem": "OEM",
+      "compatible": "Compatible"
+    },
+    "priceOnRequest": "Price on request",
+    "whatsappOrder": "Order on WhatsApp",
+    "addToQuote": "Add to quote",
+    "addedToQuote": "Added to quote",
+    "inQuote": "In quote list ({qty})",
+    "addToCart": "Add to cart",
+    "addedToCart": "Added to cart",
+    "requestQuote": "Request quote",
+    "askWhatsapp": "Ask about this part"
+  },
+  "home": {
+    "eyebrow": "Industrial sewing machine parts",
+    "title": "Find the part. Keep the line running.",
+    "lead": "Needles, hooks, loopers, feed dogs, presser feet, motors and control boxes for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special.",
+    "searchHint": "Try a part number like <code>B1101-012-000</code> — spaces and dashes don't matter.",
+    "or": "or",
+    "whatsappCta": "Send a photo on WhatsApp",
+    "callCta": "Call now",
+    "machinesHeading": "Shop by machine brand",
+    "machinesSub": "Pick the brand on your machine plate, then the model.",
+    "machinesAll": "All machine brands",
+    "models": "{count, plural, =0 {Models coming soon} one {# model} other {# models}}",
+    "categoriesHeading": "Shop by part type",
+    "categoriesSub": "Every part listed with its OEM part number.",
+    "categoriesAll": "All categories",
+    "parts": "{count, plural, =0 {—} one {# part} other {# parts}}",
+    "rfqHeading": "Have a list of parts?",
+    "rfqBody": "Add parts to your quote list as you browse, or send us your list — 5 lines or 200. Upload an Excel sheet or a photo of the old part and we reply with a formal quote.",
+    "rfqCta": "Request a quote",
+    "trust": {
+      "partNumbers": "Correct OEM part numbers",
+      "dispatch": "Dispatch from Dhaka",
+      "payment": "Cash on delivery, bKash, Nagad",
+      "invoice": "VAT invoice on request"
+    },
+    "offline": "Live catalogue is temporarily unavailable — search and WhatsApp still work.",
+    "indexTitle": "Parts index"
+  },
+  "parts": {
+    "needle": "Needles",
+    "hook": "Hooks & loopers",
+    "bobbinCase": "Bobbin cases",
+    "presserFoot": "Presser feet",
+    "feedDog": "Feed dogs",
+    "servoMotor": "Servo motors",
+    "controlBox": "Control boxes & PCBs",
+    "knife": "Knives & trimmers"
+  },
+  "search": {
+    "title": "Search",
+    "resultsFor": "Results for “{query}”",
+    "empty": "Type a part number, machine model or part name.",
+    "noResults": "Nothing found for “{query}”.",
+    "noResultsHelp": "Send us the part number or a photo of the old part on WhatsApp — we'll find it.",
+    "exactMatch": "Exact part-number match",
+    "count": "{count, plural, one {# part} other {# parts}}",
+    "stock": "Stock",
+    "price": "Price"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "This page isn't in the catalogue",
+    "body": "The link may be old or the part may have moved. Search by part number, or ask us on WhatsApp.",
+    "home": "Back to home",
+    "search": "Search parts"
+  },
+  "placeholder": {
+    "title": "Coming soon",
+    "body": "This section is being rebuilt. Meanwhile, search by part number or message us on WhatsApp."
+  },
+  "rfq": {
+    "title": "Quote list",
+    "lead": "Parts you have added while browsing. Adjust quantities, then send the list — we reply with prices and availability.",
+    "empty": "Your quote list is empty.",
+    "emptyHelp": "Search by part number and tap “Add to quote”, or send your list straight to WhatsApp.",
+    "qty": "Qty",
+    "item": "Part",
+    "remove": "Remove {name}",
+    "clear": "Clear list",
+    "sendWhatsapp": "Send list on WhatsApp",
+    "formSoon": "The full quote form (company, BIN, Excel/photo upload) is coming soon.",
+    "waHeader": "Quote request — Rakib Enterprise",
+    "lines": "{count, plural, one {# line} other {# lines}}"
+  }
+}
