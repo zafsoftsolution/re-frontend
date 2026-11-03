@@ -1231,13 +1231,20 @@ function flattenErr(x: object): string {
 
 interface RequestInit_ extends RequestInit {
   anon?: boolean;
+  /**
+   * Accept-Language for the request. Defaults to "en" so translated model
+   * fields (name, description, …) are always read and written as English —
+   * Bangla copies are addressed explicitly via `<field>_bn`.
+   */
+  lang?: "en" | "bn";
   query?: Record<string, string | number | boolean | undefined | null>;
 }
 
 async function request<T>(path: string, init: RequestInit_ = {}): Promise<T> {
-  const { anon, headers: rawHeaders, query, ...rest } = init;
+  const { anon, headers: rawHeaders, query, lang = "en", ...rest } = init;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "Accept-Language": lang,
     ...((rawHeaders as Record<string, string>) ?? {}),
   };
   if (!anon) {
@@ -1547,6 +1554,9 @@ export const djangoAdmin = {
         "/site/products/export.csv/",
         query as Record<string, string | number | boolean | undefined | null> | undefined,
       ),
+    /** Detail read in one language (Bangla falls back to English server-side). */
+    getLocalized: (slug: string, lang: "en" | "bn") =>
+      request<Record<string, unknown>>(`/site/products/${slug}/`, { lang }),
     /** Apply one change to up to 500 products by slug. */
     bulkUpdate: (slugs: string[], set: ProductBulkSet) =>
       request<ProductBulkResult>("/site/products/bulk-update/", {
