@@ -9,12 +9,13 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SearchInput } from "@/components/ui/Input";
 
 /**
- * Phase 0 placeholder for nav targets that Phase 2 builds as real routes.
+ * Phase 0 placeholder for nav targets not built yet (machines, categories
+ * and brands became real routes in Phase 2's (catalog) group).
  * Static routes (e.g. app/[locale]/machines/page.tsx) take precedence over
  * this dynamic segment, so each one replaces its placeholder automatically.
  * Delete this folder once all sections exist.
  */
-const SECTIONS = ["machines", "categories", "brands", "guides", "contact"] as const;
+const SECTIONS = ["guides", "contact"] as const;
 type Section = (typeof SECTIONS)[number];
 const isSection = (s: string): s is Section => (SECTIONS as readonly string[]).includes(s);
 

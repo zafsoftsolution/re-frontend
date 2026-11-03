@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import { guardCatalogPath } from "./lib/api/catalog-index";
+import { catalogLookup } from "./lib/api/catalog-index-store";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -11,6 +13,10 @@ const handleI18nRouting = createMiddleware(routing);
  * HTTP 404 inside the localized shell. (A notFound() after awaiting params in
  * a partially-prerendered page can only send 200 + noindex, and a rewrite's
  * `status` option is ignored for app pages.) Add a section when you add its route.
+ *
+ * Catalogue detail paths (/machines/…, /parts/…, /categories/…, /brands/…)
+ * are validated the same way against a cached slug index — see
+ * src/lib/api/catalog-index.ts — so unknown slugs are real 404s too.
  */
 const SECTIONS = new Set([
   "",
@@ -32,16 +38,30 @@ const SECTIONS = new Set([
   "policies",
 ]);
 
-export default function proxy(request: NextRequest) {
+const CATALOG = new Set(["machines", "parts", "categories", "brands"]);
+
+export default async function proxy(request: NextRequest) {
   const segments = request.nextUrl.pathname.split("/").filter(Boolean);
   const prefixed = (routing.locales as readonly string[]).includes(segments[0] ?? "");
-  const section = (prefixed ? segments[1] : segments[0]) ?? "";
+  const rest = prefixed ? segments.slice(1) : segments;
+  const section = rest[0] ?? "";
+  const locale = prefixed ? segments[0] : routing.defaultLocale;
 
-  if (!SECTIONS.has(section)) {
-    const locale = prefixed ? segments[0] : routing.defaultLocale;
+  const notFound = () => {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}/404/not-found`;
     return NextResponse.rewrite(url);
+  };
+
+  if (!SECTIONS.has(section)) return notFound();
+
+  if (CATALOG.has(section) && (rest.length > 1 || section === "parts")) {
+    const verdict = await guardCatalogPath(rest, catalogLookup);
+    if (verdict.kind === "not-found") return notFound();
+    if (verdict.kind === "redirect") {
+      const target = new URL(`${prefixed ? `/${locale}` : ""}${verdict.path}`, request.url);
+      return NextResponse.redirect(target, verdict.permanent ? 308 : 307);
+    }
   }
   return handleI18nRouting(request);
 }
