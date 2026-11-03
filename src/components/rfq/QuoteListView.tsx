@@ -23,9 +23,17 @@ export function QuoteListView({ whatsapp }: { whatsapp: string }) {
       <div className="mt-8 max-w-2xl border border-dashed border-re-steel-400 p-6">
         <p className="text-lg font-semibold">{t("empty")}</p>
         <p className="mt-2 text-re-steel-600">{t("emptyHelp")}</p>
-        <Link href="/search" className={buttonClass({ variant: "secondary" }, "mt-5")}>
-          {t("item")} →
-        </Link>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href="/search" className={buttonClass({ variant: "secondary" })}>
+            {t("browse")}
+          </Link>
+          {whatsappHref(whatsapp) && (
+            <a href={whatsappHref(whatsapp, t("waHeader"))} target="_blank" rel="noopener" className={buttonClass({ variant: "whatsapp" })}>
+              <WhatsAppIcon />
+              {t("sendWhatsapp")}
+            </a>
+          )}
+        </div>
       </div>
     );
   }

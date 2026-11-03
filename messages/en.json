@@ -167,6 +167,7 @@
     "sendWhatsapp": "Send list on WhatsApp",
     "formSoon": "The full quote form (company, BIN, Excel/photo upload) is coming soon.",
     "waHeader": "Quote request — Rakib Enterprise",
-    "lines": "{count, plural, one {# line} other {# lines}}"
+    "lines": "{count, plural, one {# line} other {# lines}}",
+    "browse": "Search parts"
   }
 }
