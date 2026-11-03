@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LogOut, Search, UserCircle2 } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Search, UserCircle2 } from "lucide-react";
 import type { AdminUser } from "@/types/admin";
 import { useAdmin } from "@/context/AdminContext";
 import NotificationBell from "@/components/admin/NotificationBell";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 const SEGMENT_LABEL: Record<string, string> = {
   admin: "Console",
+  rfq: "Quotes",
   products: "Products",
   orders: "Orders",
   customers: "Customers",
@@ -33,12 +34,20 @@ function prettify(s: string) {
   return s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function Topbar({ admin }: { admin: AdminUser }) {
+export default function Topbar({
+  admin,
+  onMenu,
+}: {
+  admin: AdminUser;
+  /** Opens the off-canvas sidebar below the lg breakpoint. */
+  onMenu?: () => void;
+}) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const { logout } = useAdmin();
   const crumbs = buildCrumbs(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [q, setQ] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,10 +61,20 @@ export default function Topbar({ admin }: { admin: AdminUser }) {
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-[var(--jmn-line)]">
-      <div className="h-16 px-6 lg:px-10 flex items-center gap-6">
+    <header className="sticky top-0 z-20 bg-white border-b border-[var(--jmn-line)]">
+      <div className="h-16 px-4 sm:px-6 lg:px-10 flex items-center gap-3 sm:gap-6">
+        {onMenu && (
+          <button
+            type="button"
+            onClick={onMenu}
+            aria-label="Open navigation"
+            className="lg:hidden -ml-1 h-11 w-11 grid place-items-center text-navy hover:bg-[#F4F5F7]"
+          >
+            <Menu size={20} />
+          </button>
+        )}
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-[12px] text-ink/55 min-w-0">
+        <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-2 text-[12px] text-ink/55 min-w-0">
           {crumbs.map((c, i) => (
             <span key={c.href} className="flex items-center gap-2 min-w-0">
               {i > 0 && <span className="text-ink/25">/</span>}
@@ -76,16 +95,30 @@ export default function Topbar({ admin }: { admin: AdminUser }) {
         </nav>
 
         {/* Search */}
-        <div className="hidden md:flex flex-1 max-w-md ml-auto items-center gap-2 px-3 h-9 rounded-md bg-[#F4F5F7] border border-transparent focus-within:border-navy/20">
-          <Search size={15} className="text-ink/40" />
+        {/* Quick search: RFQ references / phones go to the quotes inbox,
+            anything else searches parts (part numbers, SKUs, names). */}
+        <form
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const term = q.trim();
+            if (!term) return;
+            const isQuote = /^rfq[-\s]?/i.test(term) || /^\+?[\d\s-]{8,}$/.test(term);
+            router.push(
+              `${isQuote ? "/admin/rfq" : "/admin/products"}?search=${encodeURIComponent(term)}`,
+            );
+          }}
+          className="hidden md:flex flex-1 max-w-md ml-auto items-center gap-2 px-3 h-9 rounded-sm bg-[#F4F5F7] border border-transparent focus-within:border-re-blue"
+        >
+          <Search size={15} className="text-ink/55" aria-hidden />
           <input
-            placeholder="Search orders, products, customers…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="Search parts or quotes"
+            placeholder="Part no., SKU, RFQ reference or phone…"
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-ink/40"
           />
-          <kbd className="hidden lg:inline text-[10px] text-ink/40 border border-ink/15 rounded px-1.5 py-0.5">
-            ⌘ K
-          </kbd>
-        </div>
+        </form>
 
         {/* Right cluster */}
         <div className="ml-auto md:ml-0 flex items-center gap-2">

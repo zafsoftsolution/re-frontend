@@ -1,5 +1,5 @@
-/* Admin console stylesheet — the pre-rebuild design tokens, kept verbatim so
-   /admin looks exactly as before. The public site has its own stylesheet
+/* Admin console stylesheet — Rakib Enterprise "Spec Sheet" tokens, aligned
+   with the public site. The public site has its own stylesheet
    (src/app/[locale]/site.css); the two never load on the same page.
    Tailwind scans only admin code (base = this folder + the @source dirs). */
 @import "tailwindcss" source(".");
@@ -8,31 +8,65 @@
 @source "../../lib";
 
 /* =========================================================================
-   RAKIB ENTERPRISE — Brand Tokens & Design System
-   Palette: Oxford Navy / Antique Gold / Bone Cream / Ink Black
+   RAKIB ENTERPRISE — admin tokens ("Spec Sheet", see docs/REBUILD_BRIEF.md)
+   ink #231F20 · red #ED1C24 (primary actions / active nav) · blue #0077C0
+   (links / focus) · steel greys. Hard edges (0–2px radius), hairline rules.
+
+   The legacy utility names (navy / gold / cream / bone / ash) are kept as
+   ALIASES so the existing class usages restyle without a rewrite:
+     navy  → ink          (text, dark fills, primary buttons)
+     gold  → red-text     (eyebrows, accents — #C8102E is AA on white)
+     cream → steel-50     (page bg; text on dark fills)
+     bone  → steel-100    (subtle fills)
+     ash   → steel-600    (secondary text, 6:1)
+   New code should prefer the re-* names.
    ========================================================================= */
 
 :root {
-  /* Brand */
-  --jmn-navy: #0E1A3A;
-  --jmn-navy-deep: #070F24;
-  --jmn-navy-soft: #1C2A54;
-  --jmn-gold: #C9A14A;
-  --jmn-gold-bright: #E4BD5E;
-  --jmn-gold-soft: #E8D5A4;
-  --jmn-cream: #F7F3EC;
-  --jmn-bone: #EFE8DB;
-  --jmn-ink: #0A0A0A;
-  --jmn-ash: #6B6B6B;
-  --jmn-line: rgba(14, 26, 58, 0.08);
+  --re-ink: #231F20;
+  --re-ink-deep: #151213;
+  --re-ink-soft: #3A3536;
+  --re-paper: #FFFFFF;
+  --re-steel-50: #F5F6F7;
+  --re-steel-100: #ECEEF0;
+  --re-steel-200: #E4E6E8;
+  --re-steel-300: #C9CDD1;
+  --re-steel-400: #9AA0A6;
+  --re-steel-600: #5B6168;
+  --re-red: #ED1C24;
+  --re-red-hover: #B80F25;
+  /* Red behind white UI text (buttons, badges): 5.0:1 — #ED1C24 is 4.4:1,
+     so the pure brand red is kept for bars, rules and large text only. */
+  --re-red-cta: #DD141D;
+  --re-red-text: #C8102E;
+  --re-red-on-dark: #FF6B70; /* 5.4:1 on ink — small red text on dark */
+  --re-blue: #0077C0;
+  --re-blue-text: #00629E;
+  --re-stock-in: #1E7A3C;
+  --re-stock-low: #B26A00;
+  --re-stock-low-bg: #FFF4DC;
+  --re-whatsapp: #128C4A;
+
+  /* Legacy aliases (see header comment) */
+  --jmn-navy: var(--re-ink);
+  --jmn-navy-deep: var(--re-ink-deep);
+  --jmn-navy-soft: var(--re-ink-soft);
+  --jmn-gold: var(--re-red-text);
+  --jmn-gold-bright: var(--re-red);
+  --jmn-gold-soft: #F9D5D7;
+  --jmn-cream: var(--re-steel-50);
+  --jmn-bone: var(--re-steel-100);
+  --jmn-ink: var(--re-ink);
+  --jmn-ash: var(--re-steel-600);
+  --jmn-line: var(--re-steel-200);
 
   /* Semantic */
-  --background: var(--jmn-cream);
-  --foreground: var(--jmn-ink);
+  --background: var(--re-steel-50);
+  --foreground: var(--re-ink);
   --surface: #ffffff;
-  --surface-alt: var(--jmn-bone);
-  --accent: var(--jmn-gold);
-  --accent-on: var(--jmn-navy);
+  --surface-alt: var(--re-steel-100);
+  --accent: var(--re-red);
+  --accent-on: #ffffff;
 
   /* Type scale (clamp) */
   --fs-display: clamp(3.5rem, 10vw, 9.5rem);
@@ -42,7 +76,7 @@
   --fs-body: 1rem;
   --fs-small: 0.8125rem;
 
-  /* Motion */
+  /* Motion — functional only, 120–180ms */
   --ease-emph: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -50,9 +84,6 @@
   /* Layout */
   --shell-max: 1440px;
   --gutter: clamp(1rem, 3vw, 2.5rem);
-  --radius-sm: 4px;
-  --radius-md: 10px;
-  --radius-lg: 22px;
 }
 
 @theme inline {
@@ -69,8 +100,40 @@
   --color-ink: var(--jmn-ink);
   --color-ash: var(--jmn-ash);
   --color-surface: var(--surface);
-  --font-display: var(--font-fraunces);
-  --font-sans: var(--font-inter);
+
+  --color-re-ink: var(--re-ink);
+  --color-re-paper: var(--re-paper);
+  --color-re-steel-50: var(--re-steel-50);
+  --color-re-steel-100: var(--re-steel-100);
+  --color-re-steel-200: var(--re-steel-200);
+  --color-re-steel-300: var(--re-steel-300);
+  --color-re-steel-400: var(--re-steel-400);
+  --color-re-steel-600: var(--re-steel-600);
+  --color-re-red: var(--re-red);
+  --color-re-red-hover: var(--re-red-hover);
+  --color-re-red-cta: var(--re-red-cta);
+  --color-re-red-text: var(--re-red-text);
+  --color-re-red-on-dark: var(--re-red-on-dark);
+  --color-re-blue: var(--re-blue);
+  --color-re-blue-text: var(--re-blue-text);
+  --color-re-stock-in: var(--re-stock-in);
+  --color-re-stock-low: var(--re-stock-low);
+  --color-re-stock-low-bg: var(--re-stock-low-bg);
+  --color-re-whatsapp: var(--re-whatsapp);
+
+  --font-display: var(--font-archivo);
+  --font-sans: var(--font-archivo);
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Hard-edged components: every rounded-* utility tops out at 2px.
+     rounded-full is kept (avatars, dots, spinners). */
+  --radius-xs: 1px;
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-2xl: 2px;
+  --radius-3xl: 2px;
 }
 
 /* =========================================================================
@@ -90,32 +153,36 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  /* Inter for Latin, Hind Siliguri as the Bangla fallback so glyphs render
-     correctly on bn pages. The browser picks per-script automatically. */
-  font-family: var(--font-inter), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
-  font-feature-settings: "ss01", "cv11";
-  letter-spacing: -0.01em;
+  /* Archivo for Latin, Hind Siliguri as the Bangla fallback — the browser
+     picks per-script automatically. */
+  font-family: var(--font-archivo), var(--font-bangla), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
-/* When the SPA flips to Bangla, lead with the Bangla font for everything —
-   tighter tracking is also undone since Bangla doesn't want negative spacing. */
-html[data-locale="bn"] body {
-  font-family: var(--font-bangla), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: 0;
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-archivo), var(--font-bangla), ui-sans-serif, sans-serif;
+  font-weight: 700;
+  font-stretch: 88%;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
-h1, h2, h3, h4, h5 {
-  font-family: var(--font-fraunces), var(--font-bangla), "Times New Roman", serif;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 0.95;
+a { text-underline-offset: 2px; }
+
+/* Focus ring: 2px blue + 2px offset, everywhere. */
+:focus-visible {
+  outline: 2px solid var(--re-blue);
+  outline-offset: 2px;
 }
 
 ::selection {
-  background: var(--jmn-navy);
-  color: var(--jmn-gold);
+  background: var(--re-ink);
+  color: #ffffff;
 }
+
+/* Shadows are reserved for menus / drawers — flatten Tailwind's soft card
+   shadows so panels read as hairline-ruled sheets. */
+.shadow-sm, .shadow { box-shadow: none !important; }
 
 /* Right-side slide-in for form drawers (ResourceForm, CreateProductModal,
    StockEditDrawer, ManualAdjustDrawer, AddressDialog…). 220ms is quick
@@ -132,8 +199,18 @@ h1, h2, h3, h4, h5 {
    Utilities & Effects
    ========================================================================= */
 
-.font-display { font-family: var(--font-fraunces), serif; }
-.font-sans { font-family: var(--font-inter), sans-serif; }
+.font-display {
+  font-family: var(--font-archivo), var(--font-bangla), sans-serif;
+  font-weight: 700;
+  font-stretch: 85%;
+  letter-spacing: -0.01em;
+}
+.font-sans { font-family: var(--font-archivo), var(--font-bangla), sans-serif; }
+.font-mono, .part-no { font-family: var(--font-plex-mono), ui-monospace, monospace; }
+.part-no { letter-spacing: 0; }
+
+/* Section header rule — a thin red bar tops a header like a document header. */
+.re-rule { border-top: 2px solid var(--re-red); }
 
 .shell {
   max-width: var(--shell-max);
@@ -170,10 +247,10 @@ h1, h2, h3, h4, h5 {
   justify-content: center;
   gap: 0.75rem;
   padding: 1rem 2rem;
-  background: var(--jmn-navy);
-  color: var(--jmn-cream);
-  border-radius: 999px;
-  font-weight: 500;
+  background: var(--re-red-cta);
+  color: #ffffff;
+  border-radius: 2px;
+  font-weight: 600;
   font-size: 0.875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -186,14 +263,14 @@ h1, h2, h3, h4, h5 {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--jmn-gold);
+  background: var(--re-red-hover);
   transform: translateY(102%);
   transition: transform 0.5s var(--ease-out-expo);
   z-index: -1;
 }
 
 .btn-primary:hover {
-  color: var(--jmn-navy);
+  color: #ffffff;
 }
 
 .btn-primary:hover::before {
@@ -206,7 +283,7 @@ h1, h2, h3, h4, h5 {
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: 2px;
   font-size: 0.8125rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -259,8 +336,12 @@ h1, h2, h3, h4, h5 {
   padding-bottom: 0.1em;
 }
 
-/* Fancy number counter font tabular */
-.tabular { font-variant-numeric: tabular-nums; }
+/* Numbers: tabular figures in the mono face. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  letter-spacing: 0;
+}
 
 /* Hide scrollbar on horizontal drag rails */
 .rail {
@@ -303,7 +384,7 @@ h1, h2, h3, h4, h5 {
 /* Divider gold line */
 .hr-gold {
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--jmn-gold) 50%, transparent);
+  background: var(--re-steel-200);
 }
 
 /* Aspect helpers */
@@ -319,4 +400,33 @@ h1, h2, h3, h4, h5 {
     transition-duration: 0.001ms !important;
   }
   .marquee-track { animation: none; }
+}
+
+/* =========================================================================
+   AA contrast floor. Legacy screens use translucent ink for secondary text
+   (text-ink/40…/65), which falls to 2.8–4.2:1 on white. These unlayered
+   rules beat Tailwind's @layer utilities and pin them to steel-600 (6:1 on
+   white, 5.7:1 on steel-50). /30 and lower stay for icons / disabled only.
+   ========================================================================= */
+.text-ink\/40, .text-ink\/45, .text-ink\/50, .text-ink\/55,
+.text-ink\/60, .text-ink\/65, .text-navy\/60, .text-navy\/65,
+.text-ash {
+  color: var(--re-steel-600);
+}
+.placeholder\:text-ink\/30::placeholder,
+.placeholder\:text-ink\/35::placeholder,
+.placeholder\:text-ink\/40::placeholder {
+  color: #767B82; /* 4.5:1 on white */
+}
+
+/* Primary actions are red. Legacy screens mark their primary buttons /
+   selected chips as solid "navy" (= ink); on interactive elements that
+   becomes the CTA red (white text 5.0:1). Non-interactive ink fills
+   (avatars, chart bars, previews) stay ink. */
+button.bg-navy, a.bg-navy, label.bg-navy {
+  background-color: var(--re-red-cta);
+  border-color: var(--re-red-cta);
+}
+button.bg-navy:not(:disabled):hover, a.bg-navy:hover, label.bg-navy:hover {
+  background-color: var(--re-red-hover);
 }

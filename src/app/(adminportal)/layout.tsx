@@ -1,41 +1,57 @@
-import type { Metadata } from "next";
-import { Inter, Fraunces, Hind_Siliguri } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Archivo, Hind_Siliguri, IBM_Plex_Mono } from "next/font/google";
 import "./admin.css";
 import { AdminProvider } from "@/context/AdminContext";
 import { FeedbackProvider } from "@/context/FeedbackContext";
 
-const inter = Inter({
+// Same faces as the public site (Spec Sheet design system): Archivo for UI
+// and condensed headings, IBM Plex Mono for numbers / part numbers / codes.
+const archivo = Archivo({
   subsets: ["latin"],
+  axes: ["wdth"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-archivo",
 });
 
-const fraunces = Fraunces({
+const plexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-fraunces",
-  axes: ["SOFT", "opsz"],
+  variable: "--font-plex-mono",
 });
 
-// Bangla fallback after Inter so admin-entered Bangla content renders.
+// Bangla fallback so admin-entered Bangla content (name_bn, …) renders.
+// Not preloaded: most admin screens are Latin-only.
 const hindSiliguri = Hind_Siliguri({
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   subsets: ["bengali", "latin"],
   display: "swap",
   variable: "--font-bangla",
+  preload: false,
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rakibenterprise-bd.com"),
   title: {
     default: "Admin — Rakib Enterprise",
-    template: "%s · Rakib Enterprise",
+    template: "%s · Rakib Enterprise admin",
   },
-  robots: { index: false, follow: false },
+  // The console must never be indexed or followed.
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false, noimageindex: true },
+  },
+  referrer: "same-origin",
   // With no app-level root layout, the src/app/opengraph-image.png file
   // convention resolves before metadataBase applies (→ localhost), so point
   // at it explicitly. Icons still come from the file conventions.
   openGraph: { images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }] },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#231F20",
 };
 
 /**
@@ -47,7 +63,7 @@ export default function AdminRootLayout({ children }: { children: React.ReactNod
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${fraunces.variable} ${hindSiliguri.variable}`}
+      className={`${archivo.variable} ${plexMono.variable} ${hindSiliguri.variable}`}
     >
       <body className="bg-cream text-ink antialiased">
         <FeedbackProvider>
