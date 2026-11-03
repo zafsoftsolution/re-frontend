@@ -15,20 +15,20 @@ import {
   Cog,
   Cpu,
   FileText,
+  FileSpreadsheet,
   Folder,
   Gift,
   HelpCircle,
   Home,
   LineChart,
-  Image as ImageIcon,
   KeyRound,
-  Layers,
   LayoutDashboard,
   Mail,
   MessagesSquare,
   Package,
   PackagePlus,
   Quote,
+  Inbox,
   RefreshCw,
   Search,
   Settings,
@@ -45,6 +45,7 @@ import {
   Warehouse,
 } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
+import { useNewQuoteCount } from "@/lib/admin/use-quote-count";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -56,6 +57,8 @@ interface NavItem {
    * is visible to every admin. Superusers see everything regardless.
    */
   permission?: string | string[];
+  /** Show the live "new quotes" count badge. */
+  badge?: "rfq";
 }
 
 const NAV: { section: string; items: NavItem[] }[] = [
@@ -65,6 +68,9 @@ const NAV: { section: string; items: NavItem[] }[] = [
       // Dashboard + notifications are always visible — they're the
       // operator's home + signal of "something needs me".
       { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      // QUOTE-FIRST: the RFQ inbox is the primary sales queue.
+      { label: "Quotes", href: "/admin/rfq", icon: Inbox, badge: "rfq",
+        permission: ["sales.order.view", "sales.order.update"] },
       { label: "Notifications", href: "/admin/notifications", icon: BellIcon },
     ],
   },
@@ -85,6 +91,8 @@ const NAV: { section: string; items: NavItem[] }[] = [
         permission: "catalog.category.manage" },
       { label: "Products", href: "/admin/products", icon: Package,
         permission: "catalog.product.view" },
+      { label: "Import parts", href: "/admin/products/import", icon: FileSpreadsheet,
+        permission: "catalog.product.create" },
     ],
   },
   {
@@ -165,7 +173,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
         permission: "catalog.review.manage" },
       { label: "FAQs", href: "/admin/faqs", icon: HelpCircle,
         permission: "content.faq.manage" },
-      { label: "Testimonials", href: "/admin/testimonials", icon: Quote,
+      { label: "Customer factories", href: "/admin/testimonials", icon: Quote,
         permission: "content.testimonial.manage" },
     ],
   },
@@ -205,11 +213,22 @@ const NAV: { section: string; items: NavItem[] }[] = [
 interface Props {
   collapsed: boolean;
   onToggle: () => void;
+  /** Below lg the sidebar is an off-canvas drawer. */
+  mobileOpen?: boolean;
+  onNavigate?: () => void;
 }
 
-export default function Sidebar({ collapsed, onToggle }: Props) {
+export default function Sidebar({
+  collapsed: collapsedProp,
+  onToggle,
+  mobileOpen = false,
+  onNavigate,
+}: Props) {
+  // The drawer always shows labels; "collapsed" only applies on desktop.
+  const collapsed = collapsedProp && !mobileOpen;
   const pathname = usePathname() ?? "";
   const { hasPermission, admin } = useAdmin();
+  const newQuotes = useNewQuoteCount();
 
   // Filter the nav down to entries the current admin can actually use, then
   // drop entire sections that ended up empty. Superusers see everything;
@@ -248,14 +267,15 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-30 flex flex-col bg-navy text-cream/90 transition-[width] duration-300 overflow-hidden border-r border-cream/[0.04]",
+        "fixed inset-y-0 left-0 z-30 flex flex-col bg-re-ink text-white transition-[width,transform] duration-150 overflow-hidden border-r border-black",
         collapsed ? "w-[72px]" : "w-[260px]",
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
       )}
     >
       {/* Brand */}
       <div
         className={cn(
-          "h-16 flex items-center border-b border-cream/10 shrink-0",
+          "h-16 flex items-center border-b border-white/10 border-t-2 border-t-re-red shrink-0",
           collapsed ? "justify-center" : "px-5",
         )}
       >
@@ -273,12 +293,9 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           />
           {!collapsed && (
             <>
-              <span className="font-display text-2xl tracking-[0.15em] text-cream shrink-0">
-                Rakib
-              </span>
-              <span className="h-4 w-px bg-cream/25 shrink-0" />
-              <span className="text-[10px] tracking-[0.3em] uppercase text-gold whitespace-nowrap">
-                Console
+              <span className="h-4 w-px bg-white/25 shrink-0" />
+              <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-white/85 whitespace-nowrap">
+                Admin
               </span>
             </>
           )}
@@ -299,11 +316,11 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
               collapsed ? "px-2" : "px-3",
               // Visual divider between sections when collapsed (no labels to
               // separate the groups otherwise).
-              collapsed && gi > 0 ? "mt-2 pt-2 border-t border-cream/[0.06]" : gi > 0 ? "mt-5" : "",
+              collapsed && gi > 0 ? "mt-2 pt-2 border-t border-white/10" : gi > 0 ? "mt-5" : "",
             )}
           >
             {!collapsed && (
-              <p className="px-3 mb-2 text-[10px] tracking-[0.3em] uppercase text-cream/40">
+              <p className="px-3 mb-2 text-[10px] font-semibold tracking-[0.22em] uppercase text-white/60">
                 {group.section}
               </p>
             )}
@@ -311,26 +328,33 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
               {group.items.map((item) => {
                 const active = item.href === activeHref;
                 const Icon = item.icon;
+                const badge = item.badge === "rfq" && newQuotes > 0 ? newQuotes : 0;
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={onNavigate}
                       title={collapsed ? item.label : undefined}
-                      aria-label={collapsed ? item.label : undefined}
+                      aria-label={
+                        collapsed
+                          ? badge ? `${item.label} (${badge} new)` : item.label
+                          : undefined
+                      }
+                      aria-current={active ? "page" : undefined}
                       className={cn(
-                        "group relative flex items-center rounded-md text-sm transition-colors",
+                        "group relative flex items-center rounded-sm text-sm transition-colors duration-150",
                         collapsed
                           ? "h-10 w-10 mx-auto justify-center"
                           : "gap-3 px-3 py-2",
                         active
-                          ? "bg-cream/10 text-cream"
-                          : "text-cream/60 hover:text-cream hover:bg-cream/5",
+                          ? "bg-white/10 text-white font-medium"
+                          : "text-white/75 hover:text-white hover:bg-white/5",
                       )}
                     >
                       {active && (
                         <span
                           className={cn(
-                            "absolute w-0.5 rounded-r bg-gold",
+                            "absolute w-[3px] bg-re-red",
                             collapsed
                               ? "left-0 top-1.5 bottom-1.5"
                               : "left-0 top-1.5 bottom-1.5",
@@ -340,6 +364,19 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
                       <Icon size={16} className="shrink-0" />
                       {!collapsed && (
                         <span className="truncate">{item.label}</span>
+                      )}
+                      {badge > 0 && (
+                        <span
+                          aria-label={collapsed ? undefined : `${badge} new`}
+                          className={cn(
+                            "tabular bg-re-red-cta text-white text-[10px] font-semibold leading-none",
+                            collapsed
+                              ? "absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 grid place-items-center"
+                              : "ml-auto min-w-5 h-5 px-1.5 grid place-items-center",
+                          )}
+                        >
+                          {badge > 99 ? "99+" : badge}
+                        </span>
                       )}
                     </Link>
                   </li>
@@ -353,15 +390,16 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
       {/* Footer / collapse toggle */}
       <div
         className={cn(
-          "border-t border-cream/10 shrink-0",
+          "border-t border-white/10 shrink-0",
           collapsed ? "px-2 py-2" : "px-3 py-3",
         )}
       >
         <button
+          type="button"
           onClick={onToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "w-full flex items-center rounded-md text-cream/55 hover:text-cream hover:bg-cream/5 transition-colors",
+            "w-full flex items-center rounded-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors",
             collapsed ? "justify-center h-10" : "justify-center gap-2 py-2",
           )}
         >

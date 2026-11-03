@@ -581,6 +581,213 @@ export interface NotificationShape {
   is_read: boolean;
 }
 
+// ─── Sales model / quotes (RFQ) ─────────────────────────────────────────────
+
+export type SiteSalesMode = "quote_only" | "mixed";
+export type ProductSalesModeSetting = "inherit" | "quote_only" | "direct";
+export type AvailabilityOverride = "auto" | "on_request" | "discontinued";
+export type ProductStatusCode = "active" | "draft" | "archived";
+
+export type QuoteStatus =
+  | "new"
+  | "in_review"
+  | "quoted"
+  | "accepted"
+  | "rejected"
+  | "expired"
+  | "cancelled"
+  | "converted";
+
+export type QuotePreferredContact = "whatsapp" | "call" | "email";
+
+export interface QuoteItemShape {
+  id: string;
+  order: number;
+  product: string | null;
+  product_slug: string | null;
+  product_name: string | null;
+  product_part_number: string | null;
+  /** Internal list price (staff only) — a reference when quoting. */
+  product_price: string | null;
+  part_number_text: string;
+  description: string;
+  quantity: number;
+  machine_model_text: string;
+  quoted_unit_price: string | null;
+  line_total: string | null;
+  admin_notes: string;
+}
+
+export interface QuoteAttachmentShape {
+  id: string;
+  original_name: string;
+  content_type: string;
+  size: number;
+  /** Authenticated download endpoint — fetch with the admin JWT. */
+  url: string;
+  created_at: string;
+}
+
+export interface QuoteCustomerSummary {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  company_name: string;
+}
+
+export interface QuoteShape {
+  id: string;
+  reference: string;
+  status: QuoteStatus;
+  /** PATCH-able next statuses (never contains "converted"). */
+  allowed_transitions: QuoteStatus[];
+  admin_notes: string;
+  company_name: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  bin_number: string;
+  delivery_area: string;
+  preferred_contact: QuotePreferredContact;
+  notes: string;
+  currency: string;
+  quoted_total: string | null;
+  valid_until: string | null;
+  quoted_at: string | null;
+  quoted_by: string | null;
+  sent_at: string | null;
+  sent_count: number;
+  order: string | null;
+  order_number: string | null;
+  converted_at: string | null;
+  customer: string | null;
+  customer_summary: QuoteCustomerSummary | null;
+  locale: string;
+  ip_address: string | null;
+  user_agent: string;
+  user: string | null;
+  items: QuoteItemShape[];
+  attachments: QuoteAttachmentShape[];
+  items_count: number;
+  attachments_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuotePatchInput {
+  status?: QuoteStatus;
+  admin_notes?: string;
+  valid_until?: string | null;
+  quoted_total?: string | number | null;
+  customer?: string | null;
+}
+
+export interface QuoteMarkQuotedInput {
+  items?: Array<{
+    id: string;
+    quoted_unit_price: string | number | null;
+    admin_notes?: string;
+    /** slug or uuid; null/"" unlinks. */
+    product?: string | null;
+  }>;
+  quoted_total?: string | number | null;
+  valid_until?: string | null;
+  currency?: string;
+  admin_notes?: string;
+}
+
+export interface QuoteConvertInput {
+  payment_method?: string;
+  payment_status?: "pending" | "paid";
+  shipping?: string | number;
+  tax?: string | number;
+  allow_no_stock?: boolean;
+  skip_unlinked?: boolean;
+  notes?: string;
+  internal_notes?: string;
+  shipping_address?: Record<string, unknown>;
+  billing_address?: Record<string, unknown>;
+}
+
+export interface QuoteConvertResponse {
+  order: { id: string; order_number: string } & Record<string, unknown>;
+  quote: QuoteShape;
+}
+
+export interface QuoteSendInput {
+  email?: string;
+  message?: string;
+  send_email?: boolean;
+}
+
+export interface QuoteSendResponse {
+  sent_at: string;
+  sent_count: number;
+  emailed: boolean;
+  email_to: string | null;
+  email_error: string | null;
+  whatsapp_url: string | null;
+  pdf_url: string;
+}
+
+export interface QuoteStatsShape {
+  total: number;
+  by_status: Record<QuoteStatus, number>;
+  open: number;
+  new_last_7_days: number;
+  expiring_soon: number;
+  currency: string;
+  quoted_value_total: string | null;
+  open_quoted_value: string | null;
+  converted_value: string | null;
+  /** converted / ever-quoted, 0..1 — null until something was quoted. */
+  conversion_rate: number | null;
+  avg_response_hours: number | null;
+  newest: Array<{
+    id: string;
+    reference: string;
+    status: QuoteStatus;
+    company_name: string;
+    contact_name: string;
+    phone: string;
+    items_count: number;
+    quoted_total: string | null;
+    created_at: string;
+  }>;
+}
+
+// ─── Products: bulk + import ────────────────────────────────────────────────
+
+export interface ProductBulkSet {
+  sales_mode?: ProductSalesModeSetting;
+  status?: ProductStatusCode;
+  availability_override?: AvailabilityOverride;
+  price_on_request?: boolean;
+  /** category slug */
+  category?: string;
+}
+
+export interface ProductBulkResult {
+  matched: number;
+  updated: number;
+  unchanged: number;
+  not_found: string[];
+  set: Record<string, unknown>;
+}
+
+export interface ProductImportResult {
+  dry_run: boolean;
+  applied: boolean;
+  total_rows: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  error_count: number;
+  errors: Array<{ row: number; sku: string; errors: Record<string, string> }>;
+  rows: Array<{ row: number; sku: string; action: "create" | "update" | "unchanged" }>;
+}
+
 // ─── Site settings (singleton) ──────────────────────────────────────────────
 
 export interface SiteSettingsShape {
@@ -588,9 +795,23 @@ export interface SiteSettingsShape {
   // Identity
   site_name: string;
   site_tagline: string;
+  /** QUOTE-FIRST: "quote_only" hides every price; "mixed" lets products
+   *  with sales_mode="direct" show prices + checkout. */
+  sales_mode: SiteSalesMode;
   contact_email: string;
   contact_phone: string;
   business_address: string;
+  // Explicit-language copies (modeltranslation).
+  site_tagline_en: string;
+  site_tagline_bn: string;
+  business_address_en: string;
+  business_address_bn: string;
+  footer_text_en: string;
+  footer_text_bn: string;
+  // Quotations
+  company_bin: string;
+  quote_validity_days: number;
+  quote_terms: string;
   // Localization
   default_currency: string;
   default_locale: string;
@@ -922,11 +1143,23 @@ export interface LoyaltyDashboardResponse {
 export class DjangoApiError extends Error {
   status: number;
   fields: Record<string, string[]>;
-  constructor(message: string, status: number, fields: Record<string, string[]>) {
+  /** Raw JSON error body — action endpoints return structured errors
+   *  (e.g. convert-to-order `{code, items[]}`). */
+  body: Record<string, unknown>;
+  /** Machine-readable `code` from the body, when present. */
+  code?: string;
+  constructor(
+    message: string,
+    status: number,
+    fields: Record<string, string[]>,
+    body: Record<string, unknown> = {},
+  ) {
     super(message);
     this.name = "DjangoApiError";
     this.status = status;
     this.fields = fields;
+    this.body = body;
+    this.code = typeof body.code === "string" ? body.code : undefined;
   }
 }
 
@@ -989,6 +1222,13 @@ async function tryRefresh(): Promise<string | null> {
   }
 }
 
+/** Nested DRF errors (`items: [{field: [msg]}]`) → "field: msg" text. */
+function flattenErr(x: object): string {
+  return Object.entries(x)
+    .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
+    .join("; ");
+}
+
 interface RequestInit_ extends RequestInit {
   anon?: boolean;
   query?: Record<string, string | number | boolean | undefined | null>;
@@ -1037,7 +1277,9 @@ async function request<T>(path: string, init: RequestInit_ = {}): Promise<T> {
     let detail: string | undefined;
     for (const [k, v] of Object.entries(body)) {
       if (k === "detail" && typeof v === "string") detail = v;
-      else if (Array.isArray(v)) fields[k] = v.map(String);
+      else if (k === "code") continue;
+      else if (Array.isArray(v))
+        fields[k] = v.map((x) => (typeof x === "object" && x ? flattenErr(x) : String(x)));
       else if (typeof v === "string") fields[k] = [v];
     }
     const message =
@@ -1046,6 +1288,7 @@ async function request<T>(path: string, init: RequestInit_ = {}): Promise<T> {
       message || `Request failed (${res.status})`,
       res.status,
       fields,
+      body,
     );
   }
 
@@ -1116,6 +1359,95 @@ export async function downloadCsv(
   a.remove();
   setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   return resolved;
+}
+
+
+/**
+ * Authenticated GET → Blob (private files: RFQ attachments, quotation PDFs).
+ * Same 401-refresh-retry as `request()`. Returns the server's filename from
+ * Content-Disposition when present.
+ */
+export async function fetchBlob(
+  path: string,
+): Promise<{ blob: Blob; filename: string | null; contentType: string }> {
+  const url = path.startsWith("http") ? path : `${API}${path}`;
+  const headers: Record<string, string> = {};
+  const token = getAccess();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  let res = await fetch(url, { headers });
+  if (res.status === 401) {
+    const refreshed = await tryRefresh();
+    if (refreshed) {
+      headers["Authorization"] = `Bearer ${refreshed}`;
+      res = await fetch(url, { headers });
+    }
+  }
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const body = (await res.json()) as { detail?: string };
+      detail = body.detail ?? "";
+    } catch {
+      /* not json */
+    }
+    throw new DjangoApiError(detail || `Download failed (${res.status})`, res.status, {});
+  }
+  const disp = res.headers.get("Content-Disposition") || "";
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disp);
+  return {
+    blob: await res.blob(),
+    filename: match ? decodeURIComponent(match[1]) : null,
+    contentType: res.headers.get("Content-Type") || "application/octet-stream",
+  };
+}
+
+/** Save a Blob to disk via a temporary object URL. */
+export function saveBlob(blob: Blob, filename: string): void {
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+/** Multipart POST with auth + refresh-retry; parses JSON on success AND on
+ *  4xx when `acceptErrorBody` (import dry-run returns its report with 400). */
+async function postMultipart<T>(
+  path: string,
+  fd: FormData,
+  query?: Record<string, string>,
+  acceptErrorBody = false,
+): Promise<T> {
+  let url = `${API}${path}`;
+  if (query) url += "?" + new URLSearchParams(query).toString();
+  const headers: Record<string, string> = {};
+  const token = getAccess();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  let res = await fetch(url, { method: "POST", body: fd, headers });
+  if (res.status === 401) {
+    const refreshed = await tryRefresh();
+    if (refreshed) {
+      headers["Authorization"] = `Bearer ${refreshed}`;
+      res = await fetch(url, { method: "POST", body: fd, headers });
+    }
+  }
+  let body: Record<string, unknown> = {};
+  try {
+    body = await res.json();
+  } catch {
+    /* not json */
+  }
+  if (res.ok || (acceptErrorBody && res.status === 400 && "total_rows" in body)) {
+    return body as T;
+  }
+  throw new DjangoApiError(
+    (body.detail as string) || `Request failed (${res.status})`,
+    res.status,
+    {},
+  );
 }
 
 // ─── Resource helpers ────────────────────────────────────────────────────────
@@ -1197,6 +1529,8 @@ export const djangoAdmin = {
       status?: string;
       gender?: string;
       "category__slug"?: string;
+      "brand__slug"?: string;
+      "machine_brands__slug"?: string;
       ordering?: string;
       page?: number;
       page_size?: number;
@@ -1213,6 +1547,28 @@ export const djangoAdmin = {
         "/site/products/export.csv/",
         query as Record<string, string | number | boolean | undefined | null> | undefined,
       ),
+    /** Apply one change to up to 500 products by slug. */
+    bulkUpdate: (slugs: string[], set: ProductBulkSet) =>
+      request<ProductBulkResult>("/site/products/bulk-update/", {
+        method: "POST",
+        body: JSON.stringify({ slugs, set }),
+      }),
+    /** CSV/XLSX upsert by SKU. dryRun validates only; a real run is
+     *  all-or-nothing (row errors → 400 with the same report, nothing written). */
+    importFile: (file: File, dryRun: boolean) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      return postMultipart<ProductImportResult>(
+        "/site/products/import/",
+        fd,
+        dryRun ? { dry_run: "1" } : undefined,
+        true,
+      );
+    },
+    downloadImportTemplate: () =>
+      downloadCsv("/site/products/import-template.csv/", undefined, "parts-import-template.csv"),
+    exportImportLayout: () =>
+      downloadCsv("/site/products/export.csv/", { layout: "import" }, "parts-export.csv"),
   },
   categories: crud("/site/categories/", "slug"),
   brands: crud("/site/brands/", "slug"),
@@ -1802,6 +2158,45 @@ export const djangoAdmin = {
       request<PaginatedResponse<unknown>>("/auth/login-attempts/", { query }),
   },
 
+  // ── Quotes (RFQ) — the primary sales flow (QUOTE-FIRST)
+  rfq: {
+    list: (query?: {
+      status?: string;
+      preferred_contact?: string;
+      customer?: string;
+      search?: string;
+      ordering?: string;
+      page?: number;
+      page_size?: number;
+    }) => request<PaginatedResponse<QuoteShape>>("/site/rfq/", { query }),
+    get: (id: string) => request<QuoteShape>(`/site/rfq/${id}/`),
+    update: (id: string, data: QuotePatchInput) =>
+      request<QuoteShape>(`/site/rfq/${id}/`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    markQuoted: (id: string, data: QuoteMarkQuotedInput) =>
+      request<QuoteShape>(`/site/rfq/${id}/mark-quoted/`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    convertToOrder: (id: string, data: QuoteConvertInput = {}) =>
+      request<QuoteConvertResponse>(`/site/rfq/${id}/convert-to-order/`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    sendQuote: (id: string, data: QuoteSendInput = {}) =>
+      request<QuoteSendResponse>(`/site/rfq/${id}/send-quote/`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    /** Quotation PDF ("DRAFT" watermark until quoted). */
+    pdf: (id: string) => fetchBlob(`/site/rfq/${id}/quote-pdf/?download=1`),
+    attachment: (quoteId: string, attId: string) =>
+      fetchBlob(`/site/rfq/${quoteId}/attachments/${attId}/download/`),
+    stats: () => request<QuoteStatsShape>("/site/rfq/stats/"),
+  },
+
   // ── Dashboard
   dashboard: {
     stats: (days = 14) =>
@@ -2020,6 +2415,8 @@ export interface DashboardStatsResponse {
     reviewCount: number;
   }>;
   trafficSources: Array<{ source: string; visits: number; share: number }>;
+  /** RFQ widget numbers (same as GET /site/rfq/stats/). */
+  quotes?: QuoteStatsShape;
 }
 
 // ─── Financials (P&L) shape ─────────────────────────────────────────────────
