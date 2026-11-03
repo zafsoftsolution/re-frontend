@@ -1,29 +1,26 @@
-// import type { NextConfig } from "next";
+import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
-// const nextConfig: NextConfig = {
-//   /* config options here */
-// };
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-// export default nextConfig;
-
-const nextConfig = {
+const nextConfig: NextConfig = {
   // Self-contained server bundle (.next/standalone) for the Docker image.
   output: "standalone",
+
+  // Cache Components: data is dynamic by default; the public site opts in to
+  // caching with `'use cache'` + cacheLife/cacheTag (see src/lib/api/).
+  cacheComponents: true,
+  partialPrefetching: true,
+
+  experimental: {
+    // Two root layouts ((adminportal) and [locale]) → no single layout to
+    // compose an app-wide 404 from. See src/app/global-not-found.tsx.
+    globalNotFound: true,
+  },
+
   images: {
-    // Placeholder tiles from placehold.co are served as SVG. Allow them with
-    // the Next-recommended hardening (CSP + attachment disposition).
-    dangerouslyAllowSVG: true,
-    contentDispositionType: "attachment",
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
       // Backend media uploads (Django MEDIA_URL). Both protocols are allowed
       // because the API currently returns http:// URLs.
       {
@@ -40,4 +37,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default withNextIntl(nextConfig);
