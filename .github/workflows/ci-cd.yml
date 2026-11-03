@@ -1,5 +1,5 @@
 # ── Rakib Enterprise — frontend CI/CD ───────────────────────────────────────
-# ci         : lint + type-check + build (push & PR to main)
+# ci         : type-check + lint + unit tests + build (push & PR to main)
 # build-push : build Docker image, push to GHCR (push to main / manual run)
 # deploy     : SSH to the VPS, pull the new image, restart, health-check
 #
@@ -46,17 +46,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # The codebase currently has pre-existing ESLint errors; report them
-      # without blocking the pipeline. Remove continue-on-error once fixed.
-      - name: Lint
+      # next-env.d.ts and route types are gitignored; `typecheck` runs
+      # `next typegen` first.
+      - name: Type-check
+        run: npm run typecheck
+
+      # Public site + shared code must lint clean (blocking).
+      - name: Lint (public site)
+        run: npm run lint:site
+
+      # The admin console still has pre-existing ESLint errors (React
+      # Compiler rules from eslint-config-next 16: set-state-in-effect,
+      # jsx-key, refs…). Report them without blocking; drop continue-on-error
+      # once admin is cleaned up.
+      - name: Lint (all, incl. admin — non-blocking)
         run: npm run lint
         continue-on-error: true
 
-      # next-env.d.ts and route types are gitignored; generate them first.
-      - name: Type-check
-        run: |
-          npx next typegen
-          npx tsc --noEmit
+      - name: Unit tests
+        run: npm test
 
       - name: Build
         run: npm run build
