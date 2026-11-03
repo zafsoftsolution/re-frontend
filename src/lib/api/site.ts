@@ -14,19 +14,31 @@ import { ApiError, apiFetch, unwrapList } from "./client";
 import {
   FALLBACK_SETTINGS,
   mapCategory,
+  mapCategoryDetail,
   mapList,
   mapMachineBrand,
+  mapMachineBrandDetail,
   mapMachineModel,
+  mapMachineModelDetail,
   mapPart,
+  mapPartDetail,
   mapPartsBrand,
+  mapPartsBrandDetail,
   mapSettings,
   mapSitemapEntry,
 } from "./mappers";
+import { indexFromLists, parseSitemapIndex, PLACEHOLDER_SLUG } from "./catalog-index";
 import { TAGS } from "./tags";
 import type {
+  CatalogIndex,
+  CategoryDetail,
   CategorySummary,
+  MachineBrandDetail,
   MachineBrandSummary,
+  MachineModelDetail,
   MachineModelSummary,
+  PartDetail,
+  PartsBrandDetail,
   PartsBrandSummary,
   PartSummary,
   RfqInput,
@@ -52,16 +64,54 @@ async function tryFetch<T>(path: string, locale: string, query?: Raw): Promise<T
   }
 }
 
+/**
+ * Every page of a DRF list. Most catalogue viewsets ignore `page_size` and
+ * serve 25 rows a page, so follow page numbers (not `next` - that URL
+ * carries the backend's own host) up to `maxPages`. Page 1 failing -> null;
+ * a later page failing -> what we have so far.
+ */
 async function fetchList<T>(
   path: string,
   locale: string,
   mapper: (d: unknown) => T | null,
   query?: Raw,
+  maxPages = 20,
 ): Promise<T[] | null> {
-  const data = await tryFetch<unknown>(path, locale, { page_size: 100, ...query });
-  if (data === null) return null;
-  return mapList(unwrapList(data as never), mapper);
+  const q = { page_size: 100, ...query };
+  const firstPage = await tryFetch<unknown>(path, locale, q);
+  if (firstPage === null) return null;
+  const out = mapList(unwrapList(firstPage as never), mapper);
+  if (Array.isArray(firstPage) || !(firstPage as Raw).next) return out;
+  const rows = unwrapList(firstPage as never).length || 1;
+  const total = Number((firstPage as Raw).count) || 0;
+  const pages = Math.min(maxPages, Math.ceil(total / rows));
+  // Remaining pages in small parallel batches.
+  for (let start = 2; start <= pages; start += 6) {
+    const batch = await Promise.all(
+      Array.from({ length: Math.min(6, pages - start + 1) }, (_, i) =>
+        tryFetch<unknown>(path, locale, { ...q, page: start + i }),
+      ),
+    );
+    for (const data of batch) {
+      if (data === null) return out;
+      out.push(...mapList(unwrapList(data as never), mapper));
+    }
+  }
+  return out;
 }
+
+/** Detail GET: null on HTTP 404, throws on anything else (an outage must
+ *  surface as an error, never be cached as "not found"). */
+async function fetchDetail<T>(path: string, locale: string, mapper: (d: unknown) => T | null): Promise<T | null> {
+  try {
+    return mapper(await apiFetch<unknown>(path, { locale }));
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+const usable = (slug: string) => Boolean(slug) && slug !== PLACEHOLDER_SLUG && slug.length <= 200;
 
 // ─── Bootstrap (settings + top categories + machine brands) ─────────────────
 
@@ -123,7 +173,7 @@ export async function getCategories(locale: string): Promise<CategorySummary[]> 
 
 export async function getMachineBrands(locale: string): Promise<MachineBrandSummary[]> {
   "use cache";
-  cacheTag(TAGS.machineBrands);
+  cacheTag(TAGS.machineBrands, TAGS.machines);
   const list = await fetchList("/site/machine-brands/", locale, mapMachineBrand);
   if (list) cacheLife("hours");
   else cacheLife("minutes");
@@ -135,9 +185,10 @@ export async function getMachineModels(
   brandSlug?: string,
 ): Promise<MachineModelSummary[]> {
   "use cache";
-  cacheTag(TAGS.machineModels, ...(brandSlug ? [TAGS.machineBrand(brandSlug)] : []));
+  cacheTag(TAGS.machineModels, TAGS.machines, ...(brandSlug ? [TAGS.machineBrand(brandSlug)] : []));
   const list = await fetchList("/site/machine-models/", locale, mapMachineModel, {
     machine_brand__slug: brandSlug,
+    page_size: 500,
   });
   if (list) cacheLife("hours");
   else cacheLife("minutes");
@@ -170,6 +221,120 @@ export async function getParts(
   if (list) cacheLife("hours");
   else cacheLife("minutes");
   return list ?? [];
+}
+
+// ─── Catalogue details ───────────────────────────────────────────────────────
+
+export async function getMachineBrand(locale: string, slug: string): Promise<MachineBrandDetail | null> {
+  "use cache";
+  cacheTag(TAGS.machineBrands, TAGS.machines, TAGS.machineBrand(slug));
+  cacheLife("hours");
+  if (!usable(slug)) return null;
+  return fetchDetail(`/site/machine-brands/${encodeURIComponent(slug)}/`, locale, mapMachineBrandDetail);
+}
+
+export async function getMachineModel(locale: string, slug: string): Promise<MachineModelDetail | null> {
+  "use cache";
+  cacheTag(TAGS.machineModels, TAGS.machines, TAGS.machineModel(slug), TAGS.products);
+  cacheLife("hours");
+  if (!usable(slug)) return null;
+  return fetchDetail(`/site/machine-models/${encodeURIComponent(slug)}/`, locale, mapMachineModelDetail);
+}
+
+export async function getCategory(locale: string, slug: string): Promise<CategoryDetail | null> {
+  "use cache";
+  cacheTag(TAGS.categories, TAGS.category(slug));
+  cacheLife("hours");
+  if (!usable(slug)) return null;
+  const detail = await fetchDetail(`/site/categories/${encodeURIComponent(slug)}/`, locale, mapCategoryDetail);
+  if (!detail || detail.parent || !detail.parentId) return detail;
+  // The detail payload carries only the parent's id — resolve its name/slug.
+  const all = await getCategories(locale);
+  const parent = all.find((c) => c.id === detail.parentId);
+  return { ...detail, parent: parent ? { slug: parent.slug, name: parent.name } : null };
+}
+
+export async function getPartsBrand(locale: string, slug: string): Promise<PartsBrandDetail | null> {
+  "use cache";
+  cacheTag(TAGS.brands, TAGS.brand(slug));
+  cacheLife("hours");
+  if (!usable(slug)) return null;
+  return fetchDetail(`/site/brands/${encodeURIComponent(slug)}/`, locale, mapPartsBrandDetail);
+}
+
+export async function getPart(locale: string, slug: string): Promise<PartDetail | null> {
+  "use cache";
+  cacheTag(TAGS.products, TAGS.product(slug));
+  cacheLife("hours");
+  if (!usable(slug)) return null;
+  return fetchDetail(`/site/products/${encodeURIComponent(slug)}/`, locale, mapPartDetail);
+}
+
+/**
+ * Every active part matching one base filter (a category, a parts brand or
+ * a machine model), for server-side facet filtering, sorting and paging.
+ * The products endpoint serves 25 rows a page and has no stock filter, so
+ * the set is loaded once per base filter (cached) — capped at 40 pages
+ * (1000 parts). Backend follow-up: `in_stock` filter + `page_size`.
+ */
+export async function getAllParts(
+  locale: string,
+  base: { category?: string; brand?: string; machineModel?: string; machineBrand?: string },
+): Promise<PartSummary[]> {
+  "use cache";
+  cacheTag(
+    TAGS.products,
+    ...(base.category ? [TAGS.category(base.category)] : []),
+    ...(base.brand ? [TAGS.brand(base.brand)] : []),
+    ...(base.machineModel ? [TAGS.machineModel(base.machineModel)] : []),
+    ...(base.machineBrand ? [TAGS.machineBrand(base.machineBrand)] : []),
+  );
+  const list = await fetchList(
+    "/site/products/",
+    locale,
+    mapPart,
+    {
+      category__slug: base.category,
+      brand__slug: base.brand,
+      machine_models__slug: base.machineModel,
+      machine_brands__slug: base.machineBrand,
+      ordering: "name",
+    },
+    40,
+  );
+  if (list) cacheLife("hours");
+  else cacheLife("minutes");
+  return list ?? [];
+}
+
+/**
+ * Slug index of the whole public catalogue (sitemap feed, or the list
+ * endpoints before it is deployed). Used by generateStaticParams; the proxy
+ * keeps its own in-memory copy (catalog-index-store.ts).
+ */
+export async function getCatalogIndex(): Promise<CatalogIndex | null> {
+  "use cache";
+  cacheTag(TAGS.sitemap, TAGS.products, TAGS.machines, TAGS.machineBrands, TAGS.machineModels, TAGS.categories, TAGS.brands);
+  const parsed = parseSitemapIndex(await tryFetch<unknown>("/site/sitemap-entries/", "en"));
+  if (parsed) {
+    cacheLife("hours");
+    return parsed;
+  }
+  const raw = (d: unknown) => (d && typeof d === "object" ? (d as Raw) : null);
+  const [machineBrands, machineModels, categories, brands] = await Promise.all([
+    fetchList("/site/machine-brands/", "en", raw),
+    fetchList("/site/machine-models/", "en", raw, { page_size: 500 }),
+    fetchList("/site/categories/", "en", raw),
+    fetchList("/site/brands/", "en", raw),
+  ]);
+  cacheLife("minutes");
+  if (!machineBrands && !machineModels && !categories && !brands) return null;
+  return indexFromLists({
+    machineBrands: machineBrands ?? [],
+    machineModels: machineModels ?? [],
+    categories: categories ?? [],
+    brands: brands ?? [],
+  });
 }
 
 // ─── Search ──────────────────────────────────────────────────────────────────

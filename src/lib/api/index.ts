@@ -9,8 +9,16 @@ export {
   getMachineModels,
   getPartsBrands,
   getParts,
+  getAllParts,
+  getMachineBrand,
+  getMachineModel,
+  getCategory,
+  getPartsBrand,
+  getPart,
+  getCatalogIndex,
   searchParts,
   getSitemapEntries,
   getRedirects,
   submitRfq,
 } from "./site";
+export { guardCatalogPath, isValidSlug, PLACEHOLDER_SLUG, MIN_MODEL_CATEGORY_PARTS } from "./catalog-index";

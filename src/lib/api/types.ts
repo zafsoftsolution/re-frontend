@@ -41,7 +41,22 @@ export interface CategorySummary {
   description: string;
   productCount: number;
   isFeatured: boolean;
+  /** Parent category id (list endpoint) — "" for top-level. */
+  parentId: string;
   children: { id: string; name: string; slug: string }[];
+}
+
+/** SEO fields shared by catalogue detail payloads (empty when unset). */
+export interface SeoFields {
+  seoTitle: string;
+  seoDescription: string;
+  ogImage: string;
+}
+
+export interface CategoryDetail extends CategorySummary, SeoFields {
+  bannerImage: string;
+  /** Parent category (detail payload), null for top-level. */
+  parent: { slug: string; name: string } | null;
 }
 
 export interface MachineTypeCount {
@@ -61,6 +76,10 @@ export interface MachineBrandSummary {
   modelCountsByType: MachineTypeCount[];
 }
 
+export interface MachineBrandDetail extends MachineBrandSummary, SeoFields {
+  description: string;
+}
+
 export interface MachineModelSummary {
   id: string;
   name: string;
@@ -72,6 +91,14 @@ export interface MachineModelSummary {
   partsCount: number;
 }
 
+export interface MachineModelDetail extends MachineModelSummary, SeoFields {
+  description: string;
+  image: string;
+  brand: { slug: string; name: string; logo: string; country: string };
+  /** Compatible active parts per category, most parts first. */
+  categories: { slug: string; name: string; count: number }[];
+}
+
 export interface PartsBrandSummary {
   id: string;
   name: string;
@@ -79,6 +106,11 @@ export interface PartsBrandSummary {
   logo: string;
   isOem: boolean;
   productCount: number;
+}
+
+export interface PartsBrandDetail extends PartsBrandSummary, SeoFields {
+  description: string;
+  machineBrandSlugs: string[];
 }
 
 export interface PartSummary {
@@ -109,6 +141,51 @@ export interface PartSummary {
   image: string;
   availability: Availability;
   availableQty: number;
+  /** Compatible machine model / machine brand slugs (list payloads). */
+  machineModelSlugs: string[];
+  machineBrandSlugs: string[];
+  /** ISO timestamp — used for "newest" sorting. */
+  createdAt: string;
+}
+
+export interface PriceTier {
+  minQuantity: number;
+  unitPrice: number;
+}
+
+export interface PartDetail extends PartSummary, SeoFields {
+  images: string[];
+  description: string;
+  shortDescription: string;
+  /** Ordered [label, value] pairs from the `specifications` dict. */
+  specifications: [string, string][];
+  features: string[];
+  category: { slug: string; name: string; parentSlug: string } | null;
+  brand: { slug: string; name: string; isOem: boolean; description: string; logo: string } | null;
+  machineModels: MachineModelSummary[];
+  /** Direct parts only — always [] for quote parts (backend empties it too). */
+  priceTiers: PriceTier[];
+  relatedIds: string[];
+  updatedAt: string;
+}
+
+/**
+ * Slug sets for every public catalogue entity, from /site/sitemap-entries/
+ * (or the list endpoints when that is unavailable). Drives
+ * generateStaticParams and the proxy's real-404 guard.
+ */
+export interface CatalogIndex {
+  machineBrands: string[];
+  /** model slug → machine brand slug, plus parts count. */
+  machineModels: { slug: string; brandSlug: string; partsCount: number }[];
+  /** Model × category combos with ≥ 3 parts. */
+  modelCategories: { brandSlug: string; modelSlug: string; categorySlug: string; count: number }[];
+  categories: { slug: string; productCount: number }[];
+  brands: { slug: string; productCount: number }[];
+  parts: string[];
+  /** false when a list could not be loaded completely (e.g. parts in the
+   *  list-endpoint fallback) — the guard then confirms misses one by one. */
+  complete: { parts: boolean; modelCategories: boolean };
 }
 
 export interface SiteBootstrap {

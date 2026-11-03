@@ -5,7 +5,14 @@
  */
 import type {
   Availability,
+  CategoryDetail,
   CategorySummary,
+  MachineBrandDetail,
+  MachineModelDetail,
+  PartDetail,
+  PartsBrandDetail,
+  PriceTier,
+  SeoFields,
   MachineBrandSummary,
   MachineModelSummary,
   PartsBrandSummary,
@@ -107,6 +114,7 @@ export function mapCategory(d: unknown): CategorySummary | null {
     description: str(d, "description"),
     productCount: num(d.product_count),
     isFeatured: bool(d.is_featured),
+    parentId: str(d, "parent"),
     children: arr(d.children)
       .filter(isObj)
       .map((c) => ({ id: str(c, "id"), name: str(c, "name"), slug: str(c, "slug") }))
@@ -198,7 +206,7 @@ export function mapPart(d: unknown): PartSummary | null {
     minOrderQuantity: Math.max(1, num(d.min_order_quantity, 1)),
     priceOnRequest: bool(d.price_on_request, price === null),
     leadTimeDays: nullableNum(d.lead_time_days),
-    fitsCount: num(d.fits_count),
+    fitsCount: num(d.fits_count) || arr(d.machine_models).length,
     match: str(d, "match"),
     price: salesMode === "direct" ? price : null,
     compareAtPrice: salesMode === "direct" ? nullableNum(d.compare_at_price) : null,
@@ -207,6 +215,133 @@ export function mapPart(d: unknown): PartSummary | null {
     image: str({ i: arr(d.images)[0] }, "i") || str(d, "image"),
     availability: mapAvailability(d),
     availableQty: num(d.available_qty ?? d.total_stock),
+    machineModelSlugs: arr(d.machine_models)
+      .map((m) => (typeof m === "string" ? m : isObj(m) ? str(m, "slug") : ""))
+      .filter(Boolean),
+    machineBrandSlugs: arr(d.machine_brands)
+      .map((m) => (typeof m === "string" ? m : isObj(m) ? str(m, "slug") : ""))
+      .filter(Boolean),
+    createdAt: str(d, "created_at"),
+  };
+}
+
+// ─── Detail payloads ─────────────────────────────────────────────────────────
+
+function seo(d: Raw): SeoFields {
+  return {
+    seoTitle: str(d, "seo_title"),
+    seoDescription: str(d, "seo_description"),
+    ogImage: str(d, "og_image"),
+  };
+}
+
+export function mapCategoryDetail(d: unknown): CategoryDetail | null {
+  const base = mapCategory(d);
+  if (!base || !isObj(d)) return null;
+  const parent = isObj(d.parent) && str(d.parent, "slug") ? { slug: str(d.parent, "slug"), name: str(d.parent, "name") } : null;
+  return { ...base, ...seo(d), bannerImage: str(d, "banner_image"), parent };
+}
+
+export function mapMachineBrandDetail(d: unknown): MachineBrandDetail | null {
+  const base = mapMachineBrand(d);
+  if (!base || !isObj(d)) return null;
+  return { ...base, ...seo(d), description: str(d, "description") };
+}
+
+export function mapMachineModelDetail(d: unknown): MachineModelDetail | null {
+  const base = mapMachineModel(d);
+  if (!base || !isObj(d)) return null;
+  const b = isObj(d.brand) ? d.brand : {};
+  return {
+    ...base,
+    ...seo(d),
+    brandSlug: base.brandSlug || str(b, "slug"),
+    brandName: base.brandName || str(b, "name"),
+    description: str(d, "description"),
+    image: str(d, "image"),
+    brand: {
+      slug: str(b, "slug") || base.brandSlug,
+      name: str(b, "name") || base.brandName,
+      logo: str(b, "logo"),
+      country: str(b, "country"),
+    },
+    categories: arr(d.categories)
+      .filter(isObj)
+      .map((c) => ({ slug: str(c, "slug"), name: str(c, "name"), count: num(c.count) }))
+      .filter((c) => c.slug && c.count > 0),
+  };
+}
+
+export function mapPartsBrandDetail(d: unknown): PartsBrandDetail | null {
+  const base = mapPartsBrand(d);
+  if (!base || !isObj(d)) return null;
+  return {
+    ...base,
+    ...seo(d),
+    description: str(d, "description"),
+    machineBrandSlugs: arr(d.machine_brand_slugs).filter((x): x is string => typeof x === "string"),
+  };
+}
+
+/** `specifications` may be a dict ({"Size": "#14"}) or a list of
+ *  {label|name|key, value} rows. Values are stringified; empties dropped. */
+export function mapSpecifications(v: unknown): [string, string][] {
+  const out: [string, string][] = [];
+  const push = (k: unknown, val: unknown) => {
+    const key = typeof k === "string" ? k.trim() : "";
+    const value =
+      typeof val === "string" ? val.trim() : typeof val === "number" || typeof val === "boolean" ? String(val) : "";
+    if (key && value) out.push([key, value]);
+  };
+  if (Array.isArray(v)) {
+    for (const row of v) if (isObj(row)) push(row.label ?? row.name ?? row.key, row.value);
+  } else if (isObj(v)) {
+    for (const [k, val] of Object.entries(v)) push(k, val);
+  }
+  return out;
+}
+
+export function mapPartDetail(d: unknown): PartDetail | null {
+  const base = mapPart(d);
+  if (!base || !isObj(d)) return null;
+  const category = isObj(d.category) ? d.category : null;
+  const brand = isObj(d.brand) ? d.brand : null;
+  const direct = base.salesMode === "direct";
+  const tiers: PriceTier[] = direct
+    ? arr(d.price_tiers)
+        .filter(isObj)
+        .map((t) => ({ minQuantity: num(t.min_quantity), unitPrice: nullableNum(t.unit_price) ?? Number.NaN }))
+        .filter((t) => t.minQuantity > 0 && Number.isFinite(t.unitPrice))
+        .sort((a, b) => a.minQuantity - b.minQuantity)
+    : [];
+  const images = arr(d.images).filter((x): x is string => typeof x === "string" && x.trim() !== "");
+  const machineModels = mapList(d.machine_models, mapMachineModel);
+  return {
+    ...base,
+    ...seo(d),
+    fitsCount: machineModels.length || base.fitsCount,
+    machineModelSlugs: machineModels.map((m) => m.slug),
+    images,
+    description: str(d, "description"),
+    shortDescription: str(d, "short_description"),
+    specifications: mapSpecifications(d.specifications),
+    features: arr(d.features).filter((x): x is string => typeof x === "string" && x.trim() !== ""),
+    category: category
+      ? { slug: str(category, "slug"), name: str(category, "name"), parentSlug: isObj(category.parent) ? str(category.parent, "slug") : "" }
+      : null,
+    brand: brand
+      ? {
+          slug: str(brand, "slug"),
+          name: str(brand, "name"),
+          isOem: bool(brand.is_oem),
+          description: str(brand, "description"),
+          logo: str(brand, "logo"),
+        }
+      : null,
+    machineModels,
+    priceTiers: tiers,
+    relatedIds: arr(d.related_product_ids).map(String),
+    updatedAt: str(d, "updated_at"),
   };
 }
 

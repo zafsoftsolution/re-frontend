@@ -9,6 +9,8 @@ export const TAGS = {
   categories: "categories",
   machineBrands: "machine-brands",
   machineModels: "machine-models",
+  /** Sent by the backend for any MachineBrand / MachineModel change. */
+  machines: "machines",
   brands: "brands",
   products: "products",
   sitemap: "sitemap",
@@ -17,6 +19,7 @@ export const TAGS = {
   category: (slug: string) => `category:${slug}`,
   machineBrand: (slug: string) => `machine-brand:${slug}`,
   machineModel: (slug: string) => `machine-model:${slug}`,
+  brand: (slug: string) => `brand:${slug}`,
 } as const;
 
 /** Next rejects tags over 256 chars; also guards the revalidate endpoint. */
