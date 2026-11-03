@@ -40,6 +40,35 @@ const FALLBACK_QUERY: Record<PartIconKey, string> = {
 };
 
 const tileGrid = "grid gap-px border border-re-steel-200 bg-re-steel-200";
+
+/** Static class maps (Tailwind needs literal class names). */
+const SPAN = {
+  base: ["", "col-span-1", "col-span-2"],
+  xs: ["", "xs:col-span-1", "xs:col-span-2"],
+  sm: ["", "sm:col-span-1", "sm:col-span-2", "sm:col-span-3"],
+  lg: ["", "lg:col-span-1", "lg:col-span-2", "lg:col-span-3", "lg:col-span-4", "lg:col-span-5", "lg:col-span-6"],
+} as const;
+
+/** Classes that make a trailing "All …" tile fill the last row at each breakpoint, so the grid never shows a hole. */
+function fillSpan(n: number, cols: Partial<Record<keyof typeof SPAN, number>>): string {
+  return (Object.entries(cols) as [keyof typeof SPAN, number][])
+    .map(([bp, c]) => SPAN[bp][c - (n % c)])
+    .join(" ");
+}
+
+function AllTile({ href, label, className }: { href: string; label: React.ReactNode; className: string }) {
+  return (
+    <li className={`bg-re-steel-50 ${className}`}>
+      <Link
+        href={href}
+        className="group flex h-full min-h-16 items-center justify-between gap-3 px-4 py-4 font-semibold text-re-blue transition-colors duration-150 hover:bg-re-steel-100"
+      >
+        {label}
+        <ArrowRight aria-hidden className="size-5 transition-transform duration-150 group-hover:translate-x-0.5" />
+      </Link>
+    </li>
+  );
+}
 const allLink = "inline-flex h-11 items-center gap-1.5 font-semibold text-re-blue hover:underline";
 
 function AllLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -126,6 +155,11 @@ export function MachineBrandTiles({
             </Link>
           </li>
         ))}
+        <AllTile
+          href={copy?.cta?.href || "/machines"}
+          label={copy?.cta?.label || t("machinesAll")}
+          className={fillSpan(tiles.length, { base: 2, sm: 3, lg: 6 })}
+        />
       </ul>
     </section>
   );
@@ -198,6 +232,11 @@ export function CategoryGrid({
             </li>
           );
         })}
+        <AllTile
+          href={copy?.cta?.href || "/categories"}
+          label={copy?.cta?.label || t("home.categoriesAll")}
+          className={fillSpan(rows.length, { base: 1, xs: 2, lg: 4 })}
+        />
       </ul>
     </section>
   );

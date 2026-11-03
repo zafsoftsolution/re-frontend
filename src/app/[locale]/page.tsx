@@ -112,7 +112,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       <Hero
         copy={content.hero}
         examples={examples}
-        picker={picker.filter((b) => b.models.length > 0)}
+        picker={picker.some((b) => b.models.length > 0) ? picker.filter((b) => b.models.length > 0) : picker}
         paths={{
           search: localePath("/search", locale),
           find: localePath("/machines/find", locale),

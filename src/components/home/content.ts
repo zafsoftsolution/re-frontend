@@ -62,10 +62,18 @@ function copyOf(b: unknown, locale: string): HomeCopy | null {
   };
   const href = safeHref(r.cta_href);
   const label = text("cta_label");
+  let title = text("title");
+  let subtitle = text("subtitle");
+  // Older blocks split one headline across title + subtitle ("Shop by" / "part type."):
+  // a subtitle that starts lower-case continues the title.
+  if (title && /^[a-z]/.test(subtitle)) {
+    title = `${title} ${subtitle}`.replace(/\.$/, "");
+    subtitle = "";
+  }
   return {
     eyebrow: text("eyebrow"),
-    title: text("title"),
-    subtitle: text("subtitle"),
+    title,
+    subtitle,
     body: text("body"),
     cta: href && label ? { label, href } : null,
   };

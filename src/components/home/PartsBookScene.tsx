@@ -98,7 +98,7 @@ export function PartsBookScene({
                 <span aria-hidden className="absolute top-2 right-2 size-3 border-t border-r border-re-ink" />
                 <span aria-hidden className="absolute bottom-2 left-2 size-3 border-b border-l border-re-ink" />
                 <span aria-hidden className="absolute right-2 bottom-2 size-3 border-r border-b border-re-ink" />
-                <div className="mx-auto w-full max-w-[36rem] p-5 sm:p-8 lg:h-full lg:max-h-[38rem] lg:w-auto lg:aspect-square lg:p-6">
+                <div className="mx-auto w-full max-w-[36rem] p-5 sm:p-8 lg:absolute lg:inset-0 lg:max-w-none lg:p-6 xl:p-8 lg:[&_svg]:h-full">
                   <HookAssemblyFigure label={labels.figAria} />
                 </div>
               </div>
