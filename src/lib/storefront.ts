@@ -59,10 +59,11 @@ import type {
 const SERVER_ROOT =
   typeof window === "undefined" ? process.env.INTERNAL_DJANGO_BACKEND : undefined;
 
+// `||` (not `??`) so an empty-string env var falls through to the next option.
 const ROOT =
-  SERVER_ROOT ??
-  process.env.NEXT_PUBLIC_DJANGO_API_URL?.replace(/\/api\/auth\/?$/, "") ??
-  process.env.NEXT_PUBLIC_DJANGO_BACKEND ??
+  SERVER_ROOT ||
+  process.env.NEXT_PUBLIC_DJANGO_API_URL?.replace(/\/api\/auth\/?$/, "") ||
+  process.env.NEXT_PUBLIC_DJANGO_BACKEND ||
   "http://localhost:8000";
 
 const API = `${ROOT}/api`;

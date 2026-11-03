@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
@@ -32,6 +33,14 @@ export default function AdminLoginPage() {
       <div className="flex items-center justify-center p-8 lg:p-16">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-3 mb-12">
+            <Image
+              src="/logo/rakib-enterprise.png"
+              alt="Rakib Enterprise"
+              width={434}
+              height={240}
+              priority
+              className="h-11 w-auto"
+            />
             <span className="font-display text-3xl tracking-[0.15em] text-navy">
               Rakib
             </span>

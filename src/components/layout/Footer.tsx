@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Mail, MapPin, ArrowRight } from "lucide-react";
 import { FaTiktok, FaPinterestP, FaYoutube, FaInstagram } from "react-icons/fa6";
@@ -118,7 +119,14 @@ export default function Footer() {
         {/* Main grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-12 pt-16">
           <div className="col-span-2">
-            <Link href="/" className="inline-flex items-center gap-3">
+            <Link href="/" className="inline-flex items-center gap-3" aria-label="Rakib Enterprise — home">
+              <Image
+                src="/logo/rakib-enterprise-light.png"
+                alt="Rakib Enterprise"
+                width={434}
+                height={240}
+                className="h-12 w-auto"
+              />
               <span className="font-display text-3xl tracking-[0.14em] text-cream">Rakib</span>
               <span className="h-5 w-px bg-cream/30" />
               <span className="text-[12px] tracking-[0.3em] uppercase text-cream/70">Enterprise</span>

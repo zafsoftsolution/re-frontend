@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   ArrowRightLeft,
@@ -263,11 +264,18 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           className="flex items-center gap-3 min-w-0"
           aria-label="Rakib Console"
         >
-          <span className="font-display text-2xl tracking-[0.15em] text-cream shrink-0">
-            Rakib
-          </span>
+          <Image
+            src="/logo/rakib-enterprise-light.png"
+            alt="Rakib Enterprise"
+            width={434}
+            height={240}
+            className="h-8 w-auto shrink-0"
+          />
           {!collapsed && (
             <>
+              <span className="font-display text-2xl tracking-[0.15em] text-cream shrink-0">
+                Rakib
+              </span>
               <span className="h-4 w-px bg-cream/25 shrink-0" />
               <span className="text-[10px] tracking-[0.3em] uppercase text-gold whitespace-nowrap">
                 Console

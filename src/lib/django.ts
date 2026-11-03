@@ -15,7 +15,7 @@
 import type { User } from "@/types";
 
 const BASE =
-  process.env.NEXT_PUBLIC_DJANGO_API_URL ?? "http://localhost:8000/api/auth";
+  process.env.NEXT_PUBLIC_DJANGO_API_URL || "http://localhost:8000/api/auth";
 const ACCESS_KEY = "jmn:django:access";
 const REFRESH_KEY = "jmn:django:refresh";
 

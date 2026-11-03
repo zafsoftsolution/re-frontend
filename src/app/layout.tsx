@@ -53,9 +53,8 @@ export const metadata: Metadata = {
     description: siteConfig.shortDescription,
     type: "website",
   },
-  icons: {
-    icon: "/logo/rakib-mark.svg",
-  },
+  // Icons come from the file conventions in this folder: favicon.ico,
+  // icon.png, apple-icon.png and opengraph-image.png (Rakib Enterprise logo).
 };
 
 /**

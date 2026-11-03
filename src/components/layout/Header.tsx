@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, User, Heart, ShoppingBag, Menu, X } from "lucide-react";
@@ -90,12 +91,21 @@ export default function Header() {
           <Link
             href="/"
             className="group absolute left-1/2 -translate-x-1/2 flex items-center gap-3"
+            aria-label="Rakib Enterprise — home"
           >
-            <span className="font-display text-2xl tracking-[0.14em] text-navy leading-none">
+            <Image
+              src="/logo/rakib-enterprise.png"
+              alt="Rakib Enterprise"
+              width={434}
+              height={240}
+              priority
+              className="h-9 w-auto sm:h-10"
+            />
+            <span className="hidden md:block font-display text-2xl tracking-[0.14em] text-navy leading-none">
               Rakib
             </span>
-            <span className="hidden sm:block h-4 w-px bg-navy/30" />
-            <span className="hidden sm:block text-[11px] tracking-[0.3em] text-navy/70 uppercase">
+            <span className="hidden md:block h-4 w-px bg-navy/30" />
+            <span className="hidden md:block text-[11px] tracking-[0.3em] text-navy/70 uppercase">
               Enterprise
             </span>
           </Link>
@@ -155,7 +165,16 @@ export default function Header() {
             className="fixed inset-0 z-[60] bg-navy text-cream"
           >
             <div className="shell flex items-center justify-between h-20">
-              <span className="font-display text-xl tracking-widest">Rakib Enterprise</span>
+              <span className="flex items-center gap-3">
+                <Image
+                  src="/logo/rakib-enterprise-light.png"
+                  alt=""
+                  width={434}
+                  height={240}
+                  className="h-9 w-auto"
+                />
+                <span className="font-display text-xl tracking-widest">Rakib Enterprise</span>
+              </span>
               <button
                 onClick={() => setMenuOpen(false)}
                 aria-label="Close"

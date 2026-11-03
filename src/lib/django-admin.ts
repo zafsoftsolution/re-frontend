@@ -23,7 +23,7 @@
  */
 
 const ROOT =
-  process.env.NEXT_PUBLIC_DJANGO_API_URL?.replace(/\/api\/auth\/?$/, "") ??
+  process.env.NEXT_PUBLIC_DJANGO_API_URL?.replace(/\/api\/auth\/?$/, "") ||
   "http://localhost:8000";
 const API = `${ROOT}/api`;
 

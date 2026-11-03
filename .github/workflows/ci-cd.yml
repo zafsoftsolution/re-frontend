@@ -31,8 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Public, build-time values (GitHub → Settings → Variables → Actions).
-      NEXT_PUBLIC_DJANGO_API_URL: ${{ vars.NEXT_PUBLIC_DJANGO_API_URL }}
-      NEXT_PUBLIC_DJANGO_BACKEND: ${{ vars.NEXT_PUBLIC_DJANGO_BACKEND }}
+      NEXT_PUBLIC_DJANGO_API_URL: ${{ vars.NEXT_PUBLIC_DJANGO_API_URL || 'https://api.rakibenterprise-bd.com/api/auth' }}
+      NEXT_PUBLIC_DJANGO_BACKEND: ${{ vars.NEXT_PUBLIC_DJANGO_BACKEND || 'https://api.rakibenterprise-bd.com' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -107,8 +107,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NODE_VERSION=${{ env.NODE_VERSION }}
-            NEXT_PUBLIC_DJANGO_API_URL=${{ vars.NEXT_PUBLIC_DJANGO_API_URL }}
-            NEXT_PUBLIC_DJANGO_BACKEND=${{ vars.NEXT_PUBLIC_DJANGO_BACKEND }}
+            NEXT_PUBLIC_DJANGO_API_URL=${{ vars.NEXT_PUBLIC_DJANGO_API_URL || 'https://api.rakibenterprise-bd.com/api/auth' }}
+            NEXT_PUBLIC_DJANGO_BACKEND=${{ vars.NEXT_PUBLIC_DJANGO_BACKEND || 'https://api.rakibenterprise-bd.com' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
