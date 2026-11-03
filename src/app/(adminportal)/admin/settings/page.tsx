@@ -18,6 +18,7 @@ import {
   Bell,
   Building2,
   CheckCircle2,
+  FileSignature,
   Globe,
   Image as ImageIcon,
   Loader2,
@@ -33,11 +34,13 @@ import {
   type SiteSettingsShape,
   type SiteSettingsUpdateInput,
 } from "@/lib/django-admin";
-import { useToast } from "@/context/FeedbackContext";
+import { useConfirm, useToast } from "@/context/FeedbackContext";
 import PageHeader from "@/components/admin/PageHeader";
 import { cn, formatDate } from "@/lib/utils";
+import { isValidBdPhone } from "@/lib/admin/quotes";
 
 type TabKey =
+  | "sales"
   | "general"
   | "branding"
   | "shipping"
@@ -53,16 +56,22 @@ const TABS: Array<{
   description: string;
 }> = [
   {
+    key: "sales",
+    label: "Sales & quotes",
+    icon: FileSignature,
+    description: "Quote-only vs mixed selling, quotation defaults.",
+  },
+  {
     key: "general",
-    label: "General",
+    label: "Contact & business",
     icon: Building2,
-    description: "Store name, contact info, and locale.",
+    description: "Name, phone, WhatsApp, address (+ Bangla), locale.",
   },
   {
     key: "branding",
     label: "Branding",
     icon: ImageIcon,
-    description: "Logo, colors, and footer text.",
+    description: "Logo, OG image, colours, footer text (+ Bangla).",
   },
   {
     key: "shipping",
@@ -98,15 +107,19 @@ const TABS: Array<{
 
 // Fields each tab is allowed to dirty. Used to scope the PATCH payload so a
 // half-finished change on another tab doesn't get silently overwritten.
+// Translated fields are addressed explicitly (`_en` / `_bn`) so the language
+// written never depends on the request's Accept-Language.
 const TAB_FIELDS: Record<TabKey, Array<keyof SiteSettingsShape>> = {
+  sales: ["sales_mode", "company_bin", "quote_validity_days", "quote_terms"],
   general: [
-    "site_name", "site_tagline",
-    "contact_email", "contact_phone", "business_address",
+    "site_name", "site_tagline_en", "site_tagline_bn",
+    "contact_email", "contact_phone", "whatsapp_number",
+    "business_address_en", "business_address_bn",
     "default_currency", "default_locale", "timezone",
   ],
   branding: [
     "logo_url", "logo_dark_url", "favicon_url", "og_image_url",
-    "primary_color", "accent_color", "footer_text",
+    "primary_color", "accent_color", "footer_text_en", "footer_text_bn",
   ],
   shipping: [
     "free_shipping_threshold", "flat_shipping_fee", "tax_rate",
@@ -134,7 +147,7 @@ const TAB_FIELDS: Record<TabKey, Array<keyof SiteSettingsShape>> = {
     "sitemap_priority_product", "sitemap_priority_category",
     "robots_txt_override",
     // Social
-    "facebook_url", "instagram_url", "youtube_url", "whatsapp_number",
+    "facebook_url", "instagram_url", "youtube_url",
   ],
   notifications: [
     "notify_order_placed", "notify_order_paid",
@@ -147,25 +160,26 @@ const TAB_FIELDS: Record<TabKey, Array<keyof SiteSettingsShape>> = {
 
 export default function AdminSettings() {
   const toast = useToast();
-  const [tab, setTab] = useState<TabKey>("general");
+  const confirm = useConfirm();
+  const [tab, setTab] = useState<TabKey>("sales");
   const [server, setServer] = useState<SiteSettingsShape | null>(null);
   const [draft, setDraft] = useState<SiteSettingsShape | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Initial load + reload-after-save helper.
-  async function load() {
-    setLoadError(null);
-    try {
-      const data = await djangoAdmin.siteSettings.get();
-      setServer(data);
-      setDraft(data);
-    } catch (e) {
-      setLoadError((e as Error).message);
-    }
-  }
   useEffect(() => {
-    load();
+    let cancelled = false;
+    djangoAdmin.siteSettings.get().then(
+      (data) => {
+        if (cancelled) return;
+        setServer(data);
+        setDraft(data);
+      },
+      (e: Error) => !cancelled && setLoadError(e.message),
+    );
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Has the user changed anything in the current tab?
@@ -198,6 +212,23 @@ export default function AdminSettings() {
 
   async function saveTab() {
     if (!draft || !server) return;
+    const problem = validateTab(tab, draft);
+    if (problem) {
+      toast.error("Check the form", problem);
+      return;
+    }
+    if (tab === "sales" && draft.sales_mode !== server.sales_mode) {
+      const toMixed = draft.sales_mode === "mixed";
+      const ok = await confirm({
+        title: toMixed ? "Switch the site to Mixed selling?" : "Switch the site to Quote only?",
+        description: toMixed
+          ? "Parts set to “Direct” (and not price-on-request) will show their price publicly, get Add to cart, and cart/checkout appear in the site navigation. Every other part stays quote-only."
+          : "All prices disappear from the public site, Add to cart and checkout are hidden, and every part goes back to “Add to quote”. Open carts can no longer check out.",
+        confirmLabel: toMixed ? "Switch to Mixed" : "Switch to Quote only",
+        tone: toMixed ? "danger" : "default",
+      });
+      if (!ok) return;
+    }
     // Patch only the fields scoped to the active tab — server merges them
     // into the singleton row. This prevents a stale draft on another tab
     // from clobbering live data.
@@ -246,7 +277,7 @@ export default function AdminSettings() {
       <PageHeader
         eyebrow="System"
         title="Settings"
-        description="Tune the storefront, checkout math, branding, and notifications. Changes take effect on the next request — no restart needed."
+        description="How the site sells (quote-only vs mixed), contact details, branding, shipping, SEO and notifications. Changes reach the public site within a minute."
         actions={
           server?.updated_at ? (
             <p className="text-[11px] text-ink/45 tabular">
@@ -279,7 +310,7 @@ export default function AdminSettings() {
 
       <div className="grid lg:grid-cols-[240px_1fr] gap-6">
         {/* Tab nav */}
-        <nav className="bg-white border border-[var(--jmn-line)] rounded-lg p-2 h-fit lg:sticky lg:top-4">
+        <nav aria-label="Settings sections" className="bg-white border border-[var(--jmn-line)] p-2 h-fit lg:sticky lg:top-20 flex gap-1 overflow-x-auto no-scrollbar lg:block">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.key;
@@ -288,9 +319,12 @@ export default function AdminSettings() {
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  "w-full flex items-start gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-left",
+                  "shrink-0 lg:w-full flex items-start gap-3 px-3 py-2.5 text-sm transition-colors text-left border-l-[3px]",
                   active
-                    ? "bg-navy/5 text-navy"
+                    ? "bg-re-steel-50 text-navy font-medium border-re-red"
+                    : "border-transparent",
+                  active
+                    ? ""
                     : "text-ink/65 hover:text-navy hover:bg-[#FAFAFA]",
                 )}
               >
@@ -300,8 +334,8 @@ export default function AdminSettings() {
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block leading-tight">{t.label}</span>
-                  <span className="block text-[10px] tracking-[0.14em] uppercase text-ink/40 mt-0.5">
-                    {t.description.split(" ").slice(0, 3).join(" ")}…
+                  <span className="hidden lg:block text-[11px] text-ink/60 mt-0.5 font-normal">
+                    {t.description}
                   </span>
                 </span>
               </button>
@@ -317,6 +351,7 @@ export default function AdminSettings() {
           </header>
 
           <div className="px-6 py-5 flex-1 overflow-y-auto space-y-5">
+            {tab === "sales" && <SalesTab value={draft} server={server} onChange={set} />}
             {tab === "general" && (
               <GeneralTab value={draft} onChange={set} />
             )}
@@ -381,20 +416,23 @@ export default function AdminSettings() {
           width: 100%;
           min-height: 38px;
           padding: 8px 12px;
-          border: 1px solid var(--jmn-line);
-          border-radius: 6px;
+          border: 1px solid var(--re-steel-300);
+          border-radius: 2px;
           background: white;
           font-size: 14px;
           color: var(--jmn-ink, #0a0a0a);
           transition: border-color 120ms, box-shadow 120ms;
         }
+        .stg-input[aria-invalid="true"] {
+          border-color: #be123c;
+        }
         .stg-input:focus {
           outline: none;
-          border-color: var(--jmn-navy, #0e1a3a);
-          box-shadow: 0 0 0 3px rgba(14, 26, 58, 0.08);
+          border-color: var(--re-blue);
+          box-shadow: 0 0 0 1px var(--re-blue);
         }
         .stg-input::placeholder {
-          color: rgba(10, 10, 10, 0.35);
+          color: #767b82;
         }
         textarea.stg-input {
           min-height: 80px;
@@ -430,47 +468,84 @@ function GeneralTab({
           className="stg-input"
         />
       </Field>
-      <Field
-        label="Tagline"
-        hint="A short line shown under the store name on emails and the storefront."
-      >
-        <input
-          value={value.site_tagline}
-          onChange={(e) => onChange("site_tagline", e.target.value)}
-          placeholder="Modern Bangladeshi tailoring"
-          className="stg-input"
-        />
-      </Field>
-
       <Row>
-        <Field label="Contact email">
+        <Field
+          label="Tagline"
+          hint="Short line under the name in the site header, emails and quotations."
+        >
           <input
-            type="email"
-            value={value.contact_email}
-            onChange={(e) => onChange("contact_email", e.target.value)}
-            placeholder="hello@rakibenterprise-bd.com"
+            value={value.site_tagline_en ?? ""}
+            onChange={(e) => onChange("site_tagline_en", e.target.value)}
+            placeholder="Industrial sewing machine spare parts"
             className="stg-input"
           />
         </Field>
-        <Field label="Contact phone">
+        <Field label="Tagline (বাংলা)">
           <input
-            value={value.contact_phone}
-            onChange={(e) => onChange("contact_phone", e.target.value)}
-            placeholder="+880 1700 000 000"
+            lang="bn"
+            value={value.site_tagline_bn ?? ""}
+            onChange={(e) => onChange("site_tagline_bn", e.target.value)}
+            placeholder="ইন্ডাস্ট্রিয়াল সেলাই মেশিনের যন্ত্রাংশ"
             className="stg-input"
           />
         </Field>
       </Row>
 
-      <Field label="Business address">
-        <textarea
-          value={value.business_address}
-          onChange={(e) => onChange("business_address", e.target.value)}
-          rows={3}
-          placeholder="Shop name, street, area, city"
-          className="stg-input"
-        />
-      </Field>
+      <Section title="Contact (shown on every page of the site)">
+        <Row cols={3}>
+          <Field label="Contact phone" hint="Header + footer + click-to-call.">
+            <input
+              value={value.contact_phone}
+              onChange={(e) => onChange("contact_phone", e.target.value)}
+              placeholder="+880 1711 000 000"
+              className="stg-input tabular"
+              aria-invalid={!isValidContactPhone(value.contact_phone) || undefined}
+            />
+            <PhoneCheck value={value.contact_phone} kind="phone" />
+          </Field>
+          <Field label="WhatsApp number" hint="Bangladeshi mobile — powers every WhatsApp button and quote share link.">
+            <input
+              value={value.whatsapp_number}
+              onChange={(e) => onChange("whatsapp_number", e.target.value)}
+              placeholder="+880 1711 000 000"
+              className="stg-input tabular"
+              aria-invalid={(!!value.whatsapp_number && !isValidBdPhone(value.whatsapp_number)) || undefined}
+              data-testid="whatsapp-number"
+            />
+            <PhoneCheck value={value.whatsapp_number} kind="whatsapp" />
+          </Field>
+          <Field label="Contact email" hint="Also receives new quote requests.">
+            <input
+              type="email"
+              value={value.contact_email}
+              onChange={(e) => onChange("contact_email", e.target.value)}
+              placeholder="sales@rakibenterprise-bd.com"
+              className="stg-input"
+            />
+          </Field>
+        </Row>
+      </Section>
+
+      <Row>
+        <Field label="Business address">
+          <textarea
+            value={value.business_address_en ?? ""}
+            onChange={(e) => onChange("business_address_en", e.target.value)}
+            rows={3}
+            placeholder="Shop no., market, street, area, Dhaka"
+            className="stg-input"
+          />
+        </Field>
+        <Field label="Business address (বাংলা)">
+          <textarea
+            lang="bn"
+            value={value.business_address_bn ?? ""}
+            onChange={(e) => onChange("business_address_bn", e.target.value)}
+            rows={3}
+            className="stg-input"
+          />
+        </Field>
+      </Row>
 
       <Section title="Localization">
         <Row cols={3}>
@@ -554,13 +629,13 @@ function BrandingTab({
 
       <Section title="Theme colors">
         <Row>
-          <Field label="Primary" hint="Brand navy — buttons, headlines">
+          <Field label="Primary" hint="Emails & quotation PDF accents (brand ink #231F20)">
             <ColorInput
               value={value.primary_color}
               onChange={(v) => onChange("primary_color", v)}
             />
           </Field>
-          <Field label="Accent" hint="Gold — eyebrows, highlights">
+          <Field label="Accent" hint="Highlights (brand red #ED1C24)">
             <ColorInput
               value={value.accent_color}
               onChange={(v) => onChange("accent_color", v)}
@@ -569,15 +644,26 @@ function BrandingTab({
         </Row>
       </Section>
 
-      <Field label="Footer text" hint="Shown at the bottom of every storefront page.">
-        <textarea
-          value={value.footer_text}
-          onChange={(e) => onChange("footer_text", e.target.value)}
-          rows={3}
-          placeholder="© Rakib Enterprise — Made in Bangladesh."
-          className="stg-input"
-        />
-      </Field>
+      <Row>
+        <Field label="Footer text" hint="Shown at the bottom of every page of the site.">
+          <textarea
+            value={value.footer_text_en ?? ""}
+            onChange={(e) => onChange("footer_text_en", e.target.value)}
+            rows={3}
+            placeholder="Genuine and compatible parts for Juki, Brother, Pegasus…"
+            className="stg-input"
+          />
+        </Field>
+        <Field label="Footer text (বাংলা)">
+          <textarea
+            lang="bn"
+            value={value.footer_text_bn ?? ""}
+            onChange={(e) => onChange("footer_text_bn", e.target.value)}
+            rows={3}
+            className="stg-input"
+          />
+        </Field>
+      </Row>
     </>
   );
 }
@@ -1092,14 +1178,9 @@ function SeoTab({
               className="stg-input"
             />
           </Field>
-          <Field label="WhatsApp number" hint="Powers the floating chat link.">
-            <input
-              value={value.whatsapp_number}
-              onChange={(e) => onChange("whatsapp_number", e.target.value)}
-              placeholder="+880 1700 000 000"
-              className="stg-input"
-            />
-          </Field>
+          <p className="text-[12px] text-ink/60 self-end pb-2">
+            WhatsApp number lives under Contact &amp; business.
+          </p>
         </Row>
       </Section>
     </>
@@ -1211,6 +1292,164 @@ function MaintenanceTab({
   );
 }
 
+// ─── Sales & quotes ─────────────────────────────────────────────────────────
+
+function SalesTab({
+  value,
+  server,
+  onChange,
+}: {
+  value: SiteSettingsShape;
+  server: SiteSettingsShape | null;
+  onChange: Setter;
+}) {
+  const mode = value.sales_mode ?? "quote_only";
+  const changed = !!server && server.sales_mode !== mode;
+  const OPTIONS: Array<{ v: "quote_only" | "mixed"; title: string; body: string[] }> = [
+    {
+      v: "quote_only",
+      title: "Quote only",
+      body: [
+        "No prices anywhere on the site, in search results or structured data.",
+        "Every part: “Price on request” + Add to quote → RFQ.",
+        "Cart and checkout are hidden.",
+      ],
+    },
+    {
+      v: "mixed",
+      title: "Mixed",
+      body: [
+        "Parts set to “Direct” show their price, price tiers and Add to cart.",
+        "Cart, COD checkout and the cart icon appear in the site navigation.",
+        "Everything else stays quote-only.",
+      ],
+    },
+  ];
+  return (
+    <>
+      <fieldset>
+        <legend className="block text-[11px] font-semibold tracking-[0.08em] uppercase text-ink/65 mb-2">
+          Site sales mode
+        </legend>
+        <div className="grid sm:grid-cols-2 gap-3" role="radiogroup">
+          {OPTIONS.map((o) => {
+            const on = mode === o.v;
+            return (
+              <label
+                key={o.v}
+                data-testid={`sales-mode-${o.v}`}
+                className={cn(
+                  "block border p-4 cursor-pointer transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-re-blue",
+                  on ? "border-re-ink bg-re-steel-50 border-t-2 border-t-re-red" : "border-[var(--jmn-line)] hover:border-re-steel-400",
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="sales_mode"
+                    value={o.v}
+                    checked={on}
+                    onChange={() => onChange("sales_mode", o.v)}
+                    className="h-4 w-4 accent-[#231F20]"
+                  />
+                  <span className="text-[15px] font-semibold text-navy">{o.title}</span>
+                  {server?.sales_mode === o.v && (
+                    <span className="ml-auto text-[10px] font-semibold tracking-[0.12em] uppercase text-ink/60">Live</span>
+                  )}
+                </span>
+                <ul className="mt-2 space-y-1 text-[13px] text-ink/70 list-disc pl-5">
+                  {o.body.map((b) => <li key={b}>{b}</li>)}
+                </ul>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+      {changed && (
+        <div role="status" className="border border-amber-300 bg-amber-50 px-4 py-3 text-[13px] text-amber-950 flex gap-3">
+          <AlertCircle size={16} className="shrink-0 mt-0.5 text-amber-800" aria-hidden />
+          <p>
+            {mode === "mixed"
+              ? "Saving makes internal prices of every Direct part public. Check which parts are set to Direct in Products (Sales mode column) first."
+              : "Saving hides all public prices and turns off cart/checkout immediately."}{" "}
+            The public site picks this up within a minute.
+          </p>
+        </div>
+      )}
+
+      <Section title="Quotations">
+        <Row cols={2}>
+          <Field label="Our VAT BIN" hint="Printed on every quotation PDF.">
+            <input
+              value={value.company_bin ?? ""}
+              onChange={(e) => onChange("company_bin", e.target.value)}
+              placeholder="000000000-0000"
+              className="stg-input tabular"
+            />
+          </Field>
+          <Field label="Default validity (days)" hint="Used when a quote is marked quoted without a valid-until date.">
+            <input
+              type="number"
+              min={0}
+              max={365}
+              value={value.quote_validity_days ?? 7}
+              onChange={(e) => onChange("quote_validity_days", Math.max(0, Number(e.target.value) || 0))}
+              className="stg-input tabular"
+            />
+          </Field>
+        </Row>
+        <Field label="Quotation terms" hint="One term per line — printed at the bottom of the quotation PDF.">
+          <textarea
+            value={value.quote_terms ?? ""}
+            onChange={(e) => onChange("quote_terms", e.target.value)}
+            rows={5}
+            placeholder={"Prices in BDT, VAT extra.\nDelivery within Dhaka in 1–2 days.\nPayment: bank transfer or COD."}
+            className="stg-input"
+          />
+        </Field>
+      </Section>
+    </>
+  );
+}
+
+function isValidContactPhone(v: string): boolean {
+  if (!v) return true;
+  const d = v.replace(/\D/g, "");
+  return d.length >= 8 && d.length <= 15;
+}
+
+function validateTab(tab: TabKey, v: SiteSettingsShape): string | null {
+  if (tab === "general") {
+    if (!v.site_name?.trim()) return "Store name is required.";
+    if (v.whatsapp_number && !isValidBdPhone(v.whatsapp_number))
+      return "WhatsApp number must be a Bangladeshi mobile, e.g. +8801711000000 or 01711000000.";
+    if (!isValidContactPhone(v.contact_phone)) return "Contact phone looks incomplete.";
+  }
+  if (tab === "sales" && (v.quote_validity_days ?? 0) > 365) return "Validity can be at most 365 days.";
+  return null;
+}
+
+function PhoneCheck({ value, kind }: { value: string; kind: "phone" | "whatsapp" }) {
+  if (!value) return null;
+  const ok = kind === "whatsapp" ? isValidBdPhone(value) : isValidContactPhone(value);
+  return (
+    <span className={cn("mt-1 block text-[12px]", ok ? "text-re-stock-in" : "text-rose-700")}>
+      {ok
+        ? kind === "whatsapp"
+          ? `✓ wa.me/${normaliseBd(value)}`
+          : "✓ Looks good"
+        : kind === "whatsapp"
+          ? "Use a BD mobile: +8801XXXXXXXXX or 01XXXXXXXXX"
+          : "Too short"}
+    </span>
+  );
+}
+
+function normaliseBd(v: string): string {
+  const d = v.replace(/\D/g, "");
+  return d.startsWith("880") ? d : d.startsWith("0") ? "88" + d : d;
+}
+
 // ─── Reusable bits ─────────────────────────────────────────────────────────
 
 function Field({
@@ -1226,12 +1465,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-1.5">
+      <span className="block text-[11px] font-semibold tracking-[0.08em] uppercase text-ink/65 mb-1.5">
         {label}
         {required && <span className="text-rose-700"> *</span>}
       </span>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-ink/45">{hint}</p>}
+      {hint && <span className="mt-1 block text-[12px] text-ink/60">{hint}</span>}
     </label>
   );
 }
@@ -1259,7 +1498,7 @@ function Section({
 }) {
   return (
     <div className="pt-1">
-      <h3 className="text-[10px] tracking-[0.3em] uppercase text-gold mb-3">
+      <h3 className="text-[11px] font-semibold tracking-[0.16em] uppercase text-gold mb-3 pt-3 border-t border-[var(--jmn-line)]">
         {title}
       </h3>
       <div className="space-y-4">{children}</div>
@@ -1287,7 +1526,7 @@ function Toggle({
           onChange={(e) => onChange(e.target.checked)}
           className="peer sr-only"
         />
-        <span className="block w-10 h-6 rounded-full bg-ink/20 peer-checked:bg-navy transition-colors" />
+        <span className="block w-10 h-6 rounded-full bg-re-steel-400 peer-checked:bg-re-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-re-blue transition-colors" />
         <span className="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
       </span>
       <span className="flex-1 min-w-0">
