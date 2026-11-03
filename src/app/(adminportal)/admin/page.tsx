@@ -11,16 +11,25 @@ import StatCard from "@/components/admin/StatCard";
 import SalesChart from "@/components/admin/SalesChart";
 import StatusPill from "@/components/admin/StatusPill";
 import EmptyState from "@/components/admin/EmptyState";
+import QuotesDashboardPanel from "@/components/admin/quotes/QuotesDashboardPanel";
+import type { QuoteStatsShape } from "@/lib/django-admin";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Older backends don't embed `quotes` in the dashboard payload — fall
+  // back to GET /site/rfq/stats/.
+  const [quoteStats, setQuoteStats] = useState<QuoteStatsShape | null>(null);
   const toast = useToast();
 
   useEffect(() => {
     djangoAdmin.dashboard
       .stats()
-      .then(setStats)
+      .then((s) => {
+        setStats(s);
+        if (s.quotes) setQuoteStats(s.quotes);
+        else djangoAdmin.rfq.stats().then(setQuoteStats).catch(() => {});
+      })
       .catch((e) => setError((e as Error).message));
   }, []);
 
@@ -47,7 +56,7 @@ export default function AdminDashboard() {
       <PageHeader
         eyebrow="Overview"
         title="Dashboard"
-        description="Live performance across the storefront, last 14 days."
+        description="Quotes, orders and stock at a glance — last 14 days."
         actions={
           <button
             type="button"
@@ -66,6 +75,8 @@ export default function AdminDashboard() {
           </button>
         }
       />
+
+      {quoteStats && <QuotesDashboardPanel stats={quoteStats} />}
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
@@ -117,7 +128,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="mt-1.5 h-1.5 rounded-full bg-[#F0F0F0] overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-navy to-gold"
+                    className="h-full bg-re-ink"
                     style={{ width: `${s.share}%` }}
                   />
                 </div>
