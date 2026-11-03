@@ -1,4 +1,11 @@
-@import "tailwindcss";
+/* Admin console stylesheet — the pre-rebuild design tokens, kept verbatim so
+   /admin looks exactly as before. The public site has its own stylesheet
+   (src/app/[locale]/site.css); the two never load on the same page.
+   Tailwind scans only admin code (base = this folder + the @source dirs). */
+@import "tailwindcss" source(".");
+@source "../../components/admin";
+@source "../../context";
+@source "../../lib";
 
 /* =========================================================================
    RAKIB ENTERPRISE — Brand Tokens & Design System
@@ -78,21 +85,6 @@
 html {
   background: var(--background);
   color: var(--foreground);
-  scroll-behavior: auto;  /* Lenis takes over */
-}
-
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-.lenis.lenis-stopped {
-  overflow: hidden;
 }
 
 body {
@@ -327,104 +319,4 @@ h1, h2, h3, h4, h5 {
     transition-duration: 0.001ms !important;
   }
   .marquee-track { animation: none; }
-}
-
-/* =========================================================================
-   react-phone-number-input — brand override.
-   The library ships its own CSS (dotted underline + stark borders); we
-   re-skin it to match the brand's bottom-border input style used in the
-   checkout / account forms (`bg-transparent border-b border-navy/20`).
-   ========================================================================= */
-
-.jmn-phone-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  /* py-2.5 ≈ 10px / 10px to match the sibling <input className={INPUT}> */
-  padding: 10px 0;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--jmn-navy) 20%, transparent);
-  transition: border-color 200ms ease;
-}
-.jmn-phone-field:focus-within {
-  border-bottom-color: var(--jmn-navy);
-}
-
-/* Country selector — a quiet flag + chevron. No background, no border so
-   it visually melts into the underline like the rest of the form. */
-.jmn-phone-field .PhoneInputCountry {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: transparent;
-}
-.jmn-phone-field .PhoneInputCountryIcon {
-  width: 20px;
-  height: 14px;
-  border-radius: 1px;
-  overflow: hidden;
-  box-shadow: none;
-  background: transparent;
-}
-.jmn-phone-field .PhoneInputCountryIcon--border,
-.jmn-phone-field .PhoneInputCountryIcon img {
-  box-shadow: none;
-  background: transparent;
-}
-.jmn-phone-field .PhoneInputCountrySelectArrow {
-  width: 5px;
-  height: 5px;
-  margin-left: 1px;
-  border-style: solid;
-  border-color: var(--jmn-navy);
-  border-width: 0 1px 1px 0;
-  transform: rotate(45deg);
-  opacity: 0.45;
-}
-
-/* The phone <input> — inherit everything from the surrounding form so it
-   looks identical to the sibling text inputs. */
-.jmn-phone-field .PhoneInputInput {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  outline: none;
-  padding: 0;
-  /* inherit the page's body font + size — don't introduce a new scale */
-  font: inherit;
-  color: var(--jmn-navy);
-}
-.jmn-phone-field .PhoneInputInput::placeholder {
-  color: color-mix(in srgb, var(--jmn-ink) 35%, transparent);
-}
-
-/* Native <select> sitting on top of the flag — invisible, click-through. */
-.jmn-phone-field .PhoneInputCountrySelect {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  opacity: 0;
-  cursor: pointer;
-}
-
-/* Compact variant — admin forms on white background where a boxed input
-   is the house style instead of the underline. */
-.jmn-phone-field.jmn-phone-compact {
-  padding: 0 12px;
-  height: 36px;
-  border: 1px solid var(--jmn-line, color-mix(in srgb, var(--jmn-navy) 12%, transparent));
-  border-bottom: 1px solid var(--jmn-line, color-mix(in srgb, var(--jmn-navy) 12%, transparent));
-  border-radius: 6px;
-  background: white;
-}
-.jmn-phone-field.jmn-phone-compact:focus-within {
-  border-color: var(--jmn-navy);
-  border-bottom-color: var(--jmn-navy);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--jmn-navy) 8%, transparent);
-}
-.jmn-phone-field.jmn-phone-compact .PhoneInputInput {
-  font-size: 14px;
 }
