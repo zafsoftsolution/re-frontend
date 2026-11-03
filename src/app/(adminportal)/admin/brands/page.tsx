@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { djangoAdmin } from "@/lib/django-admin";
 import ResourceManager, { type CrudClient } from "@/components/admin/ResourceManager";
+import { descriptionFields, nameBnField, seoFields } from "@/lib/admin/catalog-fields";
 import type { Column } from "@/components/admin/DataTable";
 
 interface Brand extends Record<string, unknown> {
@@ -93,6 +94,7 @@ export default function AdminBrands() {
       initialValues={{ is_active: true, is_oem: false }}
       fields={[
         { name: "name", label: "Name", type: "text", required: true, placeholder: "Organ" },
+        nameBnField,
         {
           name: "slug",
           label: "Slug",
@@ -103,8 +105,9 @@ export default function AdminBrands() {
         },
         { name: "is_oem", label: "Genuine / OEM", type: "boolean", placeholder: "Original manufacturer parts" },
         { name: "logo", label: "Logo", type: "imageUrl", full: true },
-        { name: "description", label: "Description", type: "textarea", full: true },
-        { name: "is_active", label: "Active", type: "boolean", placeholder: "Show on storefront" },
+        ...descriptionFields(),
+        { name: "is_active", label: "Active", type: "boolean", placeholder: "Show on the site" },
+        ...seoFields(),
       ]}
     />
   );

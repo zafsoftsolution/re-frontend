@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { djangoAdmin } from "@/lib/django-admin";
 import ResourceManager, { type CrudClient } from "@/components/admin/ResourceManager";
 import type { Column } from "@/components/admin/DataTable";
+import { descriptionFields, nameBnField, seoFields } from "@/lib/admin/catalog-fields";
 
 interface Category extends Record<string, unknown> {
   id: string;
@@ -106,7 +107,7 @@ export default function AdminCategories() {
       eyebrow="Catalog"
       title="Categories"
       singular="category"
-      description="Two-level taxonomy customers see in the storefront."
+      description="Part types (hooks, needles, feed dogs…) — two levels. Shown in the site navigation and category pages."
       client={djangoAdmin.categories as CrudClient<Category>}
       rowKey={(c) => c.slug}
       rowLabel={(c) => c.name}
@@ -126,6 +127,7 @@ export default function AdminCategories() {
       }}
       fields={[
         { name: "name", label: "Name", type: "text", required: true },
+        nameBnField,
         {
           name: "slug",
           label: "Slug",
@@ -144,9 +146,10 @@ export default function AdminCategories() {
         { name: "order", label: "Display order", type: "number", hint: "Lower numbers first" },
         { name: "image", label: "Image", type: "imageUrl", full: true },
         { name: "banner_image", label: "Banner image", type: "imageUrl", full: true },
-        { name: "description", label: "Description", type: "textarea", full: true, rows: 4 },
-        { name: "is_featured", label: "Featured", type: "boolean", placeholder: "Show in nav" },
-        { name: "is_active", label: "Active", type: "boolean", placeholder: "Visible on storefront" },
+        ...descriptionFields(4),
+        { name: "is_featured", label: "Featured", type: "boolean", placeholder: "Home page category grid" },
+        { name: "is_active", label: "Active", type: "boolean", placeholder: "Visible on the site" },
+        ...seoFields(),
       ]}
     />
   );

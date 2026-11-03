@@ -1476,6 +1476,43 @@ function crud<T = unknown>(base: string, idField: "slug" | "id" = "slug") {
   };
 }
 
+/**
+ * Fetch every page of a paginated list (follows `next`, max 40 pages) and
+ * return it in the paginated envelope so callers that unwrap `.results`
+ * keep working. Admin screens list catalogue tables client-side.
+ */
+async function listAllPages<T>(
+  base: string,
+  query?: Record<string, string | number | boolean | undefined | null>,
+): Promise<PaginatedResponse<T>> {
+  const first = await request<PaginatedResponse<T> | T[]>(base, { query });
+  if (Array.isArray(first)) {
+    return { count: first.length, next: null, previous: null, results: first };
+  }
+  const results = [...first.results];
+  let next = first.next;
+  for (let i = 0; next && i < 40; i++) {
+    const page: PaginatedResponse<T> = await request<PaginatedResponse<T>>(next);
+    results.push(...page.results);
+    next = page.next;
+  }
+  return { count: first.count, next: null, previous: null, results };
+}
+
+/** crud() for catalogue tables: list = all pages, inactive rows included. */
+function catalogCrud<T = unknown>(base: string) {
+  const c = crud<T>(base, "slug");
+  return {
+    ...c,
+    list: <R = PaginatedResponse<T>>(query?: Record<string, unknown>) =>
+      listAllPages<T>(base, {
+        include_inactive: 1,
+        page_size: 200,
+        ...(query as Record<string, string | number | boolean | undefined | null>),
+      }) as unknown as Promise<R>,
+  };
+}
+
 // ─── Public client ───────────────────────────────────────────────────────────
 
 export const djangoAdmin = {
@@ -1580,14 +1617,16 @@ export const djangoAdmin = {
     exportImportLayout: () =>
       downloadCsv("/site/products/export.csv/", { layout: "import" }, "parts-export.csv"),
   },
-  categories: crud("/site/categories/", "slug"),
-  brands: crud("/site/brands/", "slug"),
-  machineBrands: crud("/site/machine-brands/", "slug"),
+  categories: catalogCrud("/site/categories/"),
+  brands: catalogCrud("/site/brands/"),
+  machineBrands: catalogCrud("/site/machine-brands/"),
   machineModels: {
     ...crud("/site/machine-models/", "slug"),
     list: (machineBrandSlug?: string) =>
-      request<PaginatedResponse<unknown>>("/site/machine-models/", {
-        query: machineBrandSlug ? { "machine_brand__slug": machineBrandSlug } : undefined,
+      listAllPages<unknown>("/site/machine-models/", {
+        include_inactive: 1,
+        page_size: 200,
+        "machine_brand__slug": machineBrandSlug || undefined,
       }),
   },
   collections: crud("/site/collections/", "slug"),

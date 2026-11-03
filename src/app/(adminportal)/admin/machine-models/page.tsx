@@ -5,6 +5,7 @@ import { djangoAdmin } from "@/lib/django-admin";
 import ResourceManager, { type CrudClient } from "@/components/admin/ResourceManager";
 import type { Column } from "@/components/admin/DataTable";
 import type { FormField } from "@/components/admin/ResourceForm";
+import { MACHINE_TYPES, descriptionFields, seoFields } from "@/lib/admin/catalog-fields";
 
 interface MachineModel extends Record<string, unknown> {
   id: string;
@@ -17,20 +18,6 @@ interface MachineModel extends Record<string, unknown> {
   order: number;
   is_active: boolean;
 }
-
-const MACHINE_TYPES: Array<{ value: string; label: string }> = [
-  { value: "lockstitch", label: "Lockstitch (single/double needle)" },
-  { value: "overlock", label: "Overlock / Serger" },
-  { value: "flatlock", label: "Flatlock / Coverstitch" },
-  { value: "buttonhole", label: "Buttonhole" },
-  { value: "bartack", label: "Bartack" },
-  { value: "button_attach", label: "Button attaching" },
-  { value: "feed_off_arm", label: "Feed-off-the-arm" },
-  { value: "multi_needle", label: "Multi-needle / Chainstitch" },
-  { value: "blind_stitch", label: "Blind stitch" },
-  { value: "special", label: "Special / Automatic" },
-  { value: "other", label: "Other" },
-];
 
 const columns: Column<MachineModel>[] = [
   {
@@ -86,9 +73,11 @@ export default function AdminMachineModels() {
     { name: "machine_type", label: "Machine type", type: "select", required: true, options: MACHINE_TYPES },
     { name: "name", label: "Model name", type: "text", required: true, placeholder: "DDL-8700" },
     { name: "slug", label: "Slug", type: "slug", required: true, autoFrom: "name" },
-    { name: "description", label: "Description", type: "textarea", full: true },
+    ...descriptionFields(),
+    { name: "image", label: "Image", type: "imageUrl", full: true },
     { name: "order", label: "Sort order", type: "number" },
     { name: "is_active", label: "Active", type: "boolean" },
+    ...seoFields({ og: false }),
   ];
 
   return (

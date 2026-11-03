@@ -2,6 +2,7 @@
 
 import { djangoAdmin } from "@/lib/django-admin";
 import ResourceManager, { type CrudClient } from "@/components/admin/ResourceManager";
+import { descriptionFields, seoFields } from "@/lib/admin/catalog-fields";
 import type { Column } from "@/components/admin/DataTable";
 
 interface MachineBrand extends Record<string, unknown> {
@@ -77,11 +78,12 @@ export default function AdminMachineBrands() {
         { name: "name", label: "Name", type: "text", required: true, placeholder: "Juki" },
         { name: "slug", label: "Slug", type: "slug", required: true, autoFrom: "name" },
         { name: "country", label: "Country of origin", type: "text", placeholder: "Japan" },
-        { name: "description", label: "Description", type: "textarea", full: true },
+        ...descriptionFields(),
         { name: "logo", label: "Logo", type: "imageUrl", full: true },
         { name: "order", label: "Sort order", type: "number" },
-        { name: "is_featured", label: "Featured on storefront", type: "boolean" },
+        { name: "is_featured", label: "Featured on home page", type: "boolean" },
         { name: "is_active", label: "Active", type: "boolean" },
+        ...seoFields(),
       ]}
     />
   );
