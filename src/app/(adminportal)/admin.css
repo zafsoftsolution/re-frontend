@@ -430,3 +430,7 @@ button.bg-navy, a.bg-navy, label.bg-navy {
 button.bg-navy:not(:disabled):hover, a.bg-navy:hover, label.bg-navy:hover {
   background-color: var(--re-red-hover);
 }
+
+/* Scroll containers must contain absolutely positioned descendants (sr-only
+   labels inside wide tables) or they leak horizontal page overflow. */
+.overflow-x-auto, .overflow-auto { position: relative; }

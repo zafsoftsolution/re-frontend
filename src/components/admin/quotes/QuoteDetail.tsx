@@ -354,6 +354,18 @@ export default function QuoteDetail({ id }: { id: string }) {
         </div>
       </header>
 
+      {/* Mobile: contact first — the buyer may be waiting on WhatsApp. */}
+      <div className="lg:hidden grid grid-cols-2 gap-2 mb-4">
+        <a href={telLink(q.phone)} className={btn.secondary + " h-11"}>
+          <Phone size={15} aria-hidden /> Call
+        </a>
+        {wa && (
+          <a href={wa} target="_blank" rel="noopener noreferrer" className={btn.whatsapp + " h-11"}>
+            <MessageCircle size={15} aria-hidden /> WhatsApp
+          </a>
+        )}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* ── Main column ───────────────────────────────────────────── */}
         <div className="space-y-6 min-w-0">
@@ -364,8 +376,27 @@ export default function QuoteDetail({ id }: { id: string }) {
                 No lines — the customer sent {q.attachments_count ? "an attachment" : "notes"} only. Use the quoted total below.
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[760px]" data-testid="quote-lines">
+              <>
+              <ul className="md:hidden divide-y divide-[var(--jmn-line)]" aria-label="Line items">
+                {q.items.map((it, i) => (
+                  <LineRow
+                    key={it.id}
+                    card
+                    index={i}
+                    item={it}
+                    draft={drafts[it.id] ?? { price: "", note: "" }}
+                    currency={currency}
+                    editable={editable}
+                    invalid={computed.invalid.includes(it.id)}
+                    linking={linking === it.id}
+                    onLinkStart={() => setLinking(it.id)}
+                    onLinkCancel={() => setLinking(null)}
+                    onChange={(patch) => setLine(it.id, patch)}
+                  />
+                ))}
+              </ul>
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm min-w-[680px]" data-testid="quote-lines">
                   <thead>
                     <tr className="text-left text-[10px] tracking-[0.14em] uppercase text-ink/60 bg-re-steel-50 border-b border-[var(--jmn-line)]">
                       <th scope="col" className="px-3 py-2 font-semibold w-8">#</th>
@@ -395,6 +426,7 @@ export default function QuoteDetail({ id }: { id: string }) {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
 
             {/* Totals / quote terms */}
@@ -664,7 +696,9 @@ function LineRow({
   onLinkStart,
   onLinkCancel,
   onChange,
+  card = false,
 }: {
+  card?: boolean;
   index: number;
   item: QuoteItemShape;
   draft: LineDraft;
@@ -683,10 +717,9 @@ function LineRow({
   const linkedName = draft.link === undefined ? item.product_name : draft.linkLabel;
   const listPrice = draft.link === undefined ? item.product_price : null;
 
-  return (
-    <tr className="border-b border-[var(--jmn-line)] last:border-0 align-top">
-      <td className="px-3 py-3 tabular text-ink/60">{index + 1}</td>
-      <td className="px-3 py-3 min-w-[240px]">
+  const partCell = (
+    <>
+
         {partNo && <span className="block part-no text-[13px] text-navy font-medium">{partNo}</span>}
         {item.description && <span className="block text-[13px] text-navy">{item.description}</span>}
         {item.machine_model_text && (
@@ -737,9 +770,12 @@ function LineRow({
         ) : (
           item.admin_notes && <span className="mt-1 block text-[12px] text-ink/60">Note: {item.admin_notes}</span>
         )}
-      </td>
-      <td className="px-3 py-3 text-right tabular whitespace-nowrap">{item.quantity}</td>
-      <td className="px-3 py-3 text-right whitespace-nowrap">
+      
+    </>
+  );
+  const listCell = (
+    <>
+
         {listPrice ? (
           <>
             <span className="tabular text-ink/65">{formatMoney(listPrice, currency)}</span>
@@ -757,8 +793,12 @@ function LineRow({
         ) : (
           <span className="text-ink/55">—</span>
         )}
-      </td>
-      <td className="px-3 py-3 text-right">
+      
+    </>
+  );
+  const priceCell = (testId: string) => (
+    <>
+
         {editable ? (
           <>
             <input
@@ -768,7 +808,7 @@ function LineRow({
               placeholder="0.00"
               aria-label={`Quoted unit price for line ${index + 1}`}
               aria-invalid={invalid || undefined}
-              data-testid="line-price"
+              data-testid={testId}
               className={cn(
                 field.input,
                 "h-9 tabular text-right",
@@ -780,10 +820,48 @@ function LineRow({
         ) : (
           <span className="tabular">{formatMoney(item.quoted_unit_price, currency)}</span>
         )}
-      </td>
-      <td className="px-3 py-3 text-right tabular whitespace-nowrap text-navy">
-        {lineTotal !== null ? formatMoney(lineTotal, currency) : <span className="text-ink/55">—</span>}
-      </td>
+      
+    </>
+  );
+  const totalCell = lineTotal !== null ? formatMoney(lineTotal, currency) : <span className="text-ink/55">—</span>;
+
+  if (card) {
+    return (
+      <li className="p-4 space-y-3">
+        <div className="flex gap-3">
+          <span className="tabular text-ink/60 shrink-0">{index + 1}</span>
+          <div className="min-w-0 flex-1">{partCell}</div>
+        </div>
+        <dl className="grid grid-cols-3 gap-2 text-[12px] items-start">
+          <div>
+            <dt className="text-ink/60">Qty</dt>
+            <dd className="tabular text-sm text-navy">{item.quantity}</dd>
+          </div>
+          <div className="text-right">
+            <dt className="text-ink/60">List price</dt>
+            <dd className="text-sm">{listCell}</dd>
+          </div>
+          <div className="text-right">
+            <dt className="text-ink/60">Line total</dt>
+            <dd className="tabular text-sm text-navy">{totalCell}</dd>
+          </div>
+        </dl>
+        <div>
+          <span className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/65 mb-1">Quoted unit price</span>
+          {priceCell("line-price-m")}
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <tr className="border-b border-[var(--jmn-line)] last:border-0 align-top">
+      <td className="px-3 py-3 tabular text-ink/60">{index + 1}</td>
+      <td className="px-3 py-3 min-w-[200px]">{partCell}</td>
+      <td className="px-3 py-3 text-right tabular whitespace-nowrap">{item.quantity}</td>
+      <td className="px-3 py-3 text-right whitespace-nowrap">{listCell}</td>
+      <td className="px-3 py-3 text-right w-36">{priceCell("line-price")}</td>
+      <td className="px-3 py-3 text-right tabular whitespace-nowrap text-navy">{totalCell}</td>
     </tr>
   );
 }

@@ -12,6 +12,10 @@ import { cn } from "@/lib/utils";
 const SEGMENT_LABEL: Record<string, string> = {
   admin: "Console",
   rfq: "Quotes",
+  homepage: "Home page",
+  "machine-brands": "Machine brands",
+  "machine-models": "Machine models",
+  brands: "Parts brands",
   products: "Products",
   orders: "Orders",
   customers: "Customers",
@@ -23,10 +27,14 @@ function buildCrumbs(pathname: string) {
   const segs = pathname.split("/").filter(Boolean);
   const out: { label: string; href: string }[] = [];
   let acc = "";
-  for (const s of segs) {
+  segs.forEach((s, i) => {
     acc += `/${s}`;
-    out.push({ label: SEGMENT_LABEL[s] ?? prettify(s), href: acc });
-  }
+    const isId = /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(s);
+    const label = isId
+      ? segs[i - 1] === "rfq" ? "Quote" : "Detail"
+      : SEGMENT_LABEL[s] ?? prettify(s);
+    out.push({ label, href: acc });
+  });
   return out;
 }
 

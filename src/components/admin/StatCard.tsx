@@ -25,8 +25,8 @@ export default function StatCard({ label, value, delta, spark, hint }: Props) {
       </div>
 
       <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="font-display text-3xl md:text-4xl text-navy tabular leading-none">
+        <div className="min-w-0">
+          <p className="text-2xl xl:text-[26px] text-navy tabular leading-none whitespace-nowrap">
             {value}
           </p>
           {hint && <p className="mt-1.5 text-[11px] text-ink/45">{hint}</p>}
