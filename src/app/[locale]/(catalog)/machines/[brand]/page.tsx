@@ -4,9 +4,9 @@ import { ArrowRight } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
-import { getBootstrap, getCatalogIndex, getMachineBrand, getMachineModels } from "@/lib/api/site";
+import { getBootstrap, getMachineBrand, getMachineModels } from "@/lib/api/site";
 import type { MachineModelSummary } from "@/lib/api/types";
-import { breadcrumbJsonLd, joinList, machineTypeLabel, machineTypeLabels, placeholder, PRERENDER, topParams } from "@/lib/catalog/page";
+import { breadcrumbJsonLd, joinList, machineTypeLabel, machineTypeLabels, placeholder, PRERENDER, topParams, prerenderIndex } from "@/lib/catalog/page";
 import { catalogMetadata, localeUrl } from "@/lib/seo/metadata";
 import { itemList } from "@/lib/seo/jsonld";
 import { SheetHeader } from "@/components/catalog/SheetHeader";
@@ -23,7 +23,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 export const instant = false;
 
 export async function generateStaticParams() {
-  const ix = await getCatalogIndex();
+  const ix = await prerenderIndex();
   const counts = new Map<string, number>();
   for (const m of ix?.machineModels ?? []) counts.set(m.brandSlug, (counts.get(m.brandSlug) ?? 0) + 1);
   return topParams(ix?.machineBrands ?? [], PRERENDER.machineBrands, (b) => counts.get(b) ?? 0, (brand) => ({ brand }), {

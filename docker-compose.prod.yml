@@ -1,7 +1,7 @@
 # ── Rakib Enterprise — FRONTEND stack (production, prebuilt image) ──────────
 # Used on the VPS by the GitHub Actions deploy job (see DEPLOYMENT.md).
-# container_name, host port 9085 and network MUST match docker-compose.yml so
-# the existing Nginx Proxy Manager proxy host keeps working.
+# container_name and network MUST match docker-compose.yml so the existing
+# Nginx Proxy Manager proxy host (-> rakib-enterprise-frontend:9085) keeps working.
 # Pulls the image built by CI from GHCR instead of building locally.
 #
 #   docker compose -f docker-compose.prod.yml pull
@@ -26,8 +26,11 @@ services:
     environment:
       # SSR reaches the backend over the shared Docker network.
       INTERNAL_DJANGO_BACKEND: ${INTERNAL_DJANGO_BACKEND:-http://backend:9086}
+    # Loopback only: Nginx Proxy Manager reaches the container by name over
+    # rakib-enterprise-net (rakib-enterprise-frontend:9085); the host port is
+    # just for the deploy health check / post-deploy revalidation.
     ports:
-      - "9085:9085"
+      - "127.0.0.1:9085:9085"
     networks:
       - rakib-enterprise-net
     restart: unless-stopped

@@ -101,14 +101,29 @@ async function fetchList<T>(
   return out;
 }
 
+/** Throttled (429), 5xx or a network/timeout error: worth another try. */
+export function isTransientApiError(err: unknown): boolean {
+  if (err instanceof ApiError) return err.status === 429 || err.status >= 500;
+  return true;
+}
+
+const isBuildPhase = () => process.env.NEXT_PHASE === "phase-production-build";
+
 /** Detail GET: null on HTTP 404, throws on anything else (an outage must
- *  surface as an error, never be cached as "not found"). */
+ *  surface as an error, never be cached as "not found"). While `next build`
+ *  prerenders (only with PRERENDER_CATALOG=1 — see lib/catalog/page.ts),
+ *  transient failures (429 throttle, 5xx, timeouts) are retried with
+ *  back-off so one throttled call doesn't fail the whole build. */
 async function fetchDetail<T>(path: string, locale: string, mapper: (d: unknown) => T | null): Promise<T | null> {
-  try {
-    return mapper(await apiFetch<unknown>(path, { locale }));
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) return null;
-    throw err;
+  const attempts = isBuildPhase() ? 4 : 1;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return mapper(await apiFetch<unknown>(path, { locale }));
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return null;
+      if (attempt >= attempts || !isTransientApiError(err)) throw err;
+      await new Promise((r) => setTimeout(r, 1500 * 2 ** (attempt - 1)));
+    }
   }
 }
 

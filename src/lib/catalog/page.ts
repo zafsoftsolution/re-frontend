@@ -6,22 +6,21 @@ import type { Crumb } from "@/components/ui/Breadcrumbs";
 import type { Locale } from "@/i18n/routing";
 import { routing } from "@/i18n/routing";
 import { PLACEHOLDER_SLUG } from "@/lib/api/catalog-index";
+import { getCatalogIndex } from "@/lib/api/site";
+import type { CatalogIndex } from "@/lib/api/types";
 import { breadcrumbList } from "@/lib/seo/jsonld";
 import { localeUrl } from "@/lib/seo/metadata";
+import { prerenderCatalog } from "./prerender";
+
+export { prerenderCatalog, topParams } from "./prerender";
 
 /** How many of each entity to prerender at build time (rest: on demand). */
 export const PRERENDER = { machineBrands: 12, modelsPerBrand: 8, categoriesPerModel: 4, parts: 60, categories: 24, brands: 12 } as const;
 
-/** Top `n` by `score`, but never empty — Cache Components needs ≥ 1 param. */
-export function topParams<T, P extends Record<string, string>>(
-  items: T[],
-  n: number,
-  score: (x: T) => number,
-  toParams: (x: T) => P,
-  placeholder: P,
-): P[] {
-  const out = [...items].sort((a, b) => score(b) - score(a)).slice(0, n).map(toParams);
-  return out.length ? out : [placeholder];
+/** The slug index for generateStaticParams — null (→ placeholder only)
+ *  unless catalogue prerendering is enabled. */
+export async function prerenderIndex(): Promise<CatalogIndex | null> {
+  return prerenderCatalog() ? getCatalogIndex() : null;
 }
 
 export const placeholder = PLACEHOLDER_SLUG;

@@ -4,14 +4,31 @@ Pipeline: `.github/workflows/ci-cd.yml` (repo `zafsoftsolution/re-frontend`, bra
 
 | Job          | Runs on                                  | What it does                                                                 |
 |--------------|------------------------------------------|------------------------------------------------------------------------------|
-| `ci`         | push + PR to `main`, manual              | `npm ci`, `npm run lint` (non-blocking for now), `next typegen && tsc --noEmit`, `npm run build` |
+| `ci`         | push + PR to `main`, manual              | `npm ci`, `next typegen && tsc --noEmit`, `npm run lint:site` + `npm run lint` (blocking), `npm test`; `npm run build` on PRs only (pushes build once, in Docker) |
 | `build-push` | push to `main`, manual (`workflow_dispatch`) | Builds the Docker image (buildx + GHA cache) and pushes `ghcr.io/zafsoftsolution/re-frontend:latest` and `:sha-<7-char sha>` |
-| `deploy`     | after `build-push`, `main` only          | Copies `docker-compose.prod.yml` to the VPS, `pull` + `up -d` + `docker image prune -f`, then health-checks `http://127.0.0.1:9085/` |
+| `deploy`     | after `build-push`, `main` only          | Copies `docker-compose.prod.yml` to the VPS, `pull` + `up -d` + `docker image prune -f`, then health-checks `http://127.0.0.1:9085/` and POSTs every broad cache tag to `/api/revalidate` (see below) |
 
 `deploy` uses the GitHub environment **`production`** (add required reviewers there if you want a manual approval gate).
 
-> Lint currently fails on pre-existing ESLint errors, so the Lint step has
-> `continue-on-error: true`. Remove that line once the errors are fixed.
+### Build-time API calls
+
+`next build` (CI and the Docker image build, both on GitHub's runners) must not
+crawl the catalogue: the API throttles anonymous clients at 100 requests/hour.
+Catalogue detail routes (`/parts/[slug]`, `/machines/[brand]/…`,
+`/categories/[slug]`, `/brands/[slug]`) therefore prerender only a placeholder
+param; real pages render on their first request inside the running container
+and are cached from then on. Set `PRERENDER_CATALOG=1` at build time to
+prerender the top entities instead (only where the build can reach the API
+without being throttled; transient 429/5xx detail failures are retried).
+
+### Post-deploy revalidation
+
+After the health check, the deploy script reads `REVALIDATE_SECRET` from
+`~/RE/re_frontend/.env.local` and POSTs all broad tags (`bootstrap`, `settings`,
+`categories`, `machine-brands`, `machine-models`, `machines`, `brands`,
+`products`, `sitemap`, `redirects` — keep in sync with `src/lib/api/tags.ts`)
+to `http://127.0.0.1:9085/api/revalidate`, so nothing cached by the previous
+build is served. If the secret is missing it logs a warning and skips.
 
 ## GitHub configuration
 
@@ -59,8 +76,23 @@ never committed — see `.env.example` for key names). Compose loads it via
 
 | Key                       | Notes                                                             |
 |---------------------------|-------------------------------------------------------------------|
-| `JMN_JWT_SECRET`          | **Set this in production**. If it's missing, the app falls back to an insecure dev default. |
+| `REVALIDATE_SECRET`       | **Required.** Shared secret for `POST /api/revalidate` (header `x-revalidate-secret`). Long random string. Empty disables the endpoint (and the post-deploy purge). |
+| `INTERNAL_API_SECRET`     | **Required.** Sent as `X-Internal-Secret` on server-rendering requests so SSR isn't throttled as one anonymous visitor. Never `NEXT_PUBLIC_`. |
 | `INTERNAL_DJANGO_BACKEND` | Optional; defaults to `http://backend:9086` over `rakib-enterprise-net`. |
+| `JMN_JWT_SECRET`          | Legacy (removed mock API); safe to drop. |
+
+### Matching backend environment (`re_backend` `.env`)
+
+| Key                            | Value |
+|--------------------------------|-------|
+| `FRONTEND_REVALIDATE_URL`      | `http://frontend:9085/api/revalidate` (service name on `rakib-enterprise-net`; `http://rakib-enterprise-frontend:9085/...` also works) |
+| `FRONTEND_REVALIDATE_SECRET`   | same value as the frontend's `REVALIDATE_SECRET` |
+| `INTERNAL_API_SECRET`          | same value as the frontend's `INTERNAL_API_SECRET` |
+| `TRUSTED_PROXY_IPS`            | IPs/CIDRs whose `X-Forwarded-For` Django trusts: the frontend container / Docker network (e.g. `172.18.0.0/16`) and Nginx Proxy Manager |
+
+The frontend's form route handlers forward only the single visitor IP that
+NPM saw (right-most `X-Forwarded-For` entry or `X-Real-IP`), never a
+client-supplied chain.
 
 ## One-time server setup (VPS 69.62.73.22, user `zahid`)
 
@@ -74,7 +106,7 @@ never committed — see `.env.example` for key names). Compose loads it via
 5. **First deploy / takeover of the existing container.** `docker-compose.prod.yml`
    keeps the existing compose project name (`rakib-enterprise-frontend`),
    service (`frontend`), `container_name` (`rakib-enterprise-frontend`), port
-   `9085:9085` and external network `rakib-enterprise-net`, so `up -d` replaces the
+   9085 and external network `rakib-enterprise-net`, so `up -d` replaces the
    old locally built container in place. If compose says the container
    name is already in use, run this once and re-run the workflow:
    ```bash
@@ -84,8 +116,12 @@ never committed — see `.env.example` for key names). Compose loads it via
 ### Nginx Proxy Manager
 
 TLS and routing are handled by Nginx Proxy Manager (`nginx-proxy-manager-app-1`).
-**Don't change the proxy hosts.** The container keeps the same name, host port
-(9085) and network, so the existing proxy host keeps working.
+The container keeps the same name and network. Port 9085 is published on
+**127.0.0.1 only** (for the deploy health check), so the NPM proxy host must
+forward to `rakib-enterprise-frontend:9085` over `rakib-enterprise-net`, not
+to the server's public IP / `host.docker.internal`. Check this before the
+first deploy with the loopback binding; if the proxy host still points at
+`<public-ip>:9085`, switch it to the container name.
 
 ### Shared host safety
 

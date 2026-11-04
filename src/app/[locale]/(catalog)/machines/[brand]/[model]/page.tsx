@@ -3,10 +3,10 @@ import { ArrowRight, ScanSearch } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
-import { getAllParts, getBootstrap, getCatalogIndex } from "@/lib/api/site";
+import { getAllParts, getBootstrap } from "@/lib/api/site";
 import { MIN_MODEL_CATEGORY_PARTS } from "@/lib/api/catalog-index";
 import { groupByCategory, loadModel } from "@/lib/catalog/model";
-import { breadcrumbJsonLd, joinList, machineTypeLabel, machineTypeLabels, placeholder, PRERENDER, topParams } from "@/lib/catalog/page";
+import { breadcrumbJsonLd, joinList, machineTypeLabel, machineTypeLabels, placeholder, PRERENDER, topParams, prerenderIndex } from "@/lib/catalog/page";
 import { catalogMetadata, localeUrl } from "@/lib/seo/metadata";
 import { itemList } from "@/lib/seo/jsonld";
 import { SheetHeader } from "@/components/catalog/SheetHeader";
@@ -28,7 +28,7 @@ type Props = PageProps<"/[locale]/machines/[brand]/[model]">;
 export const instant = false;
 
 export async function generateStaticParams({ params }: { params: { brand: string } }) {
-  const ix = await getCatalogIndex();
+  const ix = await prerenderIndex();
   return topParams(
     (ix?.machineModels ?? []).filter((m) => m.brandSlug === params.brand),
     PRERENDER.modelsPerBrand,

@@ -4,10 +4,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { getAllParts, getBootstrap, getCatalogIndex, getMachineBrands, getMachineModels, getPartsBrand } from "@/lib/api/site";
+import { getAllParts, getBootstrap, getMachineBrands, getMachineModels, getPartsBrand } from "@/lib/api/site";
 import type { PartsBrandDetail } from "@/lib/api/types";
 import { hasActiveFilters, parseListingParams, type SearchParamsRecord } from "@/lib/catalog/listing";
-import { breadcrumbJsonLd, placeholder, PRERENDER, topParams } from "@/lib/catalog/page";
+import { breadcrumbJsonLd, placeholder, PRERENDER, topParams, prerenderIndex } from "@/lib/catalog/page";
 import { catalogMetadata } from "@/lib/seo/metadata";
 import { SheetHeader } from "@/components/catalog/SheetHeader";
 import { JsonLd } from "@/components/catalog/JsonLd";
@@ -30,7 +30,7 @@ type Props = PageProps<"/[locale]/brands/[slug]">;
 export const instant = false;
 
 export async function generateStaticParams() {
-  const ix = await getCatalogIndex();
+  const ix = await prerenderIndex();
   return topParams(ix?.brands ?? [], PRERENDER.brands, (b) => b.productCount, (b) => ({ slug: b.slug }), { slug: placeholder });
 }
 

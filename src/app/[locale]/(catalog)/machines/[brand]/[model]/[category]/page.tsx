@@ -5,11 +5,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { getAllParts, getBootstrap, getCatalogIndex, getCategory } from "@/lib/api/site";
+import { getAllParts, getBootstrap, getCategory } from "@/lib/api/site";
 import { MIN_MODEL_CATEGORY_PARTS } from "@/lib/api/catalog-index";
 import { loadModel } from "@/lib/catalog/model";
 import { sortParts } from "@/lib/catalog/listing";
-import { breadcrumbJsonLd, placeholder, PRERENDER, topParams } from "@/lib/catalog/page";
+import { breadcrumbJsonLd, placeholder, PRERENDER, topParams, prerenderIndex } from "@/lib/catalog/page";
 import { catalogMetadata, localePath, localeUrl } from "@/lib/seo/metadata";
 import { itemList } from "@/lib/seo/jsonld";
 import { SheetHeader } from "@/components/catalog/SheetHeader";
@@ -27,7 +27,7 @@ type Props = PageProps<"/[locale]/machines/[brand]/[model]/[category]">;
 export const instant = false;
 
 export async function generateStaticParams({ params }: { params: { brand: string; model: string } }) {
-  const ix = await getCatalogIndex();
+  const ix = await prerenderIndex();
   return topParams(
     (ix?.modelCategories ?? []).filter((r) => r.brandSlug === params.brand && r.modelSlug === params.model),
     PRERENDER.categoriesPerModel,

@@ -1,5 +1,5 @@
 # ── Rakib Enterprise — frontend CI/CD ───────────────────────────────────────
-# ci         : type-check + lint + unit tests + build (push & PR to main)
+# ci         : type-check + lint + unit tests (+ next build on PRs only)
 # build-push : build Docker image, push to GHCR (push to main / manual run)
 # deploy     : SSH to the VPS, pull the new image, restart, health-check
 #
@@ -55,17 +55,19 @@ jobs:
       - name: Lint (public site)
         run: npm run lint:site
 
-      # The admin console still has pre-existing ESLint errors (React
-      # Compiler rules from eslint-config-next 16: set-state-in-effect,
-      # jsx-key, refs…). Report them without blocking; drop continue-on-error
-      # once admin is cleaned up.
-      - name: Lint (all, incl. admin — non-blocking)
+      # Whole project, admin console included (blocking).
+      - name: Lint (all, incl. admin)
         run: npm run lint
 
       - name: Unit tests
         run: npm test
 
+      # On pushes to main / manual runs the build-push job builds the same
+      # app inside Docker, so only PRs build here (no double build). Catalogue
+      # detail pages prerender just a placeholder param unless
+      # PRERENDER_CATALOG=1, so the build makes no per-entity API calls.
       - name: Build
+        if: github.event_name == 'pull_request'
         run: npm run build
 
   build-push:
@@ -170,15 +172,34 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d
             docker image prune -f
 
-            # Health check on the published host port (NPM proxies to it).
+            # Health check on the loopback-published port.
+            healthy=0
             for i in $(seq 1 20); do
               if curl -fsS -o /dev/null http://127.0.0.1:9085/; then
                 echo "Health check passed (attempt $i)"
-                exit 0
+                healthy=1
+                break
               fi
               echo "Waiting for frontend... ($i/20)"
               sleep 5
             done
-            echo "Health check FAILED" >&2
-            docker compose -f docker-compose.prod.yml logs --tail=100 frontend || true
-            exit 1
+            if [ "$healthy" != 1 ]; then
+              echo "Health check FAILED" >&2
+              docker compose -f docker-compose.prod.yml logs --tail=100 frontend || true
+              exit 1
+            fi
+
+            # Purge the data cache so the new build never serves entries
+            # cached by the previous one (keep in sync with src/lib/api/tags.ts).
+            secret="$(grep -E '^REVALIDATE_SECRET=' .env.local 2>/dev/null | tail -n1 | cut -d= -f2- | tr -d '\r"' || true)"
+            if [ -z "$secret" ]; then
+              echo "::warning::REVALIDATE_SECRET missing from ~/RE/re_frontend/.env.local; skipping post-deploy revalidation"
+            else
+              if curl -fsS -o /dev/null -X POST http://127.0.0.1:9085/api/revalidate \
+                  -H "x-revalidate-secret: $secret" -H 'content-type: application/json' \
+                  -d '{"tags":["bootstrap","settings","categories","machine-brands","machine-models","machines","brands","products","sitemap","redirects"]}'; then
+                echo "Post-deploy revalidation done"
+              else
+                echo "::warning::post-deploy revalidation failed (site is up; caches heal on their own cacheLife)"
+              fi
+            fi
