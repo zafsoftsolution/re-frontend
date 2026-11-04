@@ -46,6 +46,22 @@ test("header search submits to /search", async ({ page }) => {
   await expect(page).toHaveURL(/\/search\?q=B1101-012-000/);
 });
 
+test("mobile menu loads its dialog on demand, opens, closes and restores focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const button = page.getByRole("button", { name: /open menu/i });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await button.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("link", { name: /machines/i }).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(button).toBeFocused();
+  await button.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+});
+
 test.describe("screenshots", () => {
   for (const width of [390, 1440]) {
     for (const p of [...pages, { name: "search", path: "/search?q=juki", lang: "en" }, { name: "rfq-bn", path: "/bn/rfq", lang: "bn" }, { name: "404", path: "/no-such-page", lang: "en" }]) {
