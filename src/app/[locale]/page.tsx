@@ -6,7 +6,9 @@ import { Link } from "@/i18n/navigation";
 import { getBootstrap, getMachineModels } from "@/lib/api/site";
 import type { CategorySummary } from "@/lib/api/types";
 import { telHref, whatsappHref } from "@/lib/format";
-import { catalogMetadata, localePath } from "@/lib/seo/metadata";
+import { catalogMetadata, localePath, localeUrl } from "@/lib/seo/metadata";
+import { websiteJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/catalog/JsonLd";
 import type { PickerBrand } from "@/components/catalog/MachinePicker";
 import { Hero } from "@/components/home/Hero";
 import { CategoryGrid, FeaturedParts, MachineBrandTiles, QuoteSteps, TrustFacts, pickCategories } from "@/components/home/HomeSections";
@@ -18,14 +20,15 @@ import { exampleNumbers, getHomeParts } from "@/components/home/data";
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const [t, boot] = await Promise.all([getTranslations({ locale, namespace: "meta" }), getBootstrap(locale)]);
-  const meta = catalogMetadata({
+  // The home title already carries the brand: no template, same OG title.
+  return catalogMetadata({
     locale,
     href: "/",
     title: t("title"),
+    seoTitle: t("title"),
     description: t("description"),
     siteName: boot.settings.siteName || t("siteName"),
   });
-  return { ...meta, title: { absolute: t("title") } };
 }
 
 /** Which category each numbered part of the drawing opens. */
@@ -95,6 +98,14 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   return (
     <>
+      <JsonLd
+        data={websiteJsonLd({
+          name: settings.siteName || t("meta.siteName"),
+          url: localeUrl("/", locale),
+          searchUrl: localeUrl("/search", locale),
+          locale,
+        })}
+      />
       {announcement && (
         <div className="border-b border-re-steel-200 bg-re-paper">
           <p className="re-shell flex min-h-10 items-center gap-2.5 py-2 text-[0.875rem] text-re-ink">

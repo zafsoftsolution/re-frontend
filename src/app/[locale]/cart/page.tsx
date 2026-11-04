@@ -11,7 +11,7 @@ import { OrderingDisabled } from "@/components/checkout/OrderingDisabled";
 export async function generateMetadata({ params }: PageProps<"/[locale]/cart">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "cart" });
-  return { title: t("title"), robots: { index: false, follow: false } };
+  return { title: t("title"), robots: { index: false, follow: true } };
 }
 
 /** Dormant until a part is sold direct (bootstrap `direct_orders_enabled`); hidden from nav otherwise. */

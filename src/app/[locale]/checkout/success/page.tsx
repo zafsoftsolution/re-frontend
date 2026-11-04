@@ -19,7 +19,7 @@ export const instant = false;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "checkout" });
-  return { title: t("success.metaTitle"), robots: { index: false, follow: false } };
+  return { title: t("success.metaTitle"), robots: { index: false, follow: true } };
 }
 
 type Raw = Record<string, unknown>;

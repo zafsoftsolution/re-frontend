@@ -6,6 +6,10 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { routing } from "@/i18n/routing";
 import { getBootstrap } from "@/lib/api/site";
 import { getCurrentYear } from "@/lib/clock";
+import { organizationJsonLd, SITE_URL } from "@/lib/seo/jsonld";
+import { siteNoindex } from "@/lib/seo/robots";
+import { JsonLd } from "@/components/catalog/JsonLd";
+import { Analytics } from "@/components/site/Analytics";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { MobileBottomBar } from "@/components/site/MobileBottomBar";
@@ -57,12 +61,21 @@ export const viewport: Viewport = {
 
 export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) return { metadataBase: new URL("https://rakibenterprise-bd.com") };
-  const t = await getTranslations({ locale, namespace: "meta" });
+  if (!hasLocale(routing.locales, locale)) return { metadataBase: new URL(SITE_URL) };
+  const [t, boot] = await Promise.all([getTranslations({ locale, namespace: "meta" }), getBootstrap(locale)]);
+  const { seo, verification } = boot.settings;
+  // Admin-set defaults are written in English; Bangla keeps its messages.
+  const title = (locale === routing.defaultLocale && seo.title) || t("title");
+  const description = (locale === routing.defaultLocale && seo.description) || t("description");
+  const other: Record<string, string> = {};
+  if (verification.bing) other["msvalidate.01"] = verification.bing;
+  if (verification.pinterest) other["p:domain_verify"] = verification.pinterest;
+  if (verification.facebook) other["facebook-domain-verification"] = verification.facebook;
+  const twitterHandle = seo.twitterHandle ? `@${seo.twitterHandle.replace(/^@/, "")}` : undefined;
   return {
-    metadataBase: new URL("https://rakibenterprise-bd.com"),
-    title: { default: t("title"), template: `%s · ${t("siteName")}` },
-    description: t("description"),
+    metadataBase: new URL(SITE_URL),
+    title: { default: title, template: `%s · ${t("siteName")}` },
+    description,
     applicationName: "Rakib Enterprise",
     openGraph: {
       type: "website",
@@ -73,6 +86,13 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
       // so reference src/app/opengraph-image.png explicitly.
       images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: t("siteName") }],
     },
+    twitter: { card: "summary_large_image", ...(twitterHandle ? { site: twitterHandle } : {}) },
+    // Staging switch: Settings → SEO → default robots "noindex…" hides the
+    // whole site (pages' own noindex still applies otherwise).
+    ...(siteNoindex(seo.defaultRobots) ? { robots: { index: false, follow: false } } : {}),
+    ...(verification.google || Object.keys(other).length
+      ? { verification: { ...(verification.google ? { google: verification.google } : {}), ...(Object.keys(other).length ? { other } : {}) } }
+      : {}),
     formatDetection: { telephone: false },
     // Icons + OG image come from the file conventions in src/app.
   };
@@ -93,6 +113,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
     getTranslations("a11y"),
   ]);
   const clientMessages = Object.fromEntries(CLIENT_NAMESPACES.map((ns) => [ns, messages[ns]]));
+  const s = boot.settings;
+  const meta = messages.meta as Record<string, string>;
 
   return (
     <html
@@ -114,6 +136,18 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
           <Footer settings={boot.settings} year={year} />
           <MobileBottomBar whatsapp={boot.settings.whatsappNumber || boot.settings.contactPhone} />
         </NextIntlClientProvider>
+        <JsonLd
+          data={organizationJsonLd({
+            name: s.siteName || meta.siteName,
+            description: meta.description,
+            logoUrl: s.logoUrl,
+            telephone: s.contactPhone,
+            email: s.contactEmail,
+            address: s.businessAddress,
+            social: s.social,
+          })}
+        />
+        <Analytics analytics={s.analytics} />
       </body>
     </html>
   );

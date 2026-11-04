@@ -11,7 +11,7 @@ import { OrderingDisabled } from "@/components/checkout/OrderingDisabled";
 export async function generateMetadata({ params }: PageProps<"/[locale]/checkout">): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "checkout" });
-  return { title: t("title"), robots: { index: false, follow: false } };
+  return { title: t("title"), robots: { index: false, follow: true } };
 }
 
 export default async function CheckoutPage({ params }: PageProps<"/[locale]/checkout">) {

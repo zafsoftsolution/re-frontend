@@ -115,3 +115,125 @@ export function productJsonLd(
 export function serializeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
 }
+
+// ─── Site-wide entities ──────────────────────────────────────────────────────
+
+/** Stable node ids so pages can reference the organisation. */
+export const ORG_ID = `${SITE_URL}/#organization`;
+export const STORE_ID = `${SITE_URL}/#store`;
+export const WEBSITE_ID = `${SITE_URL}/#website`;
+
+const httpUrl = (v: string) => (/^https?:\/\/\S+$/i.test(v.trim()) ? v.trim() : "");
+
+export interface OrgInput {
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  telephone?: string;
+  email?: string;
+  address?: string;
+  social?: Record<string, string>;
+}
+
+/** Organization + Store (LocalBusiness) as one @graph, from bootstrap
+ *  settings. Empty fields are omitted, never invented. */
+export function organizationJsonLd(org: OrgInput): Thing {
+  const logo = httpUrl(org.logoUrl ?? "") || absoluteUrl("/logo/rakib-enterprise.png");
+  const sameAs = Object.values(org.social ?? {}).map(httpUrl).filter(Boolean);
+  const telephone = org.telephone?.trim();
+  const email = org.email?.trim();
+  const address = org.address?.replace(/\s+/g, " ").trim();
+  const contact = {
+    ...(telephone ? { telephone } : {}),
+    ...(email ? { email } : {}),
+  };
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": ORG_ID,
+        name: org.name,
+        url: absoluteUrl("/"),
+        logo: { "@type": "ImageObject", url: logo },
+        ...(org.description ? { description: org.description } : {}),
+        ...contact,
+        ...(sameAs.length ? { sameAs } : {}),
+        ...(telephone || email
+          ? {
+              contactPoint: {
+                "@type": "ContactPoint",
+                contactType: "sales",
+                areaServed: "BD",
+                availableLanguage: ["en", "bn"],
+                ...contact,
+              },
+            }
+          : {}),
+      },
+      {
+        "@type": "Store",
+        "@id": STORE_ID,
+        name: org.name,
+        url: absoluteUrl("/"),
+        image: absoluteUrl("/opengraph-image.png"),
+        logo,
+        ...(org.description ? { description: org.description } : {}),
+        parentOrganization: { "@id": ORG_ID },
+        ...contact,
+        ...(address ? { address: { "@type": "PostalAddress", streetAddress: address, addressCountry: "BD" } } : {}),
+        ...(sameAs.length ? { sameAs } : {}),
+      },
+    ],
+  };
+}
+
+/** WebSite with a sitelinks SearchAction (Home only). `searchUrl` is the
+ *  absolute, locale-prefixed /search URL. */
+export function websiteJsonLd(opts: { name: string; url: string; searchUrl: string; locale: string }): Thing {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    name: opts.name,
+    url: opts.url,
+    inLanguage: opts.locale,
+    publisher: { "@id": ORG_ID },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${opts.searchUrl}?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+/** Article for a knowledge-hub guide. */
+export function articleJsonLd(a: {
+  headline: string;
+  description: string;
+  url: string;
+  locale: string;
+  published: string;
+  modified: string;
+  publisher: string;
+}): Thing {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: a.headline.slice(0, 110),
+    description: a.description,
+    inLanguage: a.locale,
+    datePublished: a.published,
+    dateModified: a.modified,
+    mainEntityOfPage: { "@type": "WebPage", "@id": a.url },
+    url: a.url,
+    image: [absoluteUrl("/opengraph-image.png")],
+    author: { "@type": "Organization", "@id": ORG_ID, name: a.publisher, url: absoluteUrl("/") },
+    publisher: {
+      "@type": "Organization",
+      "@id": ORG_ID,
+      name: a.publisher,
+      logo: { "@type": "ImageObject", url: absoluteUrl("/icon.png") },
+    },
+  };
+}

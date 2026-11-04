@@ -14,7 +14,6 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/rfq">): 
     href: "/rfq",
     title: t("rfq.metaTitle"),
     description: t("rfq.metaDescription"),
-    noindex: true,
     siteName: boot.settings.siteName || t("meta.siteName"),
   });
 }

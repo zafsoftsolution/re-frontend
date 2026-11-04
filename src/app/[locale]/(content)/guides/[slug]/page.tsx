@@ -5,7 +5,7 @@ import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { GUIDES, getGuide } from "@/content/guides";
-import { absoluteUrl } from "@/lib/seo/jsonld";
+import { articleJsonLd } from "@/lib/seo/jsonld";
 import { localeUrl } from "@/lib/seo/metadata";
 import { formatDate } from "@/components/content/dates";
 import { ContentPage, contentMetadata, Prose } from "@/components/content/ContentPage";
@@ -40,19 +40,15 @@ export default async function GuidePage({ params }: Props) {
   const toc = body.blocks.filter((b) => b.t === "h2");
   const others = GUIDES.filter((g) => g.slug !== guide.slug);
 
-  const article = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const article = articleJsonLd({
     headline: body.title,
     description: body.description,
-    inLanguage: locale,
-    datePublished: guide.published,
-    dateModified: guide.updated,
-    mainEntityOfPage: localeUrl(href, locale),
-    image: absoluteUrl("/opengraph-image.png"),
-    author: { "@type": "Organization", name: "Rakib Enterprise", url: absoluteUrl("/") },
-    publisher: { "@type": "Organization", name: "Rakib Enterprise", logo: { "@type": "ImageObject", url: absoluteUrl("/icon.png") } },
-  };
+    url: localeUrl(href, locale),
+    locale,
+    published: guide.published,
+    modified: guide.updated,
+    publisher: t("meta.siteName"),
+  });
 
   return (
     <ContentPage

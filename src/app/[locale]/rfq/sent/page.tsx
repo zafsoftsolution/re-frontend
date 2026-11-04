@@ -17,7 +17,7 @@ export const instant = false;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "rfq" });
-  return { title: t("sent.metaTitle"), robots: { index: false, follow: false } };
+  return { title: t("sent.metaTitle"), robots: { index: false, follow: true } };
 }
 
 const ERROR_CODES = new Set(["validation", "phone_invalid", "empty", "throttled", "unavailable", "file_type", "file_size", "file_empty", "file_count", "file_rejected", "items_rejected", "forbidden", "bad_request", "failed"]);

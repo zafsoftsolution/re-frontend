@@ -13,7 +13,7 @@ export const instant = false;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = await resolveLocale(params);
   const t = await getTranslations({ locale, namespace: "contact" });
-  return { title: t("sentTitle"), robots: { index: false, follow: false } };
+  return { title: t("sentTitle"), robots: { index: false, follow: true } };
 }
 
 const CODES = new Set(["validation", "throttled", "unavailable", "failed", "forbidden"]);
