@@ -45,7 +45,7 @@ export async function PartsTable({
   const name = (p: PartSummary, withThumb: boolean) => {
     const grade = gradeFor(p.brandIsOem);
     return (
-      <span className={`flex min-w-0 items-start gap-3 ${withThumb ? "" : "md:min-w-[13rem]"}`}>
+      <span className={`flex min-w-0 items-start gap-3 ${withThumb ? "" : "md:min-w-[9rem] xl:min-w-[11rem]"}`}>
         {withThumb && (
           <CatalogImage
             src={p.image}
@@ -78,6 +78,7 @@ export async function PartsTable({
       key: "thumb",
       header: <span className="sr-only">{t("catalog.listing.colImage")}</span>,
       hideOnMobile: true,
+      desktopFrom: "xl",
       width: "w-20",
       cell: (p) => (
         <CatalogImage
@@ -104,6 +105,7 @@ export async function PartsTable({
           {
             key: "fits",
             header: t("catalog.listing.colFits"),
+            desktopFrom: "xl",
             width: "w-24",
             cell: (p: PartSummary) => (
               <span className="re-mono whitespace-nowrap text-[0.875rem] text-re-steel-600">
@@ -123,6 +125,8 @@ export async function PartsTable({
       key: "price",
       header: t("catalog.listing.colPrice"),
       align: "right",
+      // Every row "on request": the column only earns its width on wide screens.
+      ...(anyDirect ? {} : { desktopFrom: "xl" as const }),
       width: "w-28",
       cell: (p) => <Price amount={direct(p) ? p.price : null} size="sm" />,
     },

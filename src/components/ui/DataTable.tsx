@@ -17,6 +17,9 @@ export interface Column<T> {
   hideOnMobile?: boolean;
   /** Mobile cards only (e.g. a thumbnail that sits in its own desktop column). */
   hideOnDesktop?: boolean;
+  /** Desktop table shows this column only from the `xl` breakpoint (1280px);
+   *  between md and xl it is dropped so the table fits beside a sidebar. */
+  desktopFrom?: "xl";
   /** On mobile, render the value across the full card width without a label
    *  (action buttons). */
   mobileFull?: boolean;
@@ -51,41 +54,44 @@ export function DataTable<T>({
 
   return (
     <div className={className}>
-      {/* Desktop */}
-      <table className="hidden w-full border-collapse text-left text-[0.9375rem] md:table">
-        {caption && <caption className="sr-only">{caption}</caption>}
-        <thead>
-          <tr className="border-b border-re-ink">
-            {desktop.map((c) => (
-              <th
-                key={c.key}
-                scope="col"
-                className={cn("re-label px-3 py-2 font-medium", c.align === "right" && "text-right", c.width)}
-              >
-                {c.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={rowKey(row)} className="border-b border-re-steel-200 transition-colors hover:bg-re-steel-50">
+      {/* Desktop — overflow-x-auto is a safety net: the page itself never scrolls sideways. */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full border-collapse text-left text-[0.9375rem]">
+          {caption && <caption className="sr-only">{caption}</caption>}
+          <thead>
+            <tr className="border-b border-re-ink">
               {desktop.map((c) => (
-                <td
+                <th
                   key={c.key}
-                  className={cn(
-                    "px-3 py-2.5 align-middle",
-                    c.align === "right" && "text-right",
-                    c.mono && "re-mono",
-                  )}
+                  scope="col"
+                  className={cn("re-label px-2 py-2 font-medium xl:px-3", c.align === "right" && "text-right", c.width, c.desktopFrom && "hidden xl:table-cell")}
                 >
-                  {c.cell(row)}
-                </td>
+                  {c.header}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={rowKey(row)} className="border-b border-re-steel-200 transition-colors hover:bg-re-steel-50">
+                {desktop.map((c) => (
+                  <td
+                    key={c.key}
+                    className={cn(
+                      "px-2 py-2.5 align-middle xl:px-3",
+                      c.align === "right" && "text-right",
+                      c.mono && "re-mono",
+                      c.desktopFrom && "hidden xl:table-cell",
+                    )}
+                  >
+                    {c.cell(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Mobile */}
       <ul className="divide-y divide-re-steel-200 border-y border-re-steel-200 md:hidden">
