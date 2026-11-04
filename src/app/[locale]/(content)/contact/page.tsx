@@ -25,6 +25,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 type T = Awaited<ReturnType<typeof getTranslations>>;
 
+/** Phones: the two things people come here for, as big tap targets. */
+function QuickContact({ t, settings: s }: { t: T; settings: SiteSettings }) {
+  const tel = telHref(s.contactPhone);
+  const waNumber = s.whatsappNumber || s.contactPhone;
+  const wa = whatsappHref(waNumber, t("contact.waText"));
+  if (!tel && !wa) return null;
+  const card = "flex min-h-24 flex-col justify-between gap-2 border p-3 active:opacity-90";
+  return (
+    <div className="-mt-2 mb-8 grid grid-cols-2 gap-3 lg:hidden">
+      {wa && (
+        <a href={wa} target="_blank" rel="noopener" className={`${card} border-re-whatsapp bg-re-whatsapp text-white`}>
+          <WhatsAppIcon className="size-6" />
+          <span>
+            <span className="block font-semibold">{t("business.whatsapp")}</span>
+            <span className="re-mono block text-[0.8125rem] opacity-90">{waNumber}</span>
+          </span>
+        </a>
+      )}
+      {tel && (
+        <a href={tel} className={`${card} border-re-ink bg-re-paper text-re-ink`}>
+          <Phone aria-hidden className="size-6" strokeWidth={1.75} />
+          <span>
+            <span className="block font-semibold">{t("catalog.listing.emptyCall")}</span>
+            <span className="re-mono block text-[0.8125rem] text-re-steel-600">{s.contactPhone}</span>
+          </span>
+        </a>
+      )}
+    </div>
+  );
+}
+
 /**
  * Contact — two location cards (the walk-in sales centre first, then the
  * corporate office), each with phones, WhatsApp, email and hours; then
@@ -49,6 +80,7 @@ export default async function ContactPage({ params }: Props) {
       lead={<p>{t("contact.lead")}</p>}
       jsonLd={[{ "@context": "https://schema.org", "@type": "ContactPage", name: t("contact.title"), url: localeUrl("/contact", locale), inLanguage: locale }]}
     >
+      <QuickContact t={t} settings={s} />
       <div className="grid gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)]">
         <section aria-labelledby="contact-locations">
           <h2 id="contact-locations" className="sr-only">
@@ -84,7 +116,7 @@ export default async function ContactPage({ params }: Props) {
           <div className="mt-6 border border-re-steel-200 bg-re-steel-50 p-4 text-[0.9375rem]">
             <p className="font-semibold">{t("contact.quoteTitle")}</p>
             <p className="mt-1 text-re-steel-600">{t("contact.quoteBody")}</p>
-            <Link href="/rfq" className={buttonClass({ variant: "primary", size: "sm" }, "mt-3")}>
+            <Link href="/rfq" className={buttonClass({ variant: "primary", size: "sm" }, "mt-3 max-md:h-11 max-md:w-full max-md:text-sm")}>
               {t("nav.rfqLong")}
             </Link>
           </div>
@@ -130,7 +162,7 @@ function LocationCard({
   const wa = whatsappHref(waNumber, t("contact.waText"));
   const mapUrl = address ? mapsSearchUrl(address) : "";
   const row = "grid grid-cols-[1.5rem_minmax(0,1fr)] gap-3 border-b border-re-steel-200 py-3 last:border-b-0";
-  const value = "re-mono text-[1.0625rem] font-semibold hover:text-re-blue";
+  const value = "re-mono inline-flex min-h-11 items-center text-[1.0625rem] font-semibold hover:text-re-blue md:inline md:min-h-0";
 
   return (
     <article className={primary ? "relative border border-re-ink" : "relative border border-re-steel-200"}>
@@ -151,7 +183,7 @@ function LocationCard({
               <dt className="sr-only">{t("business.address")}</dt>
               <dd>
                 <address className="text-[1rem] not-italic">{address}</address>
-                <a href={mapUrl} target="_blank" rel="noopener" className="mt-1 inline-flex min-h-9 items-center text-[0.875rem] font-semibold text-re-blue hover:underline">
+                <a href={mapUrl} target="_blank" rel="noopener" className="mt-1 inline-flex min-h-11 items-center text-[0.875rem] font-semibold text-re-blue hover:underline md:min-h-9">
                   {t("business.openMap")}
                 </a>
               </dd>
@@ -184,7 +216,7 @@ function LocationCard({
             <dl className="min-w-0">
               <dt className="re-label">{t("business.whatsapp")}</dt>
               <dd className="mt-0.5">
-                <a href={wa} target="_blank" rel="noopener" className="re-mono text-[1.0625rem] font-semibold hover:text-re-whatsapp">{waNumber}</a>
+                <a href={wa} target="_blank" rel="noopener" className="re-mono inline-flex min-h-11 items-center text-[1.0625rem] font-semibold hover:text-re-whatsapp md:inline md:min-h-0">{waNumber}</a>
               </dd>
               {primary && <dd className="mt-0.5 text-[0.8125rem] text-re-steel-600">{t("contact.whatsappNote")}</dd>}
             </dl>
@@ -196,7 +228,7 @@ function LocationCard({
             <dl className="min-w-0">
               <dt className="re-label">{t("business.email")}</dt>
               <dd className="mt-0.5">
-                <a href={`mailto:${s.contactEmail}`} className="text-[1rem] font-semibold break-all hover:text-re-blue">{s.contactEmail}</a>
+                <a href={`mailto:${s.contactEmail}`} className="inline-flex min-h-11 items-center text-[1rem] font-semibold break-all hover:text-re-blue md:inline md:min-h-0">{s.contactEmail}</a>
               </dd>
               {primary && <dd className="mt-0.5 text-[0.8125rem] text-re-steel-600">{t("contact.emailNote")}</dd>}
             </dl>

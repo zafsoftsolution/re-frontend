@@ -145,3 +145,55 @@ export function countBy(parts: PartSummary[], key: (p: PartSummary) => string | 
   }
   return m;
 }
+
+/**
+ * Phones page by "Load more": page N shows every row from page 1 to N, and
+ * `anchor` is the index of the first row the last tap added (0 on page 1).
+ */
+export function applyListingUpTo(parts: PartSummary[], p: ListingParams, size = PAGE_SIZE): { rows: PartSummary[]; anchor: number } {
+  const all = sortParts(filterParts(parts, p), p.sort);
+  const pageCount = Math.max(1, Math.ceil(all.length / size));
+  const page = Math.min(Math.max(1, p.page), pageCount);
+  return { rows: all.slice(0, page * size), anchor: (page - 1) * size };
+}
+
+/**
+ * Minimal per-part facet data for the phone filter sheet's live
+ * "Show N results" count — slugs only, no names or prices.
+ */
+export interface FacetRow {
+  /** Machine model slugs. */
+  m: string[];
+  /** Machine brand slugs. */
+  b: string[];
+  /** Parts brand slug. */
+  p: string;
+  /** Category slug. */
+  c: string;
+  /** In stock (in_stock / low_stock). */
+  s: 0 | 1;
+}
+
+export const facetRows = (parts: PartSummary[]): FacetRow[] =>
+  parts.map((x) => ({ m: x.machineModelSlugs, b: x.machineBrandSlugs, p: x.brandSlug, c: x.categorySlug, s: isInStock(x) ? 1 : 0 }));
+
+/** The filter form's current values (FormData entries) → how many rows match. Same rules as filterParts. */
+export function countMatches(rows: FacetRow[], form: Iterable<[string, FormDataEntryValue]>): number {
+  const v: Record<string, string> = {};
+  for (const [k, val] of form) if (typeof val === "string") v[k] = val;
+  const machine = v.machine ?? "";
+  const mbrand = v.mbrand ?? "";
+  const brand = v.brand ?? "";
+  const category = v.category ?? "";
+  const inStock = ["1", "true", "on", "yes"].includes((v.stock ?? "").toLowerCase());
+  let n = 0;
+  for (const r of rows) {
+    if (machine && !r.m.includes(machine)) continue;
+    if (mbrand && !machine && !r.b.includes(mbrand)) continue;
+    if (brand && r.p !== brand) continue;
+    if (category && r.c !== category) continue;
+    if (inStock && !r.s) continue;
+    n++;
+  }
+  return n;
+}

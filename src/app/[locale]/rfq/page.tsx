@@ -36,6 +36,7 @@ export default async function RfqPage({ params }: PageProps<"/[locale]/rfq">) {
             <ContactLine settings={boot.settings} reply className="mt-3" />
           </>
         }
+        metaClassName="max-md:hidden"
         meta={[
           { label: t("rfq.meta.reply"), value: t("rfq.meta.replyValue") },
           { label: t("rfq.meta.files"), value: "XLSX · CSV · PDF · JPG" },

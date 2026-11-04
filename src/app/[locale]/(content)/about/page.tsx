@@ -216,7 +216,7 @@ export default async function AboutPage({ params }: PageProps<"/[locale]/about">
 
       {/* Contact */}
       <section aria-labelledby="about-contact" className="re-shell mt-16">
-        <div className="relative grid gap-6 border border-re-ink p-6 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div className="relative grid grid-cols-[minmax(0,1fr)] gap-6 border border-re-ink p-5 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
           <span aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-re-red" />
           <div className="pl-2">
             <h2 id="about-contact" className="text-[1.625rem] sm:text-[2rem]">
@@ -227,7 +227,7 @@ export default async function AboutPage({ params }: PageProps<"/[locale]/about">
               {t("about.contactLink")} <ArrowRight aria-hidden className="size-4" />
             </Link>
           </div>
-          <div className="flex flex-wrap gap-3 pl-2 md:flex-col md:items-stretch md:pl-0">
+          <div className="flex flex-wrap gap-3 pl-2 md:flex-col md:items-stretch md:pl-0 max-sm:[&>*]:h-auto max-sm:[&>*]:min-h-12 max-sm:[&>*]:w-full max-sm:[&>*]:py-2 max-sm:[&>*]:whitespace-normal">
             {wa && (
               <a href={wa} target="_blank" rel="noopener" className={buttonClass({ variant: "whatsapp", size: "lg" })}>
                 <WhatsAppIcon />

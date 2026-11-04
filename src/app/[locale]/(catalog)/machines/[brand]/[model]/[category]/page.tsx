@@ -130,12 +130,12 @@ export default async function ModelCategoryPage({ params }: Props) {
             <h2 id="other-types" className="text-xl">
               {t("catalog.modelCategory.otherTypes", vars)}
             </h2>
-            <ul className="mt-3 flex flex-wrap gap-2">
+            <ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
               {others.map((c) => (
                 <li key={c.slug}>
                   <Link
                     href={c.count >= MIN_MODEL_CATEGORY_PARTS ? `${base}/${c.slug}` : `${base}#cat-${c.slug}`}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-re border border-re-steel-200 px-3 text-[0.9375rem] hover:border-re-ink"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-re border border-re-steel-200 px-3 text-[0.9375rem] whitespace-nowrap hover:border-re-ink"
                   >
                     {c.name}
                     <span className="re-mono text-[0.8125rem] text-re-steel-600">{c.count}</span>

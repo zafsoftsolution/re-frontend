@@ -62,8 +62,33 @@ export function GuideBlocks({ blocks }: { blocks: readonly GuideBlock[] }) {
       }
       case "table":
         return (
-          <div key={i} className="mt-5 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            <table className="w-full min-w-[30rem] border-collapse text-[0.9375rem] leading-snug">
+          <div key={i} className="mt-5">
+            {/* Phones: one card per row, the first column as its title. */}
+            <ul className="divide-y divide-re-steel-200 border-y border-re-ink sm:hidden">
+              {b.rows.map((r, k) => (
+                <li key={k} className="py-3">
+                  <p className="!mt-0 font-semibold">
+                    <Inline text={r[0]} />
+                  </p>
+                  <dl className="mt-1.5 grid gap-1.5 text-[0.9375rem] leading-snug">
+                    {r.slice(1).map((c, j) => (
+                      <div key={j}>
+                        <dt className="re-label">{b.head[j + 1]}</dt>
+                        <dd className="mt-0.5">
+                          <Inline text={c} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              ))}
+              {b.caption && (
+                <li className="py-2 text-[0.8125rem] text-re-steel-600">
+                  <Inline text={b.caption} />
+                </li>
+              )}
+            </ul>
+            <table className="w-full min-w-[30rem] border-collapse text-[0.9375rem] leading-snug max-sm:hidden">
               <thead>
                 <tr className="border-y border-re-ink text-left">
                   {b.head.map((h) => (

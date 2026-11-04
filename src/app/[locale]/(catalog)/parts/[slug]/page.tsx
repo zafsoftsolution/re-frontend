@@ -9,10 +9,10 @@ import type { Locale } from "@/i18n/routing";
 import { getAllParts, getBootstrap, getPart } from "@/lib/api/site";
 import type { MachineModelSummary, PartDetail, PartSummary } from "@/lib/api/types";
 import { imageSource, type ImageSource } from "@/lib/media";
-import { formatBDT } from "@/lib/format";
+import { formatBDT, whatsappHref } from "@/lib/format";
 import { isDirect } from "@/lib/sales";
 import { breadcrumbJsonLd, placeholder, PRERENDER, topParams, prerenderIndex } from "@/lib/catalog/page";
-import { catalogMetadata, localeUrl } from "@/lib/seo/metadata";
+import { catalogMetadata, localePath, localeUrl } from "@/lib/seo/metadata";
 import { productJsonLd } from "@/lib/seo/jsonld";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { PartNumber } from "@/components/ui/PartNumber";
@@ -24,6 +24,7 @@ import { JsonLd } from "@/components/catalog/JsonLd";
 import { CatalogImage } from "@/components/catalog/CatalogImage";
 import { PartGallery } from "@/components/catalog/PartGallery";
 import { PartBuyBox } from "@/components/catalog/PartBuyBox";
+import { PartActionBar } from "@/components/catalog/PartActionBar";
 import { PartsTable, gradeFor } from "@/components/catalog/PartsTable";
 import { WhatsAppLink } from "@/components/catalog/WhatsAppLink";
 
@@ -108,6 +109,8 @@ export default async function PartPage({ params }: Props) {
   const images = part.images.map(imageSource).filter((x): x is ImageSource => x !== null);
   const related = relatedParts(part, pool);
   const fitsGroups = groupModels(part.machineModels);
+  const waText = t("catalog.part.whatsappText", { name: part.name, partNumber: part.partNumber || "—", url });
+  const waHref = whatsappHref(whatsapp, waText);
 
   const crumbs = [
     { label: t("nav.home"), href: "/" },
@@ -122,7 +125,7 @@ export default async function PartPage({ params }: Props) {
           {
             label: t("catalog.part.category"),
             value: (
-              <Link href={`/categories/${part.category.slug}`} className="text-re-blue hover:underline">
+              <Link href={`/categories/${part.category.slug}`} className="text-re-blue hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">
                 {part.category.name}
               </Link>
             ),
@@ -135,7 +138,7 @@ export default async function PartPage({ params }: Props) {
             label: t("catalog.part.partsBrand"),
             value: (
               <span className="inline-flex flex-wrap items-center gap-2">
-                <Link href={`/brands/${part.brand.slug}`} className="text-re-blue hover:underline">
+                <Link href={`/brands/${part.brand.slug}`} className="text-re-blue hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">
                   {part.brand.name}
                 </Link>
                 {grade && <Badge grade={grade} />}
@@ -168,44 +171,52 @@ export default async function PartPage({ params }: Props) {
           productJsonLd(direct ? part : { ...part, price: null }, { url, compatibleWith: part.machineModels.map((m) => `${m.brandName} ${m.name}`) }),
         ]}
       />
-      <div className="re-shell py-5 md:py-8">
+      <div className="re-shell pt-1 pb-6 md:py-8">
         <Breadcrumbs items={crumbs} />
 
-        <div className="mt-6 grid gap-8 md:grid-cols-2 md:gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-14">
+        <div className="mt-2 grid gap-4 md:mt-6 md:grid-cols-2 md:gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-14">
           {/* Photos */}
           <div className="md:sticky md:top-4 md:self-start">
             {images.length > 0 ? (
               <PartGallery images={images} alt={part.name} thumbLabel={t("catalog.part.photo")} />
             ) : (
-              <figure>
+              <figure className="relative">
                 <CatalogImage
                   src={null}
                   alt=""
                   sizes="(min-width: 48rem) 40vw, 100vw"
                   hint={`${part.categorySlug} ${part.categoryName}`}
-                  className="border border-re-steel-200"
+                  className="border border-re-steel-200 max-md:aspect-[2/1]"
                   iconClassName="size-1/3"
                 />
-                <figcaption className="mt-2 text-[0.875rem] text-re-steel-600">{t("catalog.part.noPhoto")}</figcaption>
+                <figcaption className="mt-2 text-[0.875rem] text-re-steel-600 max-md:absolute max-md:inset-x-2 max-md:bottom-2 max-md:mt-0 max-md:bg-re-paper/90 max-md:px-2 max-md:py-1 max-md:text-[0.75rem] max-md:leading-snug">
+                  {t("catalog.part.noPhoto")}
+                </figcaption>
               </figure>
             )}
           </div>
 
           {/* Spec sheet + actions */}
           <div className="min-w-0">
-            <p className="re-label flex items-center gap-2">
+            <p className="re-label flex items-center gap-2 max-md:hidden">
               <span aria-hidden className="inline-block size-2.5 bg-re-red" />
               {t("catalog.part.eyebrow", { category: part.category?.name || part.categoryName || "—" })}
             </p>
-            <h1 className="mt-3 text-[1.875rem] leading-[1.08] font-extrabold text-re-ink [font-stretch:78%] sm:text-[2.375rem] bn:text-[1.75rem] bn:leading-[1.35] bn:font-bold bn:[font-stretch:100%]">
+            <h1 className="text-[1.5rem] leading-[1.1] font-extrabold md:leading-[1.08] text-re-ink [font-stretch:78%] sm:text-[2rem] md:mt-3 md:text-[1.875rem] lg:text-[2.375rem] bn:text-[1.375rem] bn:leading-[1.4] bn:font-bold bn:[font-stretch:100%] md:bn:text-[1.75rem]">
               {part.name}
             </h1>
 
             {part.partNumber && (
-              <div className="mt-5">
-                <PartNumber value={part.partNumber} labelled size="lg" className="[&_.re-mono]:text-[1.375rem] sm:[&_.re-mono]:text-[1.625rem]" />
+              <div className="mt-3 md:mt-5">
+                <PartNumber value={part.partNumber} labelled size="lg" className="[&_.re-mono]:text-[1.25rem] sm:[&_.re-mono]:text-[1.625rem]" />
               </div>
             )}
+            {/* Phones: grade + stock right under the number (the spec list below repeats them in context). */}
+            <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 md:hidden">
+              {grade && <Badge grade={grade} />}
+              <StockBadge availability={part.availability} className="text-[0.875rem]" />
+              {part.brand && <span className="text-[0.875rem] text-re-steel-600">{part.brand.name}</span>}
+            </p>
             {part.altPartNumbers.length > 0 && (
               <div className="mt-3">
                 <p className="re-label">{t("catalog.part.altNumbers")}</p>
@@ -219,9 +230,9 @@ export default async function PartPage({ params }: Props) {
               </div>
             )}
 
-            <dl className="mt-6 grid border-t border-re-ink sm:grid-cols-2">
+            <dl className="mt-6 grid grid-cols-2 border-t border-re-ink">
               {facts.map((f) => (
-                <div key={f.label} className="border-b border-re-steel-200 py-3 sm:odd:pr-4 sm:even:border-l sm:even:pl-4">
+                <div key={f.label} className="min-w-0 border-b border-re-steel-200 py-3 odd:pr-3 even:border-l even:pl-3 sm:odd:pr-4 sm:even:pl-4">
                   <dt className="re-label">{f.label}</dt>
                   <dd className="mt-1 text-[0.9375rem]">{f.value}</dd>
                 </div>
@@ -267,7 +278,8 @@ export default async function PartPage({ params }: Props) {
                 </table>
               )}
 
-              <div className="mt-5">
+              {/* Quote parts: phones/tablets use the bottom action bar instead. */}
+              <div className={direct ? "mt-5" : "mt-5 max-lg:hidden"}>
                 <PartBuyBox
                   productSlug={part.slug}
                   partNumber={part.partNumber}
@@ -279,9 +291,9 @@ export default async function PartPage({ params }: Props) {
               </div>
               <WhatsAppLink
                 number={whatsapp}
-                text={t("catalog.part.whatsappText", { name: part.name, partNumber: part.partNumber || "—", url })}
+                text={waText}
                 variant="secondary"
-                className="mt-3 w-full border-re-whatsapp text-re-whatsapp hover:border-re-whatsapp hover:bg-re-whatsapp hover:text-white sm:w-auto"
+                className="mt-3 w-full border-re-whatsapp text-re-whatsapp hover:border-re-whatsapp hover:bg-re-whatsapp hover:text-white max-lg:hidden sm:w-auto"
               >
                 {t("catalog.part.whatsapp")}
               </WhatsAppLink>
@@ -298,10 +310,10 @@ export default async function PartPage({ params }: Props) {
               {fitsGroups.length === 0 ? (
                 <p className="mt-2 text-re-steel-600">{t("catalog.part.fitsNone")}</p>
               ) : (
-                <div className="mt-3 grid gap-3">
+                <div className="-mx-4 mt-3 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] md:mx-0 md:grid md:gap-3 md:overflow-visible md:px-0 md:pb-0">
                   {fitsGroups.map((g) => (
-                    <div key={g.brandSlug} className="flex flex-wrap items-center gap-2">
-                      <Link href={`/machines/${g.brandSlug}`} className="w-full text-[0.875rem] font-semibold text-re-steel-600 hover:text-re-blue sm:w-24">
+                    <div key={g.brandSlug} className="max-md:contents md:flex md:flex-wrap md:items-center md:gap-2">
+                      <Link href={`/machines/${g.brandSlug}`} className="w-24 text-[0.875rem] font-semibold text-re-steel-600 hover:text-re-blue max-md:hidden">
                         {g.brandName}
                       </Link>
                       {g.models.map((m) => (
@@ -309,9 +321,10 @@ export default async function PartPage({ params }: Props) {
                           key={m.slug}
                           href={`/machines/${m.brandSlug}/${m.slug}`}
                           translate="no"
-                          className="re-mono inline-flex min-h-11 items-center rounded-re border border-re-steel-400 px-3 text-[0.9375rem] font-medium text-re-ink hover:border-re-ink hover:bg-re-ink hover:text-white"
+                          className="group/chip inline-flex min-h-11 shrink-0 snap-start items-center gap-1.5 rounded-re border border-re-steel-400 px-3 text-[0.9375rem] font-medium whitespace-nowrap text-re-ink hover:border-re-ink hover:bg-re-ink hover:text-white"
                         >
-                          {m.name}
+                          <span className="text-[0.8125rem] font-semibold text-re-steel-600 group-hover/chip:text-white md:hidden">{m.brandName}</span>
+                          <span className="re-mono">{m.name}</span>
                         </Link>
                       ))}
                     </div>
@@ -323,7 +336,7 @@ export default async function PartPage({ params }: Props) {
         </div>
 
         {(part.specifications.length > 0 || part.description) && (
-          <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:gap-14">
+          <div className="mt-10 grid gap-10 md:mt-14 lg:grid-cols-2 lg:gap-14">
             {part.specifications.length > 0 && (
               <section aria-labelledby="specs">
                 <SectionHeader id="specs" index="01" title={t("catalog.part.specs")} />
@@ -334,10 +347,10 @@ export default async function PartPage({ params }: Props) {
                   <tbody>
                     {part.specifications.map(([k, v]) => (
                       <tr key={k} className="border-b border-re-steel-200">
-                        <th scope="row" className="w-2/5 py-2.5 pr-4 text-left align-top font-medium text-re-steel-600">
+                        <th scope="row" className="w-2/5 py-2 pr-3 text-left align-top font-medium text-re-steel-600 md:py-2.5 md:pr-4">
                           {k}
                         </th>
-                        <td className="re-mono py-2.5 text-re-ink">{v}</td>
+                        <td className="re-mono py-2 break-words text-re-ink md:py-2.5">{v}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -359,12 +372,27 @@ export default async function PartPage({ params }: Props) {
         )}
 
         {related.length > 0 && (
-          <section aria-labelledby="related" className="mt-14">
+          <section aria-labelledby="related" className="mt-10 md:mt-14">
             <SectionHeader id="related" title={t("catalog.part.related")} subtitle={t("catalog.part.relatedSub")} />
-            <PartsTable parts={related} caption={t("catalog.part.related")} className="mt-4" />
+            <PartsTable parts={related} caption={t("catalog.part.related")} className="mt-4" mobile="carousel" />
           </section>
         )}
       </div>
+      <PartActionBar
+        productSlug={part.slug}
+        partNumber={part.partNumber}
+        name={part.name}
+        moq={part.minOrderQuantity}
+        {...(direct && part.price !== null ? { direct: { price: part.price } } : {})}
+        whatsapp={waHref ? { href: waHref, external: true } : { href: localePath("/contact", locale), external: false }}
+        labels={{
+          qty: t("catalog.part.qty"),
+          decrease: t("catalog.part.decrease"),
+          increase: t("catalog.part.increase"),
+          whatsapp: t("catalog.part.whatsapp"),
+          region: t("catalog.part.actions"),
+        }}
+      />
     </>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
@@ -62,14 +63,14 @@ export default async function GuidePage({ params }: Props) {
       jsonLd={[article]}
     >
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
-        <article>
+        <article className="min-w-0">
           <Prose>
             <GuideBlocks blocks={body.blocks} />
           </Prose>
-          <div className="mt-12 max-w-[68ch] border border-re-ink p-5">
+          <div className="mt-12 max-w-[68ch] border border-re-ink p-4 sm:p-5">
             <p className="font-semibold">{t("guides.ctaTitle")}</p>
             <p className="mt-1 text-[0.9375rem] text-re-steel-600">{t("guides.ctaBody")}</p>
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-4 grid gap-3 sm:flex sm:flex-wrap">
               <Link href="/rfq" className={buttonClass({ variant: "primary" })}>
                 {t("nav.rfqLong")}
               </Link>
@@ -82,7 +83,26 @@ export default async function GuidePage({ params }: Props) {
         <aside className="order-first lg:order-none">
           <div className="lg:sticky lg:top-24">
             {toc.length > 1 && (
-              <nav aria-label={t("guides.toc")}>
+              <details className="group border-y border-re-steel-200 lg:hidden">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 font-semibold [&::-webkit-details-marker]:hidden">
+                  {t("guides.toc")}
+                  <ChevronDown aria-hidden className="size-5 transition-transform duration-150 group-open:rotate-180" />
+                </summary>
+                <nav aria-label={t("guides.toc")}>
+                  <ol className="mb-3 border-l border-re-steel-200 text-[0.9375rem]">
+                    {toc.map((h) => (
+                      <li key={h.id}>
+                        <a href={`#${h.id}`} className="-ml-px flex min-h-11 items-center border-l border-transparent pl-3 active:border-re-ink">
+                          {h.text.replace(/[*`]/g, "")}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+              </details>
+            )}
+            {toc.length > 1 && (
+              <nav aria-label={t("guides.toc")} className="max-lg:hidden">
                 <p className="re-label">{t("guides.toc")}</p>
                 <ol className="mt-2 space-y-1 border-l border-re-steel-200 text-[0.9375rem]">
                   {toc.map((h) => (

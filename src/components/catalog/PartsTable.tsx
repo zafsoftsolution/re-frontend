@@ -7,34 +7,43 @@ import { DataTable, type Column } from "@/components/ui/DataTable";
 import { PartNumber } from "@/components/ui/PartNumber";
 import { StockBadge } from "@/components/ui/StockBadge";
 import { Price } from "@/components/ui/Price";
-import { Badge, type PartGrade } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { AddToQuoteButton } from "@/components/ui/AddToQuoteButton";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { cn } from "@/lib/utils";
 import { CatalogImage } from "./CatalogImage";
+import { gradeFor, PartRow, PartTile } from "./PartCard";
 
-/** Genuine = the parts brand is the OEM; null (unknown) shows no badge. */
-export function gradeFor(isOem: boolean | null): PartGrade | null {
-  if (isOem === null) return null;
-  return isOem ? "genuine" : "compatible";
-}
+export { gradeFor };
 
 /**
  * The shared catalogue listing: a real table from md up (thumb · part no. ·
- * name/brand · fits · stock · price · add to quote), labelled cards on
- * phones. Quote-first: prices render only for direct parts, and the cart
- * button (the only client prop that could carry a price) is mounted only
- * for them.
+ * name/brand · fits · stock · price · add to quote). Phones get thumb-sized
+ * card rows (PartRow) — or, with `mobile="carousel"`, a CSS scroll-snap
+ * strip of tiles (no JS). Quote-first: prices render only for direct parts,
+ * and the cart button (the only client prop that could carry a price) is
+ * mounted only for them.
+ *
+ * `mobileParts` lets a paged listing show every row loaded so far on phones
+ * ("Load more" appends) while the desktop table shows only the current page;
+ * `anchorIndex` puts `id="more"` on the first newly loaded row.
  */
 export async function PartsTable({
   parts,
   caption,
   showFits = true,
   className,
+  mobile = "rows",
+  mobileParts,
+  anchorIndex,
 }: {
   parts: PartSummary[];
   caption: string;
   showFits?: boolean;
   className?: string;
+  mobile?: "rows" | "carousel";
+  mobileParts?: PartSummary[];
+  anchorIndex?: number;
 }) {
   const locale = await getLocale();
   const [t, boot] = await Promise.all([getTranslations({ locale }), getBootstrap(locale)]);
@@ -42,19 +51,10 @@ export async function PartsTable({
   const direct = (p: PartSummary) => isDirect(p, directOn);
   const anyDirect = parts.some(direct);
 
-  const name = (p: PartSummary, withThumb: boolean) => {
+  const name = (p: PartSummary) => {
     const grade = gradeFor(p.brandIsOem);
     return (
-      <span className={`flex min-w-0 items-start gap-3 ${withThumb ? "" : "md:min-w-[9rem] xl:min-w-[11rem]"}`}>
-        {withThumb && (
-          <CatalogImage
-            src={p.image}
-            alt=""
-            sizes="64px"
-            hint={`${p.categorySlug} ${p.categoryName}`}
-            className="size-16 shrink-0 border border-re-steel-200"
-          />
-        )}
+      <span className="flex min-w-0 items-start gap-3 md:min-w-[9rem] xl:min-w-[11rem]">
         <span className="min-w-0">
           <Link
             href={`/parts/${p.slug}`}
@@ -97,9 +97,7 @@ export async function PartsTable({
       cell: (p) =>
         p.partNumber ? <PartNumber value={p.partNumber} size="sm" className="whitespace-nowrap" /> : <span className="re-mono text-re-steel-400">—</span>,
     },
-    // Desktop name cell; on phones the card title (below) carries the thumb.
-    { key: "name", header: t("catalog.listing.colName"), hideOnMobile: true, cell: (p) => name(p, false) },
-    { key: "title", header: t("catalog.listing.colName"), primary: true, hideOnDesktop: true, cell: (p) => name(p, true) },
+    { key: "name", header: t("catalog.listing.colName"), cell: (p) => name(p) },
     ...(showFits
       ? [
           {
@@ -164,5 +162,33 @@ export async function PartsTable({
     },
   ];
 
-  return <DataTable className={className} columns={columns} rows={parts} rowKey={(p) => p.slug} caption={caption} />;
+  const phoneRows = mobileParts ?? parts;
+  return (
+    <div className={className}>
+      <DataTable className="max-md:hidden" columns={columns} rows={parts} rowKey={(p) => p.slug} caption={caption} />
+      {mobile === "carousel" ? (
+        <ul
+          aria-label={caption}
+          className={cn(
+            "-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overscroll-x-contain px-4 pb-3 md:hidden",
+            "[scrollbar-width:thin]",
+          )}
+        >
+          {phoneRows.map((p) => (
+            <li key={p.slug} className="w-[min(15rem,72vw)] shrink-0 snap-start">
+              <PartTile part={p} direct={direct(p)} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul aria-label={caption} className="divide-y divide-re-steel-200 border-y border-re-steel-200 md:hidden">
+          {phoneRows.map((p, i) => (
+            <li key={p.slug}>
+              <PartRow part={p} direct={direct(p)} id={i === anchorIndex && i > 0 ? "more" : undefined} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }

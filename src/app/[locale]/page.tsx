@@ -11,7 +11,7 @@ import { websiteJsonLd } from "@/lib/seo/jsonld";
 import { JsonLd } from "@/components/catalog/JsonLd";
 import type { PickerBrand } from "@/components/catalog/MachinePicker";
 import { Hero } from "@/components/home/Hero";
-import { CategoryGrid, FeaturedParts, MachineBrandTiles, QuoteSteps, TrustFacts, pickCategories } from "@/components/home/HomeSections";
+import { CategoryGrid, FeaturedParts, MachineBrandTiles, QuickCategories, QuoteSteps, TrustFacts, pickCategories } from "@/components/home/HomeSections";
 import { PartsBookScene, type FigureItem } from "@/components/home/PartsBookScene";
 import { FIGURE_PARTS, type FigurePart } from "@/components/home/HookAssemblyFigure";
 import { getHomeContent } from "@/components/home/content";
@@ -95,6 +95,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   });
 
   const announcement = content.announcement?.body || content.announcement?.title;
+  const homeCategories = pickCategories(boot.categories, content.categories?.categoryIds);
 
   return (
     <>
@@ -132,7 +133,12 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         phone={settings.contactPhone}
         tel={tel}
         whatsapp={wa}
+        quick={<QuickCategories categories={homeCategories} copy={content.categories} />}
       />
+
+      {/* Phones: featured parts as a swipe strip right after the hero (the
+          desktop table stays in its place below). */}
+      <FeaturedParts index="" parts={parts} copy={content.parts} id="home-featured-m" className="lg:hidden" />
 
       {!boot.live && (
         <p className="re-shell mt-6 flex items-center gap-2 text-[0.875rem] text-re-blue">
@@ -157,12 +163,8 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       />
 
       <MachineBrandTiles index="02" brands={boot.machineBrands} copy={content.machineBrands} />
-      <CategoryGrid
-        index="03"
-        categories={pickCategories(boot.categories, content.categories?.categoryIds)}
-        copy={content.categories}
-      />
-      <FeaturedParts index="04" parts={parts} copy={content.parts} />
+      <CategoryGrid index="03" categories={homeCategories} copy={content.categories} className="max-lg:hidden" />
+      <FeaturedParts index="04" parts={parts} copy={content.parts} className="max-lg:hidden" />
       <QuoteSteps index="05" copy={content.rfq} whatsappHref={wa} />
       <TrustFacts index="06" settings={settings} tel={tel} />
     </>

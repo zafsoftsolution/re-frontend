@@ -191,6 +191,8 @@ export function HookAssemblyFigure({ label, active = "hook" }: { label: string; 
               stroke="none"
               className="fill-re-ink transition-[fill] duration-150 group-data-[active=true]/c:fill-re-red"
             />
+            {/* Phones draw the sheet ~330px wide (≈0.55×): bubbles and numbers scale up so they stay ≥ 14px. */}
+            <g className="origin-center [transform-box:fill-box] max-md:scale-[1.7]">
             <circle
               cx={bubble[0]}
               cy={bubble[1]}
@@ -207,6 +209,7 @@ export function HookAssemblyFigure({ label, active = "hook" }: { label: string; 
             >
               {i + 1}
             </text>
+            </g>
           </g>
         );
       })}

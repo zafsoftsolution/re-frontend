@@ -9,6 +9,7 @@ import { breadcrumbJsonLd, joinList } from "@/lib/catalog/page";
 import { catalogMetadata, localeUrl } from "@/lib/seo/metadata";
 import { itemList } from "@/lib/seo/jsonld";
 import { SheetHeader } from "@/components/catalog/SheetHeader";
+import { EmptyParts } from "@/components/catalog/EmptyParts";
 import { JsonLd } from "@/components/catalog/JsonLd";
 import { CatalogImage } from "@/components/catalog/CatalogImage";
 import { Badge } from "@/components/ui/Badge";
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/brands">
 export default async function BrandsPage({ params }: PageProps<"/[locale]/brands">) {
   const locale = await resolveLocale(params);
   setRequestLocale(locale);
-  const [t, brands] = await Promise.all([getTranslations({ locale }), getPartsBrands(locale)]);
+  const [t, brands, boot] = await Promise.all([getTranslations({ locale }), getPartsBrands(locale), getBootstrap(locale)]);
   const byName = (a: PartsBrandSummary, b: PartsBrandSummary) => a.name.localeCompare(b.name, "en", { sensitivity: "base" });
   const genuine = brands.filter((b) => b.isOem).sort(byName);
   const compatible = brands.filter((b) => !b.isOem).sort(byName);
@@ -85,7 +86,15 @@ export default async function BrandsPage({ params }: PageProps<"/[locale]/brands
       />
       <SheetHeader crumbs={crumbs} eyebrow={t("catalog.brands.eyebrow")} title={t("catalog.brands.title")} lead={t("catalog.brands.lead")} />
       <div className="re-shell">
-        {brands.length === 0 && <p className="mt-10 text-re-steel-600">{t("catalog.brands.empty")}</p>}
+        {brands.length === 0 && (
+          <div className="mt-10">
+            <EmptyParts
+              whatsapp={boot.settings.whatsappNumber || boot.settings.contactPhone}
+              context={t("catalog.brands.title")}
+              title={t("catalog.brands.empty")}
+            />
+          </div>
+        )}
         {group("genuine", "01", t("catalog.brands.genuineTitle"), t("catalog.brands.genuineBody"), BadgeCheck, genuine, "genuine")}
         {group("compatible", genuine.length ? "02" : "01", t("catalog.brands.compatibleTitle"), t("catalog.brands.compatibleBody"), Wrench, compatible, "compatible")}
       </div>

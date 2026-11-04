@@ -17,6 +17,10 @@ import { buttonClass } from "@/components/ui/button-styles";
 import { cn } from "@/lib/utils";
 import { whatsappHref } from "@/lib/format";
 import { describedBy, FormField, FormSection, selectClass, textareaClass } from "./FormField";
+import { RfqProgress } from "./RfqProgress";
+
+/** Phones: 48px fields (thumb + gloves), desktop keeps the 44px rhythm. */
+const big = "max-md:h-12";
 
 /** Field names are the wire names the route handler reads (also for no-JS posts). */
 type Values = {
@@ -118,6 +122,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
   });
   const area = useWatch({ control, name: "delivery_area" });
   const preferred = useWatch({ control, name: "preferred_contact" });
+  const phoneValue = useWatch({ control, name: "phone" });
   const err = (name: keyof Values) => {
     const code = errors[name]?.message;
     return code ? t(`errors.${code}` as never) : undefined;
@@ -220,12 +225,21 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
       encType="multipart/form-data"
       noValidate
       onSubmit={handleSubmit(onValid, onInvalid)}
-      className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12"
+      className="mt-0 grid gap-8 md:mt-8 md:gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-12"
     >
       <input type="hidden" name="locale" value={locale} />
+      <RfqProgress
+        label={t("progress.label")}
+        steps={[
+          { id: "rfq-parts", label: t("progress.parts"), done: totalLines > 0 },
+          { id: "rfq-files", label: t("progress.files"), done: files.length > 0 && !fileErrors.length },
+          { id: "rfq-contact", label: t("progress.contact"), done: (phoneValue ?? "").replace(/\D/g, "").length >= 10 },
+          { id: "rfq-send", label: t("progress.send"), done: false },
+        ]}
+      />
       <div className="min-w-0 space-y-12">
         {/* 01 — Parts */}
-        <FormSection index="01" id={`${uid}-parts`} title={t("partsTitle")} lead={t("partsLead")}>
+        <FormSection index="01" id={`${uid}-parts`} anchor="rfq-parts" title={t("partsTitle")} lead={t("partsLead")}>
           {quote.items.length > 0 && (
             <div className="mb-6">
               <div className="mb-2 flex items-baseline justify-between gap-3">
@@ -262,7 +276,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
                           />
                         </label>
                       </div>
-                      <span className="col-start-2 inline-flex w-max items-stretch border border-re-steel-500 md:col-start-auto">
+                      <span className="col-start-2 inline-flex w-max items-stretch border border-re-steel-500 focus-within:border-re-ink md:col-start-auto">
                         <button type="button" aria-label={`${t("decrease")}, ${i.partNumber || i.name}`} onClick={() => quote.update(key, { qty: i.qty - 1 })} className="grid size-11 place-items-center hover:bg-re-steel-100">
                           <Minus aria-hidden className="size-4" />
                         </button>
@@ -318,27 +332,28 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
                 <li key={l.id} className="grid grid-cols-2 gap-2 border border-re-steel-200 p-3 md:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_5rem_minmax(0,10rem)_2.75rem] md:border-0 md:p-0">
                   <label className="col-span-2 md:col-span-1">
                     <span className="re-label mb-1 block md:sr-only">{t("col.partNumber")}</span>
-                    <input name="line_pn" value={l.pn} onChange={(e) => updateLine(l.id, { pn: e.target.value })} maxLength={120} autoCapitalize="characters" spellCheck={false} placeholder="B1109-552-H00" className={cn(inputClass, "re-mono placeholder:font-re-mono placeholder:text-re-steel-400")} aria-label={`${t("col.partNumber")} ${n + 1}`} />
+                    <input name="line_pn" value={l.pn} onChange={(e) => updateLine(l.id, { pn: e.target.value })} maxLength={120} autoCapitalize="characters" spellCheck={false} placeholder="B1109-552-H00" className={cn(inputClass, big, "re-mono placeholder:font-re-mono placeholder:text-re-steel-400")} aria-label={`${t("col.partNumber")} ${n + 1}`} />
                   </label>
                   <label className="col-span-2 md:col-span-1">
                     <span className="re-label mb-1 block md:sr-only">{t("col.description")}</span>
-                    <input name="line_desc" value={l.desc} onChange={(e) => updateLine(l.id, { desc: e.target.value })} maxLength={500} placeholder={t("descPlaceholder")} className={inputClass} aria-label={`${t("col.description")} ${n + 1}`} />
+                    <input name="line_desc" value={l.desc} onChange={(e) => updateLine(l.id, { desc: e.target.value })} maxLength={500} placeholder={t("descPlaceholder")} className={cn(inputClass, big)} aria-label={`${t("col.description")} ${n + 1}`} />
                   </label>
                   <label>
                     <span className="re-label mb-1 block md:sr-only">{t("col.qty")}</span>
-                    <input name="line_qty" value={l.qty} onChange={(e) => updateLine(l.id, { qty: qtyDraft(e.target.value) })} onBlur={() => updateLine(l.id, { qty: String(clampQty(l.qty, 1, 1_000_000)) })} inputMode="numeric" className={cn(inputClass, "re-mono text-center")} aria-label={`${t("col.qty")} ${n + 1}`} />
+                    <input name="line_qty" value={l.qty} onChange={(e) => updateLine(l.id, { qty: qtyDraft(e.target.value) })} onBlur={() => updateLine(l.id, { qty: String(clampQty(l.qty, 1, 1_000_000)) })} inputMode="numeric" className={cn(inputClass, big, "re-mono text-center")} aria-label={`${t("col.qty")} ${n + 1}`} />
                   </label>
                   <label>
                     <span className="re-label mb-1 block md:sr-only">{t("col.machine")}</span>
-                    <input name="line_model" value={l.model} onChange={(e) => updateLine(l.id, { model: e.target.value })} maxLength={200} placeholder="DDL-8700" className={cn(inputClass, "re-mono placeholder:font-re-mono placeholder:text-re-steel-400")} aria-label={`${t("col.machine")} ${n + 1}`} />
+                    <input name="line_model" value={l.model} onChange={(e) => updateLine(l.id, { model: e.target.value })} maxLength={200} placeholder="DDL-8700" className={cn(inputClass, big, "re-mono placeholder:font-re-mono placeholder:text-re-steel-400")} aria-label={`${t("col.machine")} ${n + 1}`} />
                   </label>
                   <button
                     type="button"
                     onClick={() => setLines((ls) => (ls.length > 1 ? ls.filter((x) => x.id !== l.id) : [blankLine(nextId.current++)]))}
                     aria-label={t("removeLine", { n: n + 1 })}
-                    className="col-span-2 grid h-11 place-items-center justify-self-end text-re-steel-600 hover:text-re-red-text md:col-span-1 md:w-11"
+                    className="col-span-2 inline-flex h-11 min-w-11 items-center justify-center gap-1.5 justify-self-end px-2 text-re-steel-600 hover:text-re-red-text md:col-span-1 md:w-11 md:px-0"
                   >
                     <X aria-hidden className="size-5" />
+                    <span className="text-[0.875rem] font-semibold md:hidden">{t("removeLine", { n: n + 1 })}</span>
                   </button>
                 </li>
               ))}
@@ -346,7 +361,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
             <button
               type="button"
               onClick={() => setLines((ls) => (ls.length >= 50 ? ls : [...ls, blankLine(nextId.current++)]))}
-              className={buttonClass({ variant: "secondary", size: "sm" }, "mt-3")}
+              className={buttonClass({ variant: "secondary", size: "sm" }, "mt-3 max-md:h-12 max-md:w-full max-md:text-sm")}
             >
               <Plus aria-hidden />
               {t("addLine")}
@@ -355,7 +370,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
         </FormSection>
 
         {/* 02 — Files */}
-        <FormSection index="02" id={`${uid}-files`} title={t("filesTitle")} lead={t("filesLead")}>
+        <FormSection index="02" id={`${uid}-files`} anchor="rfq-files" title={t("filesTitle")} lead={t("filesLead")}>
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -371,23 +386,14 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
             <Upload aria-hidden className="size-6 text-re-steel-600" strokeWidth={1.5} />
             <p className="mt-2 font-semibold">{t("dropHere")}</p>
             <p className="re-mono mt-1 text-[0.8125rem] text-re-steel-600">{t("fileRules")}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <label className={buttonClass({ variant: "secondary" }, "cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-re-blue")}>
-                <Upload aria-hidden />
-                {t("chooseFiles")}
-                <input
-                  type="file"
-                  name="attachments"
-                  multiple
-                  accept={RFQ_ACCEPT}
-                  onChange={(e) => {
-                    addFiles(e.target.files);
-                    e.target.value = "";
-                  }}
-                  className="sr-only"
-                />
-              </label>
-              <label className={buttonClass({ variant: "secondary" }, "cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-re-blue")}>
+            <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
+              {/* Phones: the camera is the fastest way to send an old part — make it the big one. */}
+              <label
+                className={buttonClass(
+                  { variant: "secondary" },
+                  "cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-re-blue max-sm:h-14 max-sm:bg-re-ink max-sm:text-base max-sm:text-white sm:order-2",
+                )}
+              >
                 <Camera aria-hidden />
                 {t("takePhoto")}
                 <input
@@ -395,6 +401,21 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
                   name="attachments"
                   accept="image/*"
                   capture="environment"
+                  onChange={(e) => {
+                    addFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                  className="sr-only"
+                />
+              </label>
+              <label className={buttonClass({ variant: "secondary" }, "cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-re-blue max-sm:h-12 sm:order-1")}>
+                <Upload aria-hidden />
+                {t("chooseFiles")}
+                <input
+                  type="file"
+                  name="attachments"
+                  multiple
+                  accept={RFQ_ACCEPT}
                   onChange={(e) => {
                     addFiles(e.target.files);
                     e.target.value = "";
@@ -434,7 +455,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
         </FormSection>
 
         {/* 03 — Contact */}
-        <FormSection index="03" id={`${uid}-contact`} title={t("contactTitle")} lead={t("contactLead")}>
+        <FormSection index="03" id={`${uid}-contact`} anchor="rfq-contact" title={t("contactTitle")} lead={t("contactLead")}>
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField id={`${uid}-phone`} label={t("field.phone")} hint={t("hint.phone")} error={err("phone")}>
               <input
@@ -446,24 +467,24 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
                 placeholder="01XXX-XXXXXX"
                 aria-invalid={Boolean(errors.phone)}
                 aria-describedby={describedBy(`${uid}-phone`, err("phone"), true)}
-                className={cn(inputClass, "re-mono")}
+                className={cn(inputClass, big, "re-mono max-md:text-[1.0625rem]")}
                 {...register("phone")}
               />
             </FormField>
             <FormField id={`${uid}-name`} label={t("field.contactName")} optional optionalLabel={t("optional")} error={err("contact_name")}>
-              <input id={`${uid}-name`} autoComplete="name" className={inputClass} aria-invalid={Boolean(errors.contact_name)} {...register("contact_name")} />
+              <input id={`${uid}-name`} autoComplete="name" className={cn(inputClass, big)} aria-invalid={Boolean(errors.contact_name)} {...register("contact_name")} />
             </FormField>
             <FormField id={`${uid}-company`} label={t("field.company")} optional optionalLabel={t("optional")} error={err("company_name")}>
-              <input id={`${uid}-company`} autoComplete="organization" className={inputClass} aria-invalid={Boolean(errors.company_name)} {...register("company_name")} />
+              <input id={`${uid}-company`} autoComplete="organization" className={cn(inputClass, big)} aria-invalid={Boolean(errors.company_name)} {...register("company_name")} />
             </FormField>
             <FormField id={`${uid}-email`} label={t("field.email")} optional optionalLabel={t("optional")} error={err("email")}>
-              <input id={`${uid}-email`} type="email" inputMode="email" autoComplete="email" className={inputClass} aria-invalid={Boolean(errors.email)} aria-describedby={describedBy(`${uid}-email`, err("email"))} {...register("email")} />
+              <input id={`${uid}-email`} type="email" inputMode="email" autoComplete="email" className={cn(inputClass, big)} aria-invalid={Boolean(errors.email)} aria-describedby={describedBy(`${uid}-email`, err("email"))} {...register("email")} />
             </FormField>
             <FormField id={`${uid}-bin`} label={t("field.bin")} optional optionalLabel={t("optional")} hint={t("hint.bin")} error={err("bin_number")}>
-              <input id={`${uid}-bin`} inputMode="numeric" className={cn(inputClass, "re-mono")} aria-invalid={Boolean(errors.bin_number)} aria-describedby={describedBy(`${uid}-bin`, err("bin_number"), true)} {...register("bin_number")} />
+              <input id={`${uid}-bin`} inputMode="numeric" className={cn(inputClass, big, "re-mono")} aria-invalid={Boolean(errors.bin_number)} aria-describedby={describedBy(`${uid}-bin`, err("bin_number"), true)} {...register("bin_number")} />
             </FormField>
             <FormField id={`${uid}-area`} label={t("field.area")} optional optionalLabel={t("optional")}>
-              <select id={`${uid}-area`} className={selectClass} {...register("delivery_area")}>
+              <select id={`${uid}-area`} className={cn(selectClass, big)} {...register("delivery_area")}>
                 <option value="">{t("areaChoose")}</option>
                 {DELIVERY_AREAS.map((a) => (
                   <option key={a.key} value={a.value}>
@@ -475,16 +496,16 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
             </FormField>
             {area === "other" && (
               <FormField id={`${uid}-area-other`} label={t("field.areaOther")} className="sm:col-start-2">
-                <input id={`${uid}-area-other`} maxLength={200} className={inputClass} {...register("delivery_area_other")} />
+                <input id={`${uid}-area-other`} maxLength={200} className={cn(inputClass, big)} {...register("delivery_area_other")} />
               </FormField>
             )}
           </div>
 
           <fieldset className="mt-6">
             <legend className="text-[0.9375rem] font-semibold">{t("field.preferred")}</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
               {(["whatsapp", "call", "email"] as const).map((v) => (
-                <label key={v} className="relative inline-flex min-h-11 cursor-pointer items-center gap-2 border border-re-steel-500 px-3.5 has-checked:border-re-ink has-checked:bg-re-ink has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-re-blue">
+                <label key={v} className="relative inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 border sm:min-h-11 sm:justify-start border-re-steel-500 px-3.5 has-checked:border-re-ink has-checked:bg-re-ink has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-re-blue">
                   <input type="radio" value={v} className="sr-only" {...register("preferred_contact")} />
                   <span className="text-[0.9375rem] font-semibold">{t(`preferred.${v}`)}</span>
                 </label>
@@ -508,7 +529,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
       </div>
 
       {/* Summary + submit */}
-      <aside className="lg:sticky lg:top-24 lg:self-start">
+      <aside id="rfq-send" className="scroll-mt-16 lg:sticky lg:top-24 lg:self-start">
         <div className="border border-re-ink bg-re-paper">
           <div className="border-b border-re-ink bg-re-ink px-4 py-2.5">
             <p className="re-label !text-white/70">{t("summary")}</p>

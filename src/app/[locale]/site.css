@@ -232,3 +232,18 @@ html[lang="bn"] .re-label {
     @media (width < 48rem) { scroll-padding-top: 4rem; }
   }
 }
+
+/* A page with its own bottom action bar (`[data-page-actions]`, e.g. the
+   part page's qty · Add to quote · WhatsApp bar) replaces the tab bar. The
+   page bar keeps the tab bar's height (3.75rem + safe area) and breakpoint
+   (< lg), so the bottom padding / scroll-padding above still fit. */
+body:has([data-page-actions]) :is([data-mobile-tabbar], .re-tabbar) { display: none; }
+
+/* One focus ring per control: a bordered wrapper that marks itself with a
+   `focus-within:` utility (qty steppers, icon + input boxes) draws the ring
+   around the whole box, and the inner field drops its own. */
+:where([class*="focus-within:"]):has(:is(input, textarea, select):focus-visible) {
+  outline: 2px solid var(--color-re-blue);
+  outline-offset: 2px;
+}
+:where([class*="focus-within:"]) :is(input, textarea, select):focus-visible { outline: none; }

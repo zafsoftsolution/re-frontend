@@ -178,35 +178,83 @@ export function pickCategories(categories: CategorySummary[], ids: string[] = []
   return featured.length >= 4 ? featured : categories;
 }
 
-export function CategoryGrid({
-  categories,
-  copy,
-  index,
-}: {
-  categories: CategorySummary[];
-  copy?: HomeCopy | null;
-  index: string;
-}) {
-  const t = useTranslations();
-  const rows = categories.length
-    ? categories.slice(0, 12).map((c) => ({
+type Tr = (key: string, values?: Record<string, string | number>) => string;
+
+function categoryRows(categories: CategorySummary[], tr: unknown, limit: number) {
+  const t = tr as Tr;
+  return categories.length
+    ? categories.slice(0, limit).map((c) => ({
         key: c.slug,
         name: c.name,
         icon: partIconFor(`${c.slug} ${c.name}`),
         meta: t("home.parts", { count: c.productCount }),
         href: `/categories/${c.slug}`,
       }))
-    : FALLBACK_PART_TYPES.map((k) => ({
+    : FALLBACK_PART_TYPES.slice(0, limit).map((k) => ({
         key: k,
         name: t(`parts.${k}`),
-        icon: k,
-        meta: null,
+        icon: k as PartIconKey | null,
+        meta: null as string | null,
         // Search in English: part names are stored in English.
         href: { pathname: "/search", query: { q: FALLBACK_QUERY[k] } } as const,
       }));
+}
+
+/**
+ * Phones: the part types as a 3-up icon grid right under the hero search
+ * (8 types + "All"), so a mechanic is one tap from a listing.
+ */
+export function QuickCategories({ categories, copy }: { categories: CategorySummary[]; copy?: HomeCopy | null }) {
+  const t = useTranslations();
+  const rows = categoryRows(categories, t, 8);
+  return (
+    <nav aria-labelledby="home-quick-types">
+      <h2 id="home-quick-types" className="re-label mb-2 text-re-ink">
+        {copy?.title || t("home.categoriesHeading")}
+      </h2>
+      <ul className="grid grid-cols-3 gap-px border border-re-steel-200 bg-re-steel-200">
+        {rows.map((r) => {
+          const Icon = r.icon ? PART_ICONS[r.icon] : null;
+          return (
+            <li key={r.key} className="bg-re-paper">
+              <Link href={r.href} className="flex h-full min-h-24 flex-col items-center justify-center gap-1.5 px-1.5 py-3 text-center active:bg-re-steel-50">
+                {Icon ? <Icon className="size-7 text-re-ink" /> : <span className="re-mono text-xs text-re-steel-400">RE</span>}
+                <span className="line-clamp-2 text-[0.8125rem] leading-tight font-semibold text-re-ink bn:leading-snug">{r.name}</span>
+                {r.meta && <span className="re-mono text-[0.6875rem] text-re-steel-600">{r.meta}</span>}
+              </Link>
+            </li>
+          );
+        })}
+        <li className={`bg-re-steel-50 ${["col-span-3", "col-span-2", "col-span-1"][rows.length % 3]}`}>
+          <Link
+            href={copy?.cta?.href || "/categories"}
+            className="flex h-full min-h-24 flex-col items-center justify-center gap-1.5 px-2 py-3 text-center text-[0.8125rem] font-semibold text-re-blue active:bg-re-steel-100"
+          >
+            <ArrowRight aria-hidden className="size-5" />
+            {copy?.cta?.label || t("home.categoriesAll")}
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
+
+export function CategoryGrid({
+  categories,
+  copy,
+  index,
+  className,
+}: {
+  categories: CategorySummary[];
+  copy?: HomeCopy | null;
+  index: string;
+  className?: string;
+}) {
+  const t = useTranslations();
+  const rows = categoryRows(categories, t, 12);
 
   return (
-    <section aria-labelledby="home-categories" className="re-shell mt-16">
+    <section aria-labelledby="home-categories" className={`re-shell mt-16 ${className ?? ""}`}>
       <SectionHeader
         id="home-categories"
         index={index}
@@ -244,19 +292,31 @@ export function CategoryGrid({
   );
 }
 
-export function FeaturedParts({ parts, copy, index }: { parts: PartSummary[]; copy?: HomeCopy | null; index: string }) {
+export function FeaturedParts({
+  parts,
+  copy,
+  index,
+  className,
+  id = "home-featured",
+}: {
+  parts: PartSummary[];
+  copy?: HomeCopy | null;
+  index: string;
+  className?: string;
+  id?: string;
+}) {
   const t = useTranslations("home");
   if (parts.length === 0) return null;
   return (
-    <section aria-labelledby="home-featured" className="re-shell mt-16">
+    <section aria-labelledby={id} className={`re-shell mt-12 md:mt-16 ${className ?? ""}`}>
       <SectionHeader
-        id="home-featured"
+        id={id}
         index={index}
         title={copy?.title || t("featuredHeading")}
         subtitle={copy?.subtitle || copy?.body || t("featuredSub")}
         action={<AllLink href={copy?.cta?.href || "/categories"}>{copy?.cta?.label || t("featuredAll")}</AllLink>}
       />
-      <PartsTable parts={parts} caption={t("featuredCaption")} showFits={false} className="mt-6" />
+      <PartsTable parts={parts} caption={t("featuredCaption")} showFits={false} className="mt-5 md:mt-6" mobile="carousel" />
     </section>
   );
 }
@@ -276,7 +336,25 @@ export function QuoteSteps({
   return (
     <section aria-labelledby="home-quote" className="re-shell mt-16">
       <SectionHeader id="home-quote" index={index} title={copy?.title || t("heading")} subtitle={copy?.subtitle || t("sub")} />
-      <ScrollStage scene="rule">
+      {/* Phones: a compact vertical stepper. */}
+      <ol className="mt-5 md:hidden">
+        {steps.map((s, i) => (
+          <li key={s} className="relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 pb-5 last:pb-0">
+            {i < steps.length - 1 && <span aria-hidden className="absolute top-9 bottom-0 left-[1.0625rem] w-px bg-re-steel-400" />}
+            <span
+              aria-hidden
+              className={`re-mono relative grid size-9 place-items-center text-[0.9375rem] font-semibold text-white ${i === 2 ? "bg-re-red-dark" : "bg-re-ink"}`}
+            >
+              {`0${s}`}
+            </span>
+            <div className="min-w-0 pt-1">
+              <h3 className="text-[1.0625rem] text-re-ink">{t(`steps.${s}.title`)}</h3>
+              <p className="mt-1 text-[0.9375rem] text-re-steel-600">{t(`steps.${s}.body`)}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <ScrollStage scene="rule" className="max-md:hidden">
         <ol className="mt-6 grid border border-re-ink md:grid-cols-3">
           {steps.map((s, i) => (
             <li
@@ -299,7 +377,7 @@ export function QuoteSteps({
         </ol>
       </ScrollStage>
       {copy?.body && <p className="mt-4 max-w-2xl text-re-steel-600">{copy.body}</p>}
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
         <Link href={copy?.cta?.href || "/rfq"} className={buttonClass({ variant: "primary", size: "lg" })}>
           <FileSpreadsheet aria-hidden strokeWidth={1.75} />
           {copy?.cta?.label || t("cta")}
@@ -323,12 +401,21 @@ export function TrustFacts({ settings, index, tel }: { settings: SiteSettings; i
   const hours = useHoursShort();
   const strip = [
     { label: tb("experienceLabel"), value: tb("experience"), mono: false },
-    { label: tb("vatRegistered"), value: `BIN ${BUSINESS.vatBin}`, mono: true },
+    {
+      label: tb("vatRegistered"),
+      // May break after "BIN" on a 320px phone; the number itself never splits.
+      value: (
+        <>
+          BIN <span className="whitespace-nowrap">{BUSINESS.vatBin}</span>
+        </>
+      ),
+      mono: true,
+    },
     { label: t("address"), value: tb("area"), mono: false },
     { label: tb("hours"), value: hours, mono: false },
   ];
   const pay = [...(settings.codEnabled ? (["cod"] as const) : []), "bkash", "nagad", "bank"] as const;
-  const cell = "bg-re-paper p-5 sm:p-6";
+  const cell = "bg-re-paper p-4 sm:p-6";
   const head = "flex items-center gap-2 re-label";
   return (
     <section aria-labelledby="home-trust" className="re-shell mt-16">
@@ -346,7 +433,9 @@ export function TrustFacts({ settings, index, tel }: { settings: SiteSettings; i
             className={`px-3 py-3 sm:px-5 ${i % 2 ? "border-l border-re-steel-200" : ""} ${i > 1 ? "border-t border-re-steel-200 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
           >
             <dt className="re-label">{f.label}</dt>
-            <dd className={`mt-1 font-semibold text-re-ink ${f.mono ? "re-mono text-[0.875rem] whitespace-nowrap sm:text-[1rem]" : "text-[1rem]"}`}>{f.value}</dd>
+            <dd className={`mt-1 font-semibold text-re-ink ${f.mono ? "re-mono text-[0.8125rem] xs:text-[0.875rem] sm:text-[1rem] sm:whitespace-nowrap" : "text-[1rem]"}`}>
+              {f.value}
+            </dd>
           </div>
         ))}
       </dl>

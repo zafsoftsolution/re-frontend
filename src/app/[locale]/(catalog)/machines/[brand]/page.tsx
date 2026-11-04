@@ -129,20 +129,23 @@ export default async function MachineBrandPage({ params }: Props) {
               alt={brand.name}
               sizes="240px"
               preload
-              className="aspect-[2/1] w-48 border border-re-ink bg-re-paper md:w-60"
+              className="aspect-[2/1] w-32 border border-re-ink bg-re-paper sm:w-48 md:w-60"
             />
           ) : undefined
         }
       />
 
-      <div className="re-shell mt-10">
+      <div className="re-shell mt-6 md:mt-10">
         {sortedGroups.length > 0 && (
-          <nav aria-label={t("catalog.brand.types")} className="-mx-1 flex flex-wrap gap-2">
+          <nav
+            aria-label={t("catalog.brand.types")}
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-1 md:flex-wrap md:overflow-visible md:px-0 md:pb-0"
+          >
             {sortedGroups.map(([key, g]) => (
               <a
                 key={key}
                 href={`#type-${key}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-re border border-re-steel-200 px-3 text-[0.9375rem] font-medium hover:border-re-ink"
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-re border border-re-steel-200 px-3 text-[0.9375rem] font-medium whitespace-nowrap hover:border-re-ink"
               >
                 {g.label}
                 <span className="re-mono text-[0.8125rem] text-re-steel-600">{g.models.length}</span>
@@ -151,7 +154,7 @@ export default async function MachineBrandPage({ params }: Props) {
           </nav>
         )}
 
-        <section aria-labelledby="models" className="mt-10">
+        <section aria-labelledby="models" className="mt-8 md:mt-10">
           <SectionHeader
             id="models"
             index="01"
@@ -203,7 +206,7 @@ export default async function MachineBrandPage({ params }: Props) {
                           <th scope="row" className="px-2 py-0 font-normal">
                             <Link
                               href={`/machines/${brand.slug}/${m.slug}`}
-                              className="flex min-h-12 items-center after:absolute after:inset-0 after:content-['']"
+                              className="flex min-h-14 items-center after:absolute after:inset-0 after:content-[''] md:min-h-12"
                             >
                               <span className="re-mono text-[1.0625rem] font-semibold text-re-ink group-hover:text-re-red-text">
                                 {m.name}

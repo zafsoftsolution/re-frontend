@@ -10,6 +10,7 @@ import { breadcrumbJsonLd, joinList } from "@/lib/catalog/page";
 import { catalogMetadata, localeUrl } from "@/lib/seo/metadata";
 import { itemList } from "@/lib/seo/jsonld";
 import { SheetHeader } from "@/components/catalog/SheetHeader";
+import { EmptyParts } from "@/components/catalog/EmptyParts";
 import { JsonLd } from "@/components/catalog/JsonLd";
 import { GENERIC_PART_ICON, PART_ICONS, partIconFor } from "@/components/icons/parts";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/categori
 export default async function CategoriesPage({ params }: PageProps<"/[locale]/categories">) {
   const locale = await resolveLocale(params);
   setRequestLocale(locale);
-  const [t, categories] = await Promise.all([getTranslations({ locale }), getCategories(locale)]);
+  const [t, categories, boot] = await Promise.all([getTranslations({ locale }), getCategories(locale), getBootstrap(locale)]);
   const tree = categoryTree(categories);
   const groups = splitPartsAndDevices(tree);
   const total = categories.reduce((n, c) => n + c.productCount, 0);
@@ -59,7 +60,11 @@ export default async function CategoriesPage({ params }: PageProps<"/[locale]/ca
       />
       <div className="re-shell mt-10">
         {tree.length === 0 ? (
-          <p className="text-re-steel-600">{t("catalog.categories.empty")}</p>
+          <EmptyParts
+            whatsapp={boot.settings.whatsappNumber || boot.settings.contactPhone}
+            context={t("catalog.categories.title")}
+            title={t("catalog.categories.empty")}
+          />
         ) : groups.devices.length === 0 ? (
           <CategoryGrid nodes={tree} countLabel={(n) => t("catalog.categories.count", { count: n })} subtypes={t("catalog.categories.subtypes")} />
         ) : (

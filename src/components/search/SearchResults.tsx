@@ -1,4 +1,4 @@
-import { Camera } from "lucide-react";
+import { Camera, Phone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
@@ -6,7 +6,7 @@ import { getBootstrap, searchParts } from "@/lib/api/site";
 import type { PartSummary } from "@/lib/api/types";
 import { looksLikePartNumber } from "@/lib/part-number";
 import { isDirect } from "@/lib/sales";
-import { whatsappHref } from "@/lib/format";
+import { telHref, whatsappHref } from "@/lib/format";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { PartNumber } from "@/components/ui/PartNumber";
 import { StockBadge } from "@/components/ui/StockBadge";
@@ -16,6 +16,7 @@ import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { buttonClass } from "@/components/ui/button-styles";
 import { WhatsAppIcon } from "@/components/icons/brand";
 import { QuotePartNumberLink } from "@/components/rfq/QuotePartNumberLink";
+import { PartRow } from "@/components/catalog/PartCard";
 
 /**
  * Search results, rendered on the server in the page response (no Suspense
@@ -28,6 +29,7 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
   const number = boot.settings.whatsappNumber || boot.settings.contactPhone;
   const directOn = boot.settings.directOrdersEnabled;
   const priceOf = (p: PartSummary) => (isDirect(p, directOn) ? p.price : null);
+  const tel = telHref(boot.settings.contactPhone);
 
   if (!q) return <p className="mt-8 text-re-steel-600">{t("search.empty")}</p>;
 
@@ -69,7 +71,7 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
   const suggestions = res.machineModels.length > 0 || res.machineBrands.length > 0;
 
   return (
-    <div className="mt-8 space-y-10">
+    <div className="mt-6 space-y-8 md:mt-8 md:space-y-10">
       <p className="flex flex-wrap items-baseline justify-between gap-2 border-b border-re-steel-200 pb-3">
         <span className="text-lg font-semibold">{t("search.resultsFor", { query: q })}</span>
         <span className="re-mono text-sm text-re-steel-600">{t("search.count", { count: total })}</span>
@@ -96,9 +98,9 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
                 <Price amount={priceOf(res.exact)} size="sm" />
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid gap-2 sm:flex sm:flex-wrap [&>*]:w-full sm:[&>*]:w-auto">
               <AddToCartButton salesMode={res.exact.salesMode} directOrdersEnabled={directOn} price={res.exact.price} productSlug={res.exact.slug} partNumber={res.exact.partNumber} name={res.exact.name} />
-              <AddToQuoteButton productSlug={res.exact.slug} partNumber={res.exact.partNumber} name={res.exact.name} />
+              <AddToQuoteButton productSlug={res.exact.slug} partNumber={res.exact.partNumber} name={res.exact.name} className="max-sm:h-12" />
               <Link href={`/parts/${res.exact.slug}`} className={buttonClass({ variant: "ghost" })}>
                 {t("search.viewPart")}
               </Link>
@@ -112,10 +114,10 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
           <h2 id="search-machines" className="re-label">
             {t("search.machines")}
           </h2>
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
             {res.machineBrands.map((b) => (
               <li key={`b-${b.slug}`}>
-                <Link href={`/machines/${b.slug}`} className="inline-flex min-h-11 items-center gap-2 border border-re-ink px-3 text-[0.9375rem] font-semibold hover:bg-re-ink hover:text-white">
+                <Link href={`/machines/${b.slug}`} className="inline-flex min-h-11 items-center gap-2 border border-re-ink px-3 text-[0.9375rem] font-semibold whitespace-nowrap hover:bg-re-ink hover:text-white">
                   {b.name}
                   <span className="re-mono text-[0.75rem] font-normal opacity-70">{t("search.models", { count: b.modelCount })}</span>
                 </Link>
@@ -125,7 +127,7 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
               <li key={`m-${m.slug}`}>
                 <Link
                   href={`/machines/${m.brandSlug}/${m.slug}`}
-                  className="inline-flex min-h-11 items-center gap-2 border border-re-steel-500 px-3 text-[0.9375rem] hover:border-re-ink"
+                  className="inline-flex min-h-11 items-center gap-2 border border-re-steel-500 px-3 text-[0.9375rem] whitespace-nowrap hover:border-re-ink"
                 >
                   <span className="text-re-steel-600">{m.brandName}</span>
                   <span className="re-mono font-semibold">{m.name}</span>
@@ -140,23 +142,37 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
       {res.parts.length > 0 && (
         <section aria-label={t("search.resultsFor", { query: q })}>
           {res.exact && <h2 className="re-label mb-3">{t("search.related")}</h2>}
-          <DataTable columns={columns} rows={res.parts} rowKey={(p) => p.slug} caption={t("search.resultsFor", { query: q })} />
+          <DataTable className="max-md:hidden" columns={columns} rows={res.parts} rowKey={(p) => p.slug} caption={t("search.resultsFor", { query: q })} />
+          <ul aria-label={t("search.resultsFor", { query: q })} className="divide-y divide-re-steel-200 border-y border-re-steel-200 md:hidden">
+            {res.parts.map((p) => (
+              <li key={p.slug}>
+                <PartRow part={p} direct={isDirect(p, directOn)} />
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
       {total === 0 && (
-        <div className="max-w-2xl border border-re-steel-200 p-6" data-testid="search-empty">
+        <div className="max-w-2xl border border-re-steel-200 p-5 sm:p-6" data-testid="search-empty">
           <p className="text-lg font-semibold">{t("search.noResults", { query: q })}</p>
           <p className="mt-2 text-re-steel-600">{t("search.noResultsHelp")}</p>
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-5 grid gap-3 sm:flex sm:flex-wrap [&>*]:w-full sm:[&>*]:w-auto max-sm:[&>*]:h-auto max-sm:[&>*]:min-h-12 max-sm:[&>*]:py-2 max-sm:[&>*]:text-center max-sm:[&>*]:whitespace-normal">
             {whatsappHref(number) ? (
-              <a href={whatsappHref(number, t("search.waPhoto", { query: q }))} target="_blank" rel="noopener" className={buttonClass({ variant: "whatsapp" })}>
+              <a href={whatsappHref(number, t("search.waPhoto", { query: q }))} target="_blank" rel="noopener" className={buttonClass({ variant: "whatsapp", size: "lg" }, "sm:h-11 sm:text-sm")}>
                 <WhatsAppIcon />
                 <Camera aria-hidden className="-ml-1 size-4" />
                 {t("search.sendPhoto")}
               </a>
             ) : null}
             <QuotePartNumberLink partNumber={q} label={looksLikePartNumber(q) ? t("search.quoteNumber", { query: q }) : t("search.quoteIt")} />
+            {tel && (
+              <a href={tel} className={buttonClass({ variant: "ghost" }, "border border-re-steel-200")}>
+                <Phone aria-hidden strokeWidth={1.75} />
+                {t("catalog.listing.emptyCall")}
+                <span className="re-mono font-normal">{boot.settings.contactPhone}</span>
+              </a>
+            )}
           </div>
           {!res.live && <p className="mt-4 text-[0.8125rem] text-re-steel-600">{t("search.offline")}</p>}
         </div>

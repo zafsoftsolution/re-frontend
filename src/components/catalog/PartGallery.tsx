@@ -11,7 +11,7 @@ export function PartGallery({ images, alt, thumbLabel }: { images: ImageSource[]
   const current = images[active] ?? images[0];
   return (
     <div>
-      <div className="relative aspect-square overflow-hidden border border-re-steel-200 bg-re-steel-50">
+      <div className="relative aspect-[4/3] overflow-hidden border border-re-steel-200 bg-re-steel-50 md:aspect-square">
         <Image
           key={current.src}
           src={current.src}
@@ -24,9 +24,9 @@ export function PartGallery({ images, alt, thumbLabel }: { images: ImageSource[]
         />
       </div>
       {images.length > 1 && (
-        <ul className="mt-2 grid grid-cols-5 gap-2">
+        <ul className="mt-2 flex gap-2 overflow-x-auto md:grid md:grid-cols-5 md:overflow-visible">
           {images.map((img, i) => (
-            <li key={img.src}>
+            <li key={img.src} className="size-12 shrink-0 md:size-auto">
               <button
                 type="button"
                 onClick={() => setActive(i)}

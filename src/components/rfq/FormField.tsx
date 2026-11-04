@@ -60,9 +60,27 @@ export const selectClass = cn(
 );
 
 /** Document-style numbered block heading inside a form ("01 Parts"). */
-export function FormSection({ index, title, lead, children, className, id }: { index: string; title: ReactNode; lead?: ReactNode; children: ReactNode; className?: string; id?: string }) {
+export function FormSection({
+  index,
+  title,
+  lead,
+  children,
+  className,
+  id,
+  anchor,
+}: {
+  index: string;
+  title: ReactNode;
+  lead?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  /** id of the heading (aria-labelledby). */
+  id?: string;
+  /** id of the section itself, for in-page links (RFQ progress steps). */
+  anchor?: string;
+}) {
   return (
-    <section aria-labelledby={id} className={cn("relative border-t border-re-ink pt-5", className)}>
+    <section id={anchor} aria-labelledby={id} className={cn("relative border-t border-re-ink pt-5", anchor && "scroll-mt-16 lg:scroll-mt-4", className)}>
       <span aria-hidden className="absolute -top-px left-0 h-[3px] w-12 bg-re-red" />
       <div className="flex items-baseline gap-3">
         <span className="re-mono text-sm font-semibold text-re-red-text">{index}</span>

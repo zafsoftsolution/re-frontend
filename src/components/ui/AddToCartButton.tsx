@@ -23,6 +23,7 @@ export function AddToCartButton({
   name,
   qty = 1,
   size = "md",
+  iconOnly = false,
   className,
 }: {
   salesMode: SalesMode;
@@ -34,6 +35,8 @@ export function AddToCartButton({
   name: string;
   qty?: number;
   size?: ButtonSize;
+  /** 44px square for dense phone rows (accessible name stays the full label). */
+  iconOnly?: boolean;
   className?: string;
 }) {
   const t = useTranslations("ui");
@@ -49,10 +52,11 @@ export function AddToCartButton({
         announce(`${t("addedToCart")}: ${partNumber || name}`);
         setTimeout(() => setAdded(false), 1600);
       }}
-      className={buttonClass({ variant: "secondary", size }, className)}
+      title={iconOnly ? (added ? t("addedToCart") : t("addToCart")) : undefined}
+      className={buttonClass({ variant: "secondary", size: iconOnly ? "icon" : size }, className)}
     >
       {added ? <Check aria-hidden className="animate-re-tick" /> : <ShoppingCart aria-hidden strokeWidth={1.75} />}
-      <span>{added ? t("addedToCart") : t("addToCart")}</span>
+      {!iconOnly && <span>{added ? t("addedToCart") : t("addToCart")}</span>}
     </button>
   );
 }

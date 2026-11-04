@@ -92,7 +92,7 @@ export default async function MachineModelPage({ params }: Props) {
         number={whatsapp}
         text={t("catalog.listing.emptyWhatsappText", { context })}
         size="sm"
-        className="mt-3"
+        className="mt-3 max-md:h-11 max-md:w-full max-md:text-sm"
       >
         {t("catalog.listing.emptyCta")}
       </WhatsAppLink>
@@ -151,15 +151,16 @@ export default async function MachineModelPage({ params }: Props) {
         }
       />
 
-      <div className="re-shell mt-8 grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
-        <aside className="lg:order-none">
-          <div className="grid gap-6 lg:sticky lg:top-4">
+      <div className="re-shell mt-6 grid gap-6 md:mt-8 md:gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
+        {/* Phones/tablets: the part-type chips stick under the app bar while the groups scroll. */}
+        <aside className="min-w-0 max-lg:sticky max-md:top-14 max-lg:z-20 max-md:-mx-4 max-md:px-4 md:max-lg:-mx-6 md:max-lg:px-6 max-lg:border-b max-lg:border-re-steel-200 max-lg:bg-re-paper/95 max-lg:backdrop-blur-[2px] md:max-lg:top-0 lg:order-none">
+          <div className="grid gap-6 max-lg:grid-cols-[minmax(0,1fr)] lg:sticky lg:top-4">
             {groups.length > 0 && (
-              <nav aria-labelledby="jump" className="border-t border-re-ink pt-3">
-                <h2 id="jump" className="re-label mb-2 text-re-ink">
+              <nav aria-labelledby="jump" className="lg:border-t lg:border-re-ink lg:pt-3">
+                <h2 id="jump" className="re-label mb-2 text-re-ink max-lg:sr-only">
                   {t("catalog.model.jumpTo")}
                 </h2>
-                <ul className="flex flex-wrap gap-2 lg:grid lg:gap-0">
+                <ul className="flex gap-2 max-lg:-mx-4 max-lg:overflow-x-auto max-lg:px-4 max-lg:py-2 max-lg:[scrollbar-width:none] lg:grid lg:gap-0">
                   {groups.map((g) => {
                     const iconKey = partIconFor(`${g.slug} ${g.name}`);
                     const Icon = iconKey ? PART_ICONS[iconKey] : null;
@@ -167,7 +168,7 @@ export default async function MachineModelPage({ params }: Props) {
                       <li key={g.slug}>
                         <a
                           href={`#cat-${g.slug}`}
-                          className="flex min-h-11 items-center gap-2 rounded-re border border-re-steel-200 px-3 text-[0.9375rem] hover:border-re-ink lg:rounded-none lg:border-0 lg:border-b lg:px-1 lg:hover:bg-re-steel-50"
+                          className="flex min-h-11 items-center gap-2 rounded-re border border-re-steel-200 bg-re-paper px-3 text-[0.9375rem] whitespace-nowrap hover:border-re-ink lg:rounded-none lg:border-0 lg:border-b lg:px-1 lg:whitespace-normal lg:hover:bg-re-steel-50"
                         >
                           {Icon && <Icon aria-hidden className="size-5 shrink-0 text-re-steel-600" />}
                           <span className="min-w-0 flex-1 truncate">{g.name}</span>
@@ -192,12 +193,12 @@ export default async function MachineModelPage({ params }: Props) {
               body={t("catalog.model.noPartsBody")}
             />
           ) : (
-            <div className="grid gap-12">
+            <div className="grid gap-10 md:gap-12">
               {groups.map((g, i) => (
-                <section key={g.slug} id={`cat-${g.slug}`} aria-labelledby={`cat-${g.slug}-h`} className="scroll-mt-20">
+                <section key={g.slug} id={`cat-${g.slug}`} aria-labelledby={`cat-${g.slug}-h`} className="scroll-mt-20 max-lg:scroll-mt-[4.5rem]">
                   <header className="relative flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-re-steel-200 pt-4">
                     <span aria-hidden className="absolute -top-px left-0 h-[3px] w-12 bg-re-red" />
-                    <h2 id={`cat-${g.slug}-h`} className="flex items-baseline gap-3 text-[1.5rem] sm:text-[1.75rem]">
+                    <h2 id={`cat-${g.slug}-h`} className="flex items-baseline gap-3 text-[1.375rem] sm:text-[1.75rem]">
                       <span className="re-mono text-[0.8125rem] font-medium text-re-steel-400">§ {String(i + 1).padStart(2, "0")}</span>
                       {g.name}
                       <span className="re-mono text-[0.875rem] font-normal text-re-steel-600">{g.parts.length}</span>

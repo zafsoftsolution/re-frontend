@@ -19,7 +19,9 @@ export function ListingForm({
   defaultSort,
   children,
   className,
+  id,
 }: {
+  id?: string;
   /** Locale-prefixed listing path. */
   action: string;
   auto?: boolean;
@@ -42,6 +44,7 @@ export function ListingForm({
 
   return (
     <form
+      id={id}
       action={action}
       method="get"
       aria-busy={pending || undefined}

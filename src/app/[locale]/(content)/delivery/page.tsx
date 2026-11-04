@@ -50,7 +50,24 @@ export default async function DeliveryPage({ params }: Props) {
           {t("delivery.areas.title")}
         </h2>
         <p className="mt-2 max-w-2xl text-re-steel-600">{t("delivery.areas.lead")}</p>
-        <div className="mt-5 overflow-x-auto">
+        <ul className="mt-5 divide-y divide-re-steel-200 border-y border-re-ink sm:hidden">
+          {rows.map((r) => (
+            <li key={r.area} className="py-3">
+              <p className="font-semibold">{r.area}</p>
+              <dl className="mt-1.5 grid gap-1.5 text-[0.9375rem]">
+                <div>
+                  <dt className="re-label">{t("delivery.areas.colHow")}</dt>
+                  <dd className="mt-0.5">{r.how}</dd>
+                </div>
+                <div>
+                  <dt className="re-label">{t("delivery.areas.colTiming")}</dt>
+                  <dd className="mt-0.5 text-re-steel-600">{r.timing}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5 overflow-x-auto max-sm:hidden">
           <table className="w-full min-w-[36rem] border-collapse text-[0.9375rem]">
             <thead>
               <tr className="border-y border-re-ink text-left">
@@ -71,7 +88,7 @@ export default async function DeliveryPage({ params }: Props) {
           </table>
         </div>
         <p className="mt-3 text-[0.8125rem] text-re-steel-600">{t("delivery.areas.note")}</p>
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-5 grid gap-3 sm:flex sm:flex-wrap max-sm:[&>*]:h-auto max-sm:[&>*]:min-h-11 max-sm:[&>*]:py-2 max-sm:[&>*]:text-center max-sm:[&>*]:whitespace-normal">
           <WhatsAppLink number={wa} text={t("delivery.waText")}>
             {t("delivery.askWhatsapp")}
           </WhatsAppLink>
@@ -81,7 +98,7 @@ export default async function DeliveryPage({ params }: Props) {
         </div>
       </section>
 
-      <div className="mt-14 grid gap-10 md:grid-cols-2">
+      <div className="mt-10 grid gap-10 md:mt-14 md:grid-cols-2">
         <section aria-labelledby="payment" className="relative border-t border-re-ink pt-5">
           <span aria-hidden className="absolute -top-px left-0 h-[3px] w-12 bg-re-red" />
           <h2 id="payment" className="flex items-center gap-2 text-[1.25rem] font-bold">

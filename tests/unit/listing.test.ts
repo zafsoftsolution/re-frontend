@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   applyListing,
+  applyListingUpTo,
+  countMatches,
   DEFAULT_SORT,
+  facetRows,
+  filterParts,
   hasActiveFilters,
   listingQuery,
   pageWindow,
@@ -126,5 +130,48 @@ describe("pageWindow", () => {
     expect(pageWindow(1, 3)).toEqual([1, 2, 3]);
     expect(pageWindow(6, 12)).toEqual([1, "gap", 5, 6, 7, "gap", 12]);
     expect(pageWindow(2, 12)).toEqual([1, 2, 3, "gap", 12]);
+  });
+});
+
+describe("phone listing helpers", () => {
+  const parts = [
+    part({ slug: "a", brandSlug: "organ", machineModelSlugs: ["juki-ddl-8700"], machineBrandSlugs: ["juki"] }),
+    part({ slug: "b", brandSlug: "organ", machineModelSlugs: ["brother-s-7200c"], machineBrandSlugs: ["brother"], availability: "out_of_stock" }),
+    part({ slug: "c", brandSlug: "groz", machineModelSlugs: ["juki-ddl-8700", "juki-ddl-9000c"], machineBrandSlugs: ["juki"], availability: "low_stock" }),
+    part({ slug: "d", brandSlug: "groz", categorySlug: "hooks", machineModelSlugs: [], machineBrandSlugs: [], availability: "on_request" }),
+  ];
+  const fd = (o: Record<string, string>) => Object.entries(o);
+
+  it("applyListingUpTo returns every row up to the page and the first new row", () => {
+    const base = parseListingParams({ sort: "name" });
+    expect(applyListingUpTo(parts, base, 2)).toEqual({ rows: parts.slice(0, 2), anchor: 0 });
+    const p2 = applyListingUpTo(parts, { ...base, page: 2 }, 2);
+    expect(p2.rows.map((x) => x.slug)).toEqual(["a", "b", "c", "d"]);
+    expect(p2.anchor).toBe(2);
+    // Out-of-range pages clamp like applyListing.
+    expect(applyListingUpTo(parts, { ...base, page: 9 }, 3)).toMatchObject({ anchor: 3 });
+  });
+
+  it("countMatches agrees with filterParts for the same form values", () => {
+    const rows = facetRows(parts);
+    const cases: Record<string, string>[] = [
+      {},
+      { machine: "juki-ddl-8700" },
+      { mbrand: "juki" },
+      { mbrand: "brother", machine: "juki-ddl-8700" },
+      { brand: "groz" },
+      { category: "hooks" },
+      { stock: "1" },
+      { mbrand: "juki", stock: "1", brand: "organ" },
+      { sort: "newest", machine: "" },
+    ];
+    for (const c of cases) {
+      const params = parseListingParams(c);
+      expect(countMatches(rows, fd(c)), JSON.stringify(c)).toBe(filterParts(parts, params).length);
+    }
+  });
+
+  it("facetRows carries slugs and stock only (no names, no prices)", () => {
+    expect(facetRows([part({ slug: "x", price: 99, availability: "low_stock" })])[0]).toEqual({ m: [], b: [], p: "organ", c: "needles", s: 1 });
   });
 });

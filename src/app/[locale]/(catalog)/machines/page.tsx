@@ -13,6 +13,7 @@ import { MachinePicker, type PickerBrand } from "@/components/catalog/MachinePic
 import { CatalogImage } from "@/components/catalog/CatalogImage";
 import { JsonLd } from "@/components/catalog/JsonLd";
 import { WhatsAppLink } from "@/components/catalog/WhatsAppLink";
+import { EmptyParts } from "@/components/catalog/EmptyParts";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
 const byName = (a: MachineBrandSummary, b: MachineBrandSummary) => a.name.localeCompare(b.name, "en", { sensitivity: "base" });
@@ -113,9 +114,37 @@ export default async function MachinesPage({ params }: PageProps<"/[locale]/mach
           subtitle={t("catalog.machines.indexSub", { count: brands.length })}
         />
         {sorted.length === 0 ? (
-          <p className="mt-6 text-re-steel-600">{t("catalog.machines.empty")}</p>
+          <div className="mt-6">
+            <EmptyParts whatsapp={whatsapp} context={t("catalog.machines.title")} title={t("catalog.machines.empty")} body={t("catalog.machines.notListedBody")} />
+          </div>
         ) : (
-          <ul className="mt-6 grid border-t border-re-ink lg:grid-cols-2 lg:gap-x-10">
+          <>
+          {/* Phones: 2-up brand tiles (logo · name · model count). */}
+          <ul className="mt-5 grid grid-cols-2 gap-px border border-re-steel-200 bg-re-steel-200 md:hidden">
+            {sorted.map((b) => (
+              <li key={b.slug} className="bg-re-paper">
+                <Link
+                  href={`/machines/${b.slug}`}
+                  className="flex h-full min-h-32 flex-col justify-between gap-2 p-3 active:bg-re-steel-50"
+                >
+                  <span className="flex items-start justify-between gap-2">
+                    <CatalogImage src={b.logo} alt="" sizes="96px" className="aspect-[2/1] w-24 max-w-[75%] border border-re-steel-200 bg-re-paper" />
+                    {b.country && <span className="re-mono text-[0.6875rem] text-re-steel-600">{b.country}</span>}
+                  </span>
+                  <span>
+                    <span className="block text-[1.25rem] leading-tight font-extrabold text-re-ink [font-stretch:75%] bn:font-bold bn:[font-stretch:100%]">
+                      {b.name}
+                    </span>
+                    <span className="re-mono mt-0.5 block text-[0.8125rem] text-re-steel-600">
+                      {t("catalog.machines.models", { count: b.modelCount })}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {sorted.length % 2 === 1 && <li aria-hidden className="bg-re-steel-50" />}
+          </ul>
+          <ul className="mt-6 grid border-t border-re-ink max-md:hidden lg:grid-cols-2 lg:gap-x-10">
             {sorted.map((b, i) => {
               // Directory letter (A–Z), shown on the first brand of each initial.
               const initial = b.name.charAt(0).toUpperCase();
@@ -161,17 +190,18 @@ export default async function MachinesPage({ params }: PageProps<"/[locale]/mach
               );
             })}
           </ul>
+          </>
         )}
       </section>
 
-      <section className="re-shell mt-14">
-        <div className="relative grid gap-4 border border-re-steel-200 bg-re-steel-50 p-6 sm:grid-cols-[1fr_auto] sm:items-center">
+      <section className="re-shell mt-10 md:mt-14">
+        <div className="relative grid gap-4 border border-re-steel-200 bg-re-steel-50 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:p-6">
           <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-re-whatsapp" />
           <div className="pl-2">
             <h2 className="text-xl">{t("catalog.machines.notListedTitle")}</h2>
             <p className="mt-1 max-w-2xl text-re-steel-600">{t("catalog.machines.notListedBody")}</p>
           </div>
-          <WhatsAppLink number={whatsapp} text={t("catalog.machines.notListedText")} className="justify-self-start">
+          <WhatsAppLink number={whatsapp} text={t("catalog.machines.notListedText")} className="w-full justify-self-start sm:w-auto">
             {t("catalog.machines.notListedCta")}
           </WhatsAppLink>
         </div>

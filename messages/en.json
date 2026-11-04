@@ -171,8 +171,8 @@
     "searchPlaceholder": "Part number, e.g. B1830-227-000",
     "searchNote": "Spaces, dashes and old numbers are matched too.",
     "examples": "Try",
-    "finderTitle": "Know the machine, not the number?",
-    "finderBody": "Pick the brand on the machine plate, then the model — straight to its compatible parts.",
+    "finderTitle": "Know the model, not the part number?",
+    "finderBody": "Pick the brand on the nameplate, then the model number — straight to its compatible parts.",
     "lineDown": "Line down?",
     "whatsappCta": "Send a photo on WhatsApp",
     "callCta": "Call",
@@ -214,9 +214,9 @@
         "needle": "needle"
       }
     },
-    "machinesHeading": "Find parts by machine brand",
-    "machinesSub": "Pick the brand on your machine plate, then the model.",
-    "machinesAll": "All machine brands",
+    "machinesHeading": "Find parts by brand & model number",
+    "machinesSub": "Pick the brand on the nameplate, then the model number.",
+    "machinesAll": "All brands",
     "models": "{count, plural, =0 {Models coming soon} one {# model} other {# models}}",
     "categoriesHeading": "Parts & devices by type",
     "categoriesSub": "Every part listed with its OEM part number.",
@@ -285,7 +285,7 @@
     "facts": {
       "base": "Based in",
       "baseValue": "Mirpur-1, Dhaka",
-      "machines": "Machine brands covered",
+      "machines": "Brands covered",
       "types": "Part types",
       "grades": "Grades",
       "gradesValue": "Genuine · Compatible",
@@ -293,8 +293,8 @@
       "experienceValue": "35+ years"
     },
     "stockHeading": "What we stock",
-    "stockSub": "Parts and devices for these machine brands, by type — all searchable by part number.",
-    "machinesLabel": "Parts for machine brands",
+    "stockSub": "Parts and devices for these brands, by type — all searchable by part number.",
+    "machinesLabel": "Parts for these brands",
     "typesLabel": "Part types",
     "brandsLabel": "Parts brands",
     "genuineTag": "Genuine",
@@ -370,7 +370,7 @@
     "price": "Price",
     "viewPart": "View part",
     "related": "Other matches",
-    "machines": "Parts by machine — matching brands and models",
+    "machines": "Matching brands & model numbers",
     "sendPhoto": "Send a photo on WhatsApp",
     "waPhoto": "Hello, I'm looking for this part: {query}. Photo attached.",
     "quoteNumber": "Request a quote for {query}",
@@ -426,7 +426,7 @@
       "partNumber": "Part no.",
       "description": "Description",
       "qty": "Qty",
-      "machine": "Machine model"
+      "machine": "Model no."
     },
     "descPlaceholder": "e.g. bobbin case, feed dog",
     "addLine": "Add a line",
@@ -531,6 +531,13 @@
       "errorTitle": "Request not sent",
       "errorHelp": "Nothing was submitted. Go back to the form, or send your list on WhatsApp instead.",
       "tryAgain": "Back to the form"
+    },
+    "progress": {
+      "label": "Quote request steps",
+      "parts": "Parts",
+      "files": "Files",
+      "contact": "Contact",
+      "send": "Send"
     }
   },
   "catalog": {
@@ -548,29 +555,29 @@
       "other": "Other"
     },
     "machines": {
-      "title": "Find parts by machine",
-      "eyebrow": "Parts by machine",
-      "lead": "Pick the brand on your machine's nameplate, then the model. Every part and device we list for a model fits it — with the OEM part number to check against your old part. We supply parts, not machines.",
+      "title": "Find parts by model number",
+      "eyebrow": "Parts finder",
+      "lead": "Pick the brand on your machine's nameplate, then the model number. Every part and device listed for a model number fits it — with the OEM part number to check against your old part. We supply parts and devices, not machines.",
       "metaDescription": "Spare parts and devices by industrial sewing machine brand — {brands}. Pick your model to see every compatible part with its part number.",
-      "finderTitle": "Find parts by machine",
+      "finderTitle": "Find parts by model number",
       "finderBody": "Brand, then model — straight to the compatible parts list.",
-      "finderBrand": "Machine brand",
-      "finderModel": "Model",
+      "finderBrand": "Brand (from the nameplate)",
+      "finderModel": "Model number",
       "finderChooseBrand": "Choose a brand",
       "finderAnyModel": "All models",
       "finderSubmit": "Show parts",
-      "indexHeading": "Parts by machine brand",
+      "indexHeading": "Parts by brand",
       "indexSub": "{count, plural, one {# brand} other {# brands}} · A–Z",
       "models": "{count, plural, =0 {Models coming soon} one {# model} other {# models}}",
       "country": "Origin",
       "brands": "Brands",
       "modelsTotal": "Models",
-      "empty": "No machine brands are listed yet.",
+      "empty": "No brands are listed yet.",
       "notListedTitle": "Machine not listed?",
       "notListedBody": "We stock parts for many more machines than are online. Send the brand and model from the nameplate.",
       "notListedText": "Hello, I need parts for this machine: ",
       "notListedCta": "Send the model on WhatsApp",
-      "crumb": "Find by machine"
+      "crumb": "Find by model no."
     },
     "brand": {
       "title": "{brand} spare parts",
@@ -589,7 +596,7 @@
       "about": "About {brand}"
     },
     "model": {
-      "title": "{brand} {model} spare parts & devices",
+      "title": "Parts for {brand} {model}",
       "eyebrow": "Parts for · {brand} · {type}",
       "lead": "{count, plural, =0 {Parts for the {brand} {model} are supplied on request.} one {# part listed for the {brand} {model}.} other {# parts listed for the {brand} {model}.}} Check the part number against your old part, then add it to your quote list.",
       "metaDescription": "{brand} {model} spare parts and devices{categories} — part numbers, stock and quick quotes from Dhaka.",
@@ -648,12 +655,13 @@
       "photo": "Photo",
       "noPhoto": "No photo yet — ask us on WhatsApp for a picture of this part.",
       "brandGenuine": "Genuine part from the original manufacturer.",
-      "brandCompatible": "Compatible part made to the OEM specification."
+      "brandCompatible": "Compatible part made to the OEM specification.",
+      "actions": "Quote this part"
     },
     "categories": {
       "title": "Parts & devices",
       "eyebrow": "Catalogue",
-      "lead": "Every spare part and device we stock for industrial sewing machines. Filter by machine brand and model inside each one.",
+      "lead": "Every spare part and device we stock for industrial sewing machines. Filter by brand and model number inside each one.",
       "metaDescription": "Industrial sewing machine spare parts and devices by type: {categories}. Genuine and compatible, with part numbers.",
       "count": "{count, plural, =0 {On request} one {# part} other {# parts}}",
       "subtypes": "Includes",
@@ -667,7 +675,7 @@
     },
     "category": {
       "eyebrow": "Part type",
-      "lead": "{count, plural, =0 {{category} for industrial sewing machines, supplied on request.} one {# part in {category}.} other {# parts in {category}.}} Filter by machine to see only what fits yours.",
+      "lead": "{count, plural, =0 {{category} for industrial sewing machines, supplied on request.} one {# part in {category}.} other {# parts in {category}.}} Filter by model number to see only what fits yours.",
       "metaDescription": "{category} for industrial sewing machines — {brands}. Genuine and compatible, part numbers, stock and quick quotes from Dhaka.",
       "parent": "In",
       "children": "Sub-types",
@@ -687,7 +695,7 @@
     },
     "partsBrand": {
       "eyebrow": "Parts brand",
-      "lead": "{count, plural, =0 {{brand} parts are supplied on request.} one {# {brand} part listed.} other {# {brand} parts listed.}} Filter by machine to see what fits yours.",
+      "lead": "{count, plural, =0 {{brand} parts are supplied on request.} one {# {brand} part listed.} other {# {brand} parts listed.}} Filter by model number to see what fits yours.",
       "metaDescription": "{brand} sewing machine spare parts in Dhaka — {grade}. Part numbers, stock and quick quotes.",
       "genuine": "genuine OEM parts",
       "compatible": "compatible parts made to OEM specification",
@@ -697,10 +705,10 @@
     "listing": {
       "filters": "Filters",
       "activeFilters": "Active filters",
-      "machineBrand": "Machine brand",
-      "anyMachineBrand": "Any machine brand",
-      "machineModel": "Machine model",
-      "anyMachineModel": "Any model",
+      "machineBrand": "Brand",
+      "anyMachineBrand": "Any brand",
+      "machineModel": "Model number",
+      "anyMachineModel": "Any model number",
       "partsBrand": "Parts brand",
       "anyPartsBrand": "Any parts brand",
       "category": "Part type",
@@ -729,7 +737,15 @@
       "colFits": "Fits",
       "colStock": "Stock",
       "colPrice": "Price",
-      "fits": "{count, plural, =0 {—} one {# model} other {# models}}"
+      "fits": "{count, plural, =0 {—} one {# model} other {# models}}",
+      "showOne": "Show {count} part",
+      "showOther": "Show {count} parts",
+      "showNone": "No parts match — change filters",
+      "clearShort": "Clear",
+      "loadMore": "Load more parts",
+      "shown": "{shown} of {total} parts shown",
+      "emptyQuote": "Request a quote",
+      "emptyCall": "Call"
     }
   },
   "cart": {

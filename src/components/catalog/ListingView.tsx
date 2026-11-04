@@ -6,7 +6,9 @@ import type { Locale } from "@/i18n/routing";
 import type { MachineBrandSummary, MachineModelSummary, PartSummary } from "@/lib/api/types";
 import {
   applyListing,
+  applyListingUpTo,
   countBy,
+  facetRows,
   DEFAULT_SORT,
   hasActiveFilters,
   listingQuery,
@@ -99,6 +101,7 @@ export async function ListingView({
 }) {
   const t = await getTranslations({ locale, namespace: "catalog.listing" });
   const result = applyListing(parts, params);
+  const phone = applyListingUpTo(parts, params);
   const action = localePath(basePath, locale);
   const href = (patch: Partial<ListingParams>) => ({ pathname: basePath, query: listingQuery(params, { page: 1, ...patch }) });
 
@@ -145,7 +148,7 @@ export async function ListingView({
     });
   if (params.inStock) chips.push({ key: "stock", label: t("inStock"), remove: { inStock: false } });
 
-  const fields = (idPrefix: string): ReactNode => (
+  const fields = (idPrefix: string, actions = true): ReactNode => (
     <div className="grid gap-4">
       {machineBrandOptions.length > 0 && (
         <NativeSelect name="mbrand" label={t("machineBrand")} anyLabel={t("anyMachineBrand")} value={params.mbrand} options={machineBrandOptions} />
@@ -180,7 +183,7 @@ export async function ListingView({
         value={params.sort === DEFAULT_SORT ? "" : params.sort}
         options={SORTS.filter((s) => s !== DEFAULT_SORT).map((s) => ({ value: s, label: t(`sort_${s}`) }))}
       />
-      <div className="flex flex-wrap items-center gap-3 pt-1">
+      <div className={cn("flex flex-wrap items-center gap-3 pt-1", !actions && "hidden")}>
         <button type="submit" className={buttonClass({ variant: "secondary" })}>
           {t("apply")}
         </button>
@@ -220,9 +223,25 @@ export async function ListingView({
             )}
           </p>
           <div className="md:hidden">
-            <FilterSheet label={t("filters")} title={t("filters")} closeLabel={t("close")} activeCount={activeCount}>
-              <ListingForm key={formKey} action={action} defaultSort={DEFAULT_SORT}>
-                {fields("m")}
+            <FilterSheet
+              label={t("filters")}
+              title={t("filters")}
+              closeLabel={t("close")}
+              activeCount={activeCount}
+              formId="listing-filters-m"
+              facets={facetRows(parts)}
+              initialCount={result.total}
+              show={{ one: t.raw("showOne") as string, other: t.raw("showOther") as string, none: t.raw("showNone") as string }}
+              clear={
+                hasActiveFilters(params) ? (
+                  <Link href={basePath} className={buttonClass({ variant: "ghost", size: "lg" }, "px-3 text-re-blue")}>
+                    {t("clearShort")}
+                  </Link>
+                ) : undefined
+              }
+            >
+              <ListingForm key={formKey} id="listing-filters-m" action={action} defaultSort={DEFAULT_SORT}>
+                {fields("m", false)}
               </ListingForm>
             </FilterSheet>
           </div>
@@ -238,13 +257,16 @@ export async function ListingView({
         </noscript>
 
         {chips.length > 0 && (
-          <ul className="mt-3 flex flex-wrap gap-2" aria-label={t("activeFilters")}>
+          <ul
+            className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0"
+            aria-label={t("activeFilters")}
+          >
             {chips.map((c) => (
               <li key={c.key}>
                 <Link
                   href={href(c.remove)}
                   aria-label={t("removeFilter", { label: c.label })}
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-re border border-re-ink bg-re-paper px-2.5 text-[0.875rem] font-medium hover:bg-re-ink hover:text-white"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-re border border-re-ink bg-re-paper px-2.5 text-[0.875rem] font-medium whitespace-nowrap hover:bg-re-ink hover:text-white"
                 >
                   {c.label}
                   <X aria-hidden className="size-3.5" />
@@ -256,7 +278,7 @@ export async function ListingView({
 
         <div className="mt-4">
           {result.rows.length > 0 ? (
-            <PartsTable parts={result.rows} caption={context} />
+            <PartsTable parts={result.rows} caption={context} mobileParts={phone.rows} anchorIndex={phone.anchor} />
           ) : (
             <EmptyParts
               whatsapp={whatsapp}
@@ -272,7 +294,13 @@ export async function ListingView({
           )}
         </div>
 
-        <Pagination page={result.page} pageCount={result.pageCount} href={(page) => href({ page })} />
+        <Pagination
+          page={result.page}
+          pageCount={result.pageCount}
+          href={(page) => href({ page })}
+          shown={phone.rows.length}
+          total={result.total}
+        />
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ClipboardList, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -12,6 +13,10 @@ import type { HomeCopy } from "./content";
  * mobile search row hides itself while `[data-hero-search]` is on the page,
  * so phones see one search bar above the fold). The h1 is the LCP element:
  * plain server-rendered text, never animated.
+ *
+ * Phones read it top to bottom as: search → `quick` (the part-type grid,
+ * lg:hidden) → "find by machine" picker → lead + call/WhatsApp. On desktop
+ * the same DOM sits in two columns (picker spans both rows on the right).
  */
 export function Hero({
   copy,
@@ -21,6 +26,7 @@ export function Hero({
   phone,
   tel,
   whatsapp,
+  quick,
 }: {
   copy: HomeCopy | null;
   examples: string[];
@@ -29,21 +35,23 @@ export function Hero({
   phone: string;
   tel: string;
   whatsapp: string;
+  /** Phones only: compact part-type grid shown right under the search. */
+  quick?: ReactNode;
 }) {
   const t = useTranslations();
   return (
     <section className="re-grid-paper border-b border-re-steel-200">
-      <div className="re-shell grid gap-8 pt-7 pb-10 md:pt-12 lg:grid-cols-12 lg:gap-12 lg:pt-16 lg:pb-16">
+      <div className="re-shell grid gap-7 pt-5 pb-8 md:pt-12 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-0 lg:pt-16 lg:pb-16">
         <div className="lg:col-span-7">
           <p className="re-label flex items-center gap-2">
             <span aria-hidden className="inline-block h-2.5 w-2.5 bg-re-red" />
             {copy?.eyebrow || t("home.eyebrow")}
           </p>
-          <h1 className="mt-3 max-w-[18ch] text-[2.25rem] leading-[0.98] font-extrabold tracking-[-0.015em] text-re-ink [font-stretch:72%] sm:text-[3.25rem] lg:text-[4rem] bn:text-[2rem] bn:leading-[1.3] bn:font-bold bn:tracking-normal bn:[font-stretch:100%] bn:sm:text-[2.75rem] bn:lg:text-[3.25rem]">
+          <h1 className="mt-3 max-w-[18ch] text-[2rem] leading-[0.98] xs:text-[2.25rem] font-extrabold tracking-[-0.015em] text-re-ink [font-stretch:72%] sm:text-[3.25rem] lg:text-[4rem] bn:text-[2rem] bn:leading-[1.3] bn:font-bold bn:tracking-normal bn:[font-stretch:100%] bn:sm:text-[2.75rem] bn:lg:text-[3.25rem]">
             {copy?.title || t("home.title")}
           </h1>
 
-          <div data-hero-search className="mt-6 max-w-2xl md:mt-8">
+          <div data-hero-search className="mt-5 max-w-2xl md:mt-8">
             <SearchInput
               size="lg"
               action={paths.search}
@@ -70,35 +78,15 @@ export function Hero({
               <span className="basis-full text-[0.8125rem] sm:basis-auto sm:pl-1">{t("home.searchNote")}</span>
             </div>
           </div>
-
-          <p className="mt-6 max-w-xl text-[1.0625rem] text-re-steel-600">{copy?.subtitle || t("home.lead")}</p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="re-label w-full text-re-red-text sm:w-auto">{t("home.lineDown")}</span>
-            {whatsapp && (
-              <a href={whatsapp} target="_blank" rel="noopener" className={buttonClass({ variant: "whatsapp", size: "lg" })}>
-                <WhatsAppIcon />
-                {t("home.whatsappCta")}
-              </a>
-            )}
-            {tel && (
-              <a href={tel} className={buttonClass({ variant: "secondary", size: "lg" })}>
-                <Phone aria-hidden strokeWidth={1.75} />
-                {t("home.callCta")}
-                <span className="re-mono text-sm font-normal">{phone}</span>
-              </a>
-            )}
-            {copy?.cta && (
-              <Link href={copy.cta.href} className={buttonClass({ variant: "link" }, "min-h-11 font-semibold")}>
-                <ClipboardList aria-hidden className="size-4" strokeWidth={1.75} />
-                {copy.cta.label}
-              </Link>
-            )}
-          </div>
         </div>
 
+        {quick && <div className="lg:hidden">{quick}</div>}
+
         {picker.length > 0 && (
-          <aside aria-labelledby="home-finder" className="self-start border border-re-ink bg-re-paper lg:col-span-5 lg:mt-8">
+          <aside
+            aria-labelledby="home-finder"
+            className="self-start border border-re-ink bg-re-paper lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:mt-8"
+          >
             <div className="flex items-center justify-between gap-3 border-b border-re-ink px-4 py-2.5">
               <span className="re-label text-re-ink">{t("catalog.machines.finderTitle")}</span>
               <span aria-hidden className="re-mono text-[0.6875rem] text-re-steel-600">
@@ -126,6 +114,33 @@ export function Hero({
             </div>
           </aside>
         )}
+
+        <div className="lg:col-span-7 lg:row-start-2">
+          <p className="max-w-xl text-[1.0625rem] text-re-steel-600 lg:mt-6">{copy?.subtitle || t("home.lead")}</p>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <span className="re-label w-full text-re-red-text sm:w-auto">{t("home.lineDown")}</span>
+            {whatsapp && (
+              <a href={whatsapp} target="_blank" rel="noopener" className={buttonClass({ variant: "whatsapp", size: "lg" }, "max-sm:w-full")}>
+                <WhatsAppIcon />
+                {t("home.whatsappCta")}
+              </a>
+            )}
+            {tel && (
+              <a href={tel} className={buttonClass({ variant: "secondary", size: "lg" }, "max-sm:w-full")}>
+                <Phone aria-hidden strokeWidth={1.75} />
+                {t("home.callCta")}
+                <span className="re-mono text-sm font-normal">{phone}</span>
+              </a>
+            )}
+            {copy?.cta && (
+              <Link href={copy.cta.href} className={buttonClass({ variant: "link" }, "min-h-11 font-semibold")}>
+                <ClipboardList aria-hidden className="size-4" strokeWidth={1.75} />
+                {copy.cta.label}
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

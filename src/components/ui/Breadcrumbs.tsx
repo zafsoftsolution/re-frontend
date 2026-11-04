@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -9,15 +9,35 @@ export interface Crumb {
   href?: string;
 }
 
+/** The nearest linked ancestor — the phone "back" target. Home-only trails get none. */
+export function parentCrumb(items: Crumb[]): Crumb | null {
+  const linked = items.slice(0, -1).filter((c) => c.href);
+  return linked.length > 1 ? linked[linked.length - 1] : null;
+}
+
 /**
  * Visible trail. Pages emit the matching BreadcrumbList JSON-LD themselves
  * (absolute URLs need the locale-aware origin).
+ *
+ * Phones (< md) get one 44px "‹ Parent" link instead of a wrapping trail of
+ * 28px links; the full trail shows from md up. A trail that is only
+ * "Home › Page" shows nothing on phones (the logo already goes home).
  */
 export function Breadcrumbs({ items, className }: { items: Crumb[]; className?: string }) {
   const t = useTranslations("a11y");
+  const parent = parentCrumb(items);
   return (
-    <nav aria-label={t("breadcrumb")} className={cn("text-[0.8125rem] text-re-steel-600", className)}>
-      <ol className="flex flex-wrap items-center gap-x-1 gap-y-0.5">
+    <nav aria-label={t("breadcrumb")} className={cn("text-[0.8125rem] text-re-steel-600", !parent && "max-md:hidden", className)}>
+      {parent?.href && (
+        <Link
+          href={parent.href}
+          className="-ml-1 inline-flex min-h-11 max-w-full items-center gap-1 pr-2 text-[0.875rem] font-semibold text-re-ink active:text-re-blue md:hidden"
+        >
+          <ChevronLeft aria-hidden className="size-4 shrink-0 text-re-steel-600" />
+          <span className="truncate">{parent.label}</span>
+        </Link>
+      )}
+      <ol className="hidden flex-wrap items-center gap-x-1 gap-y-0.5 md:flex">
         {items.map((c, i) => {
           const last = i === items.length - 1;
           return (

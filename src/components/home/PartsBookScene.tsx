@@ -43,7 +43,7 @@ export function PartsBookScene({
         <div data-track className="motion-safe:lg:h-[280vh]">
           <div
             data-stage
-            className="re-shell grid gap-8 py-12 motion-safe:lg:sticky motion-safe:lg:top-0 lg:h-svh lg:max-h-[60rem] lg:min-h-[40rem] lg:grid-cols-12 lg:items-center lg:gap-10 lg:py-8"
+            className="re-shell grid gap-8 py-10 motion-safe:lg:sticky motion-safe:lg:top-0 lg:h-svh lg:max-h-[60rem] lg:min-h-[40rem] lg:grid-cols-12 lg:items-center lg:gap-10 lg:py-8"
           >
             {/* Copy + parts list */}
             <div className="lg:col-span-5">
@@ -98,7 +98,7 @@ export function PartsBookScene({
                 <span aria-hidden className="absolute top-2 right-2 size-3 border-t border-r border-re-ink" />
                 <span aria-hidden className="absolute bottom-2 left-2 size-3 border-b border-l border-re-ink" />
                 <span aria-hidden className="absolute right-2 bottom-2 size-3 border-r border-b border-re-ink" />
-                <div className="mx-auto w-full max-w-[36rem] p-5 sm:p-8 lg:absolute lg:inset-0 lg:max-w-none lg:p-6 xl:p-8 lg:[&_svg]:h-full">
+                <div className="mx-auto w-full max-w-[36rem] px-4 py-6 sm:p-8 lg:absolute lg:inset-0 lg:max-w-none lg:p-6 xl:p-8 lg:[&_svg]:h-full">
                   <HookAssemblyFigure label={labels.figAria} />
                 </div>
               </div>

@@ -16,6 +16,7 @@ export function SheetHeader({
   aside,
   children,
   titleClassName,
+  metaClassName,
 }: {
   crumbs: Crumb[];
   eyebrow?: ReactNode;
@@ -25,7 +26,11 @@ export function SheetHeader({
   aside?: ReactNode;
   children?: ReactNode;
   titleClassName?: string;
+  /** e.g. "max-md:hidden" to drop the spec cells on phones. */
+  metaClassName?: string;
 }) {
+  // An empty catalogue shows no "0" stat cells (they read as "we have nothing").
+  meta = meta.filter((m) => m.value !== 0);
   return (
     <header className="re-grid-paper border-b border-re-steel-200">
       <div className="re-shell py-5 md:py-8">
@@ -52,7 +57,7 @@ export function SheetHeader({
           {aside && <div className="min-w-0">{aside}</div>}
         </div>
         {meta.length > 0 && (
-          <dl className="mt-6 inline-grid grid-flow-col auto-cols-max divide-x divide-re-steel-200 border border-re-steel-200 bg-re-paper max-sm:grid-flow-row max-sm:auto-cols-auto max-sm:grid-cols-2 max-sm:divide-x-0 max-sm:[&>div:nth-child(odd)]:border-r max-sm:[&>div]:border-re-steel-200 max-sm:[&>div:nth-child(n+3)]:border-t">
+          <dl className={cn("mt-6 inline-grid grid-flow-col auto-cols-max divide-x divide-re-steel-200 border border-re-steel-200 bg-re-paper max-sm:grid-flow-row max-sm:auto-cols-auto max-sm:grid-cols-2 max-sm:divide-x-0 max-sm:[&>div:nth-child(odd)]:border-r max-sm:[&>div]:border-re-steel-200 max-sm:[&>div:nth-child(n+3)]:border-t", metaClassName)}>
             {meta.map((m) => (
               <div key={m.label} className="px-3 py-2 sm:px-4">
                 <dt className="re-label">{m.label}</dt>

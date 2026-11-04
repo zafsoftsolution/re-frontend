@@ -47,8 +47,8 @@ export default async function RfqSentPage({ params, searchParams }: Props) {
           <p className="mt-3 text-[1.0625rem] text-re-ink">{FIX_CODES.has(code) ? t(`fixes.rfq.${code}` as never, { lines: badLines || "?" } as never) : t(`rfq.errors.${code}` as never)}</p>
           <p className="mt-2 text-re-steel-600">{t("rfq.sent.errorHelp")}</p>
           <ContactLine settings={boot.settings} reply className="mt-3" />
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/rfq" className={buttonClass({ variant: "primary" })}>
+          <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
+            <Link href="/rfq" className={buttonClass({ variant: "primary", size: "lg" }, "sm:h-11 sm:text-sm")}>
               {t("rfq.sent.tryAgain")}
             </Link>
             <WhatsAppLink number={wa} text={t("rfq.waHeader")} variant="whatsapp">
@@ -73,13 +73,29 @@ export default async function RfqSentPage({ params, searchParams }: Props) {
           <h1 className="mt-3 text-[2rem] leading-tight font-extrabold [font-stretch:80%] bn:font-bold bn:[font-stretch:100%] sm:text-[2.5rem]">
             {t("rfq.sent.title")}
           </h1>
-          <div className="mt-6 inline-block border border-re-ink">
+          <div className="mt-6 block border-2 border-re-ink sm:inline-block sm:border">
             <p className="re-label border-b border-re-ink bg-re-ink px-4 py-2 !text-white/70">{t("rfq.sent.reference")}</p>
-            <p translate="no" className="re-mono px-4 py-4 text-[1.75rem] font-semibold tracking-wide text-re-ink select-all sm:text-[2.5rem]" data-testid="rfq-reference">
+            <p
+              translate="no"
+              className="re-mono px-4 py-5 text-center text-[1.75rem] font-semibold tracking-wide whitespace-nowrap text-re-ink select-all xs:text-[2.25rem] sm:py-4 sm:text-left sm:text-[2.5rem]"
+              data-testid="rfq-reference"
+            >
               {ref}
             </p>
           </div>
           <p className="mt-4 max-w-xl text-re-steel-600">{t("rfq.sent.keepRef")}</p>
+
+          {/* Phones: follow-up actions right under the reference, thumb-sized. */}
+          <div className="mt-6 grid gap-3 lg:hidden">
+            <WhatsAppLink number={wa} text={t("rfq.sent.waText", { ref })} size="lg" className="h-14 w-full text-base">
+              {t("rfq.sent.followWhatsapp")}
+            </WhatsAppLink>
+            {tel && (
+              <a href={tel} className={buttonClass({ variant: "secondary", size: "lg" }, "w-full")}>
+                {t("rfq.sent.call")} <span className="re-mono">{boot.settings.contactPhone}</span>
+              </a>
+            )}
+          </div>
 
           <h2 className="mt-10 text-[1.25rem] font-bold">{t("rfq.sent.nextTitle")}</h2>
           <ol className="mt-4 max-w-2xl divide-y divide-re-steel-200 border-y border-re-steel-200">
@@ -94,14 +110,14 @@ export default async function RfqSentPage({ params, searchParams }: Props) {
             ))}
           </ol>
         </div>
-        <aside className="self-start border border-re-steel-200 bg-re-steel-50 p-5">
+        <aside className="self-start border border-re-steel-200 bg-re-steel-50 p-5 max-lg:[&_.re-follow]:hidden">
           <p className="font-semibold">{t("rfq.sent.followTitle")}</p>
           <p className="mt-1 text-[0.9375rem] text-re-steel-600">{t("rfq.sent.followBody")}</p>
-          <WhatsAppLink number={wa} text={t("rfq.sent.waText", { ref })} size="lg" className="mt-4 w-full">
+          <WhatsAppLink number={wa} text={t("rfq.sent.waText", { ref })} size="lg" className="re-follow mt-4 w-full">
             {t("rfq.sent.followWhatsapp")}
           </WhatsAppLink>
           {tel && (
-            <a href={tel} className={buttonClass({ variant: "secondary" }, "mt-3 w-full")}>
+            <a href={tel} className={buttonClass({ variant: "secondary" }, "re-follow mt-3 w-full")}>
               {t("rfq.sent.call")} <span className="re-mono">{boot.settings.contactPhone}</span>
             </a>
           )}
