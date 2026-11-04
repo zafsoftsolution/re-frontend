@@ -123,9 +123,12 @@ describe("checkout + contact schemas", () => {
 });
 
 describe("route-handler forwarding helpers", () => {
-  it("forwards the visitor's X-Forwarded-For chain (Django picks the untrusted hop)", () => {
-    expect(clientIp(headers({ "x-forwarded-for": "103.4.5.6, 10.0.0.1" }))).toBe("103.4.5.6, 10.0.0.1");
+  it("forwards only the single visitor IP NPM appended, never a client chain", () => {
+    // Only the right-most hop (appended by Nginx Proxy Manager) is trusted.
+    expect(clientIp(headers({ "x-forwarded-for": "1.2.3.4, 103.4.5.6" }))).toBe("103.4.5.6");
     expect(clientIp(headers({ "x-forwarded-for": "junk, 103.4.5.6" }))).toBe("103.4.5.6");
+    expect(clientIp(headers({ "x-forwarded-for": "103.4.5.6, junk" }))).toBe("");
+    expect(clientIp(headers({ "x-forwarded-for": "8.8.8.8", "x-real-ip": "103.4.5.6" }))).toBe("8.8.8.8");
     expect(clientIp(headers({ "x-real-ip": "2001:db8::1" }))).toBe("2001:db8::1");
     expect(clientIp(headers({ "x-forwarded-for": "<script>" }))).toBe("");
     expect(clientIp(headers({}))).toBe("");

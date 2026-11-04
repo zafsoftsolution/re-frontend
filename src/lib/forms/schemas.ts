@@ -9,6 +9,7 @@
  */
 import { z } from "zod";
 import { normalizeBdPhone } from "./phone";
+import { isValidSlug } from "@/lib/api/catalog-index";
 
 export const RFQ_MAX_FILES = 5;
 export const RFQ_MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -130,7 +131,7 @@ export type CheckoutInput = z.input<typeof checkoutSchema>;
 export const checkoutItemsSchema = z
   .array(
     z.object({
-      productSlug: z.string().trim().min(1).max(200),
+      productSlug: z.string().trim().min(1).max(200).refine(isValidSlug, "slug_invalid"),
       qty: z.coerce.number().int().min(1).max(CHECKOUT_MAX_QTY, "qty_max"),
     }),
   )

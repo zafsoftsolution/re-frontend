@@ -2,8 +2,10 @@
  * Guest checkout helpers (server side): resolve cart slugs to live product
  * data and build the Django /inventory/guest-checkout/ body.
  */
-import { ApiError, apiFetch } from "@/lib/api/client";
-import { mapPart } from "@/lib/api/mappers";
+import { ApiError, unwrapList } from "@/lib/api/client";
+import { mapList, mapPart } from "@/lib/api/mappers";
+import type { PartSummary } from "@/lib/api/types";
+import { callDjango, forwardHeaders } from "./forward";
 import type { CheckoutValues } from "./schemas";
 
 export interface ResolvedLine {
@@ -18,32 +20,47 @@ export interface ResolvedLine {
   found: boolean;
 }
 
-/** Live price + mode per cart slug (uncached read; missing parts → found:false). */
-export async function resolveLines(slugs: string[], locale: string): Promise<ResolvedLine[]> {
-  const unique = [...new Set(slugs)].slice(0, 100);
-  return Promise.all(
-    unique.map(async (slug): Promise<ResolvedLine> => {
-      try {
-        const p = mapPart(await apiFetch<unknown>(`/site/products/${encodeURIComponent(slug)}/`, { locale, timeoutMs: 8000 }));
-        if (!p) throw new ApiError("not found", 404);
-        return {
-          productSlug: slug,
-          id: p.id,
-          name: p.name,
-          partNumber: p.partNumber,
-          price: p.price,
-          direct: p.salesMode === "direct" && p.price !== null,
-          availableQty: p.availableQty,
-          found: true,
-        };
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 404) {
-          return { productSlug: slug, id: "", name: "", partNumber: "", price: null, direct: false, availableQty: 0, found: false };
-        }
-        throw err;
-      }
-    }),
-  );
+/** Most distinct cart lines resolved per request (one backend page). */
+export const MAX_CART_LINES = 100;
+
+/**
+ * Live price + mode per cart slug in ONE backend call
+ * (`/site/products/?slugs=a,b,c&page_size=100`), uncached. Sent like a
+ * browser request — without X-Internal-Secret, with the visitor's IP — so
+ * the backend's anonymous throttles apply to the visitor. Slugs must already
+ * be validated (isValidSlug). Missing / inactive parts → found:false.
+ * Throws on network errors and non-2xx responses.
+ */
+export async function resolveLines(
+  slugs: string[],
+  locale: string,
+  visitor: { ip?: string; userAgent?: string | null } = {},
+): Promise<ResolvedLine[]> {
+  const unique = [...new Set(slugs)].slice(0, MAX_CART_LINES);
+  if (!unique.length) return [];
+  const res = await callDjango<unknown>("/site/products/", {
+    method: "GET",
+    headers: forwardHeaders({ locale, ip: visitor.ip, userAgent: visitor.userAgent }),
+    query: { slugs: unique.join(","), page_size: String(MAX_CART_LINES) },
+    timeoutMs: 10_000,
+  });
+  if (!res.ok) throw new ApiError(`products lookup failed (${res.status})`, res.status);
+  const bySlug = new Map<string, PartSummary>();
+  for (const p of mapList(unwrapList(res.data as never), mapPart)) bySlug.set(p.slug, p);
+  return unique.map((slug): ResolvedLine => {
+    const p = bySlug.get(slug);
+    if (!p) return { productSlug: slug, id: "", name: "", partNumber: "", price: null, direct: false, availableQty: 0, found: false };
+    return {
+      productSlug: slug,
+      id: p.id,
+      name: p.name,
+      partNumber: p.partNumber,
+      price: p.price,
+      direct: p.salesMode === "direct" && p.price !== null,
+      availableQty: p.availableQty,
+      found: true,
+    };
+  });
 }
 
 const DIVISION_NAMES: Record<CheckoutValues["division"], string> = {

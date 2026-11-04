@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { callDjango, clientIp, drfErrors, forwardHeaders, sameOrigin } from "@/lib/forms/forward";
+import { callDjango, clientIp, drfErrors, forwardHeaders, readJsonLimited, sameOrigin } from "@/lib/forms/forward";
+import { ApiError } from "@/lib/api/client";
 import { guestCheckoutBody, resolveLines } from "@/lib/forms/checkout";
 import { checkoutRequestSchema, fieldErrors } from "@/lib/forms/schemas";
 
@@ -15,20 +16,21 @@ import { checkoutRequestSchema, fieldErrors } from "@/lib/forms/schemas";
  */
 export async function POST(request: NextRequest) {
   if (!sameOrigin(request.headers, request.url)) return NextResponse.json({ ok: false, code: "forbidden" }, { status: 403 });
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ ok: false, code: "bad_request" }, { status: 400 });
-  }
+  const body = await readJsonLimited(request);
+  if (body.tooLarge) return NextResponse.json({ ok: false, code: "too_large" }, { status: 413 });
+  const raw = body.value;
+  if (raw === undefined) return NextResponse.json({ ok: false, code: "bad_request" }, { status: 400 });
   const parsed = checkoutRequestSchema.safeParse(raw);
   if (!parsed.success) return NextResponse.json({ ok: false, code: "validation", fields: fieldErrors(parsed.error) }, { status: 422 });
   const { values, items, locale } = parsed.data;
 
+  const ip = clientIp(request.headers);
+  const userAgent = request.headers.get("user-agent");
   let lines;
   try {
-    lines = await resolveLines(items.map((i) => i.productSlug), locale);
-  } catch {
+    lines = await resolveLines(items.map((i) => i.productSlug), locale, { ip, userAgent });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 429) return NextResponse.json({ ok: false, code: "throttled" }, { status: 429 });
     return NextResponse.json({ ok: false, code: "unavailable" }, { status: 502 });
   }
   const blocked = lines.filter((l) => !l.direct).map((l) => l.productSlug);
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
   const bySlug = new Map(lines.map((l) => [l.productSlug, l]));
   const qty = new Map<string, number>();
   for (const i of items) qty.set(i.productSlug, Math.min(99, (qty.get(i.productSlug) ?? 0) + i.qty));
-  const body = guestCheckoutBody(
+  const orderBody = guestCheckoutBody(
     values,
     [...qty].map(([slug, q]) => ({ id: bySlug.get(slug)!.id, qty: q })),
   );
@@ -45,8 +47,8 @@ export async function POST(request: NextRequest) {
   let res;
   try {
     res = await callDjango<Record<string, unknown>>("/inventory/guest-checkout/", {
-      headers: forwardHeaders({ locale, ip: clientIp(request.headers), userAgent: request.headers.get("user-agent"), json: true }),
-      body: JSON.stringify(body),
+      headers: forwardHeaders({ locale, ip, userAgent, json: true }),
+      body: JSON.stringify(orderBody),
     });
   } catch {
     return NextResponse.json({ ok: false, code: "unavailable" }, { status: 502 });

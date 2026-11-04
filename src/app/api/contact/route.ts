@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { callDjango, clientIp, forwardHeaders, sameOrigin, sitePath } from "@/lib/forms/forward";
+import { callDjango, clientIp, forwardHeaders, readFormLimited, sameOrigin, sitePath } from "@/lib/forms/forward";
 import { contactSchema, fieldErrors } from "@/lib/forms/schemas";
 
 const TOPIC_SUBJECT: Record<string, string> = {
@@ -26,7 +26,9 @@ export async function POST(request: NextRequest) {
   if (!sameOrigin(request.headers, request.url)) return reply(403, { ok: false, code: "forbidden" });
   let form: FormData;
   try {
-    form = await request.formData();
+    const limited = await readFormLimited(request);
+    if (!limited) return reply(413, { ok: false, code: "too_large" });
+    form = limited;
   } catch {
     return reply(400, { ok: false, code: "failed" });
   }

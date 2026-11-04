@@ -20,7 +20,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("sent.metaTitle"), robots: { index: false, follow: true } };
 }
 
-const ERROR_CODES = new Set(["validation", "phone_invalid", "empty", "throttled", "unavailable", "file_type", "file_size", "file_empty", "file_count", "file_rejected", "items_rejected", "forbidden", "bad_request", "failed"]);
+const ERROR_CODES = new Set(["validation", "phone_invalid", "empty", "throttled", "unavailable", "file_type", "file_size", "file_empty", "file_count", "file_rejected", "items_rejected", "forbidden", "bad_request", "failed", "too_many_items"]);
+/** Codes whose message lives in the `fixes.rfq` namespace. */
+const FIX_CODES = new Set(["invalid_lines", "too_large"]);
 
 export default async function RfqSentPage({ params, searchParams }: Props) {
   const locale = await resolveLocale(params);
@@ -34,13 +36,14 @@ export default async function RfqSentPage({ params, searchParams }: Props) {
   const tel = telHref(boot.settings.contactPhone);
 
   if (!valid) {
-    const code = ERROR_CODES.has(errorCode) ? errorCode : "failed";
+    const code = ERROR_CODES.has(errorCode) || FIX_CODES.has(errorCode) ? errorCode : "failed";
+    const badLines = one(sp.lines).split(",").filter((n) => /^\d{1,3}$/.test(n)).slice(0, 50).join(", ");
     return (
       <div className="re-shell py-6 md:py-10">
         <Breadcrumbs items={[{ label: t("nav.home"), href: "/" }, { label: t("rfq.title"), href: "/rfq" }, { label: t("rfq.sent.errorTitle") }]} />
         <div className="mt-8 max-w-2xl border-t-[3px] border-re-red pt-6">
           <h1 className="text-[1.75rem] font-bold">{t("rfq.sent.errorTitle")}</h1>
-          <p className="mt-3 text-[1.0625rem] text-re-ink">{t(`rfq.errors.${code}` as never)}</p>
+          <p className="mt-3 text-[1.0625rem] text-re-ink">{FIX_CODES.has(code) ? t(`fixes.rfq.${code}` as never, { lines: badLines || "?" } as never) : t(`rfq.errors.${code}` as never)}</p>
           <p className="mt-2 text-re-steel-600">{t("rfq.sent.errorHelp")}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/rfq" className={buttonClass({ variant: "primary" })}>

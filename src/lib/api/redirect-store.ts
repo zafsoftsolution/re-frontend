@@ -13,33 +13,60 @@ const RETRY_MS = 30_000;
 const TIMEOUT_MS = 2500;
 const EMPTY: RedirectTable = new Map();
 
-let current: { table: RedirectTable; at: number } | null = null;
-let inflight: Promise<RedirectTable> | null = null;
-let lastAttempt = 0;
+/** Shared via globalThis (proxy and route handlers are separate bundles in
+ *  one process) so POST /api/revalidate can mark it stale. */
+interface State {
+  current: { table: RedirectTable; at: number } | null;
+  inflight: Promise<RedirectTable> | null;
+  lastAttempt: number;
+  stale: boolean;
+}
+const KEY = Symbol.for("rakib-enterprise.redirect-store");
+const g = globalThis as typeof globalThis & { [KEY]?: State };
+const state: State = (g[KEY] ??= { current: null, inflight: null, lastAttempt: 0, stale: false });
+
+/** Called by POST /api/revalidate for the `redirects` tag. */
+export function markRedirectsStale(): void {
+  state.stale = true;
+  state.lastAttempt = 0;
+}
+
+/** Test hook. */
+export function resetRedirectStore(): void {
+  state.current = null;
+  state.inflight = null;
+  state.lastAttempt = 0;
+  state.stale = false;
+}
 
 function reload(): Promise<RedirectTable> {
-  lastAttempt = Date.now();
-  inflight ??= apiFetch<unknown>("/site/redirects/", { locale: "en", timeoutMs: TIMEOUT_MS })
+  if (state.inflight) return state.inflight;
+  state.lastAttempt = Date.now();
+  state.stale = false;
+  state.inflight = apiFetch<unknown>("/site/redirects/", { locale: "en", timeoutMs: TIMEOUT_MS })
     .then((data) => {
       const table = buildRedirectTable(parseRedirects(data));
-      current = { table, at: Date.now() };
+      state.current = { table, at: Date.now() };
       return table;
     })
-    .catch(() => current?.table ?? EMPTY)
+    .catch(() => state.current?.table ?? EMPTY)
     .finally(() => {
-      inflight = null;
+      state.inflight = null;
     });
-  return inflight;
+  return state.inflight;
 }
 
 /** Current redirect table; empty while the backend is unreachable. */
 export async function redirectTable(): Promise<RedirectTable> {
   const now = Date.now();
+  const { current, inflight } = state;
   if (!current) {
     if (inflight) return inflight;
-    if (now - lastAttempt < RETRY_MS) return EMPTY;
+    if (now - state.lastAttempt < RETRY_MS) return EMPTY;
     return reload();
   }
-  if (now - current.at > FRESH_MS && !inflight && now - lastAttempt > RETRY_MS) void reload();
+  // Revalidated: wait for the new table so a just-saved redirect applies.
+  if (state.stale) return reload();
+  if (now - current.at > FRESH_MS && !inflight && now - state.lastAttempt > RETRY_MS) void reload();
   return current.table;
 }

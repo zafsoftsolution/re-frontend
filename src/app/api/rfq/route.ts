@@ -8,6 +8,8 @@ import {
   forwardHeaders,
   RFQ_REFERENCE,
   rfqContactFromForm,
+  checkContentLength,
+  RFQ_MAX_BODY,
   rfqItemsFromForm,
   sameOrigin,
   sitePath,
@@ -30,13 +32,19 @@ export async function POST(request: NextRequest) {
   const wantsJson = (request.headers.get("accept") ?? "").includes("application/json");
   let locale = "en";
 
-  const reply = (status: number, body: { ok: boolean; code?: string; reference?: string; fields?: Record<string, string | string[]> }) => {
+  const reply = (status: number, body: { ok: boolean; code?: string; reference?: string; fields?: Record<string, string | string[]>; lines?: number[] }) => {
     if (wantsJson) return NextResponse.json(body, { status });
-    const qs = body.ok ? `ref=${encodeURIComponent(body.reference ?? "")}` : `error=${encodeURIComponent(body.code ?? "failed")}`;
+    const qs = body.ok
+      ? `ref=${encodeURIComponent(body.reference ?? "")}`
+      : `error=${encodeURIComponent(body.code ?? "failed")}${body.lines?.length ? `&lines=${body.lines.slice(0, 50).join(",")}` : ""}`;
     return NextResponse.redirect(new URL(`${sitePath(locale, "/rfq/sent")}?${qs}`, request.url), 303);
   };
 
   if (!sameOrigin(request.headers, request.url)) return reply(403, { ok: false, code: "forbidden" });
+  // Reject oversized uploads before buffering them (browsers always send
+  // Content-Length for multipart; no length → refuse rather than buffer).
+  const size = checkContentLength(request.headers, RFQ_MAX_BODY, { requireLength: true });
+  if (size !== "ok") return reply(size === "too_large" ? 413 : 411, { ok: false, code: "too_large" });
 
   let form: FormData;
   try {
@@ -50,8 +58,13 @@ export async function POST(request: NextRequest) {
   if (!contact.success) return reply(422, { ok: false, code: "validation", fields: fieldErrors(contact.error) });
   if (contact.data.website.trim()) return reply(400, { ok: false, code: "failed" }); // honeypot
 
-  const rawItems = rfqItemsFromForm(form).slice(0, RFQ_MAX_ITEMS);
-  const items = rawItems.map((i) => rfqItemSchema.safeParse(i)).flatMap((r) => (r.success ? [r.data] : []));
+  const rawItems = rfqItemsFromForm(form);
+  if (rawItems.length > RFQ_MAX_ITEMS) return reply(422, { ok: false, code: "too_many_items" });
+  // Never drop lines silently: report the (1-based) lines that are invalid.
+  const parsedItems = rawItems.map((i) => rfqItemSchema.safeParse(i));
+  const invalidLines = parsedItems.flatMap((r, n) => (r.success ? [] : [n + 1]));
+  if (invalidLines.length) return reply(422, { ok: false, code: "invalid_lines", lines: invalidLines });
+  const items = parsedItems.flatMap((r) => (r.success ? [r.data] : []));
   const files = filesFromForm(form);
   const fileErrors = checkFiles(files);
   if (fileErrors.length) return reply(422, { ok: false, code: fileErrors[0].code, fields: { attachments: fileErrors.map((e) => e.code) } });

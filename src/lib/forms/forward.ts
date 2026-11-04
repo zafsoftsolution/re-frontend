@@ -14,22 +14,91 @@ type HeaderLike = { get(name: string): string | null };
 const IP = /^[0-9a-fA-F:.]{2,45}$/;
 
 /**
- * Visitor address chain for X-Forwarded-For: the incoming X-Forwarded-For
- * as received (only well-formed IPs kept, max 5 hops), else X-Real-IP.
- * Django picks the right-most hop that is not one of its trusted proxies
- * (auth_app/utils.get_client_ip), so a forged left-most entry can't dodge
- * the per-visitor throttle. "" when unknown — Django then uses the socket
- * address.
+ * The visitor's IP for X-Forwarded-For — ONE address, never a chain.
+ * Production: browser → Nginx Proxy Manager → this server. NPM appends the
+ * peer it saw ($proxy_add_x_forwarded_for) and sets X-Real-IP, so only the
+ * right-most X-Forwarded-For entry (else X-Real-IP) is trustworthy; anything
+ * to its left was sent by the client and is dropped. "" when unknown or
+ * malformed — Django then uses the socket address.
  */
 export function clientIp(headers: HeaderLike): string {
-  const hops = (headers.get("x-forwarded-for") ?? "")
-    .split(",")
-    .map((h) => h.trim())
-    .filter((h) => IP.test(h))
-    .slice(-5);
-  if (hops.length) return hops.join(", ");
+  const hops = (headers.get("x-forwarded-for") ?? "").split(",").map((h) => h.trim()).filter(Boolean);
+  const last = hops[hops.length - 1];
+  if (last) return IP.test(last) ? last : "";
   const real = headers.get("x-real-ip")?.trim() ?? "";
   return real && IP.test(real) ? real : "";
+}
+
+// ─── Request body limits ────────────────────────────────────────────────────
+
+/** RFQ: 5 attachments × 10 MB + form fields, with multipart overhead. */
+export const RFQ_MAX_BODY = 55 * 1024 * 1024;
+/** JSON / small form bodies (checkout, cart lines, contact). */
+export const SMALL_MAX_BODY = 64 * 1024;
+
+/**
+ * Pre-parse size check from Content-Length. "too_large" when the declared
+ * length exceeds `max`; "length_required" when there is no (valid) length
+ * and `requireLength` is set (large multipart bodies must declare one —
+ * browsers always do); otherwise "ok".
+ */
+export function checkContentLength(
+  headers: HeaderLike,
+  max: number,
+  opts: { requireLength?: boolean } = {},
+): "ok" | "too_large" | "length_required" {
+  const raw = headers.get("content-length");
+  if (raw === null || raw.trim() === "") return opts.requireLength ? "length_required" : "ok";
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return opts.requireLength ? "length_required" : "too_large";
+  return n > max ? "too_large" : "ok";
+}
+
+/**
+ * Read a request body, aborting once it exceeds `max` bytes (covers bodies
+ * without Content-Length / chunked uploads). null when too large.
+ */
+export async function readBodyLimited(request: Request, max: number): Promise<Uint8Array | null> {
+  if (checkContentLength(request.headers, max) === "too_large") return null;
+  if (!request.body) return new Uint8Array(0);
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) {
+    out.set(c, at);
+    at += c.byteLength;
+  }
+  return out;
+}
+
+/** JSON body capped at `max` bytes: { tooLarge } | { value } (undefined = not JSON). */
+export async function readJsonLimited(request: Request, max = SMALL_MAX_BODY): Promise<{ tooLarge: true } | { tooLarge: false; value: unknown }> {
+  const bytes = await readBodyLimited(request, max);
+  if (!bytes) return { tooLarge: true };
+  try {
+    return { tooLarge: false, value: JSON.parse(new TextDecoder().decode(bytes)) };
+  } catch {
+    return { tooLarge: false, value: undefined };
+  }
+}
+
+/** Form body (urlencoded / multipart) capped at `max` bytes; null when too large. */
+export async function readFormLimited(request: Request, max = SMALL_MAX_BODY): Promise<FormData | null> {
+  const bytes = await readBodyLimited(request, max);
+  if (!bytes) return null;
+  return new Response(bytes as BodyInit, { headers: { "content-type": request.headers.get("content-type") ?? "" } }).formData();
 }
 
 /** Headers for the Django call — never the internal secret. */

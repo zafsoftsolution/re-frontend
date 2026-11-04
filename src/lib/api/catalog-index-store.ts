@@ -23,9 +23,40 @@ const MEMO_MISS_MS = 60_000;
 const MEMO_MAX = 5000;
 const TIMEOUT_MS = 2500;
 
-let current: { index: CatalogIndex; at: number } | null = null;
-let inflight: Promise<CatalogIndex | null> | null = null;
-let lastAttempt = 0;
+/**
+ * State lives on a globalThis symbol, not in module scope: the proxy and the
+ * route handlers are separate bundles (separate module instances) in one
+ * Node process, and POST /api/revalidate must be able to mark the proxy's
+ * copy stale (markCatalogIndexStale).
+ */
+interface State {
+  current: { index: CatalogIndex; at: number } | null;
+  inflight: Promise<CatalogIndex | null> | null;
+  lastAttempt: number;
+  /** Set by revalidation: the next lookup reloads regardless of age. */
+  stale: boolean;
+  memo: Map<string, { value: unknown; until: number }>;
+}
+const KEY = Symbol.for("rakib-enterprise.catalog-index-store");
+const g = globalThis as typeof globalThis & { [KEY]?: State };
+const state: State = (g[KEY] ??= { current: null, inflight: null, lastAttempt: 0, stale: false, memo: new Map() });
+
+/** Called by POST /api/revalidate for catalogue tags: the next lookup
+ *  reloads the index and per-slug memos are dropped. */
+export function markCatalogIndexStale(): void {
+  state.stale = true;
+  state.lastAttempt = 0;
+  state.memo.clear();
+}
+
+/** Test hook. */
+export function resetCatalogIndexStore(): void {
+  state.current = null;
+  state.inflight = null;
+  state.lastAttempt = 0;
+  state.stale = false;
+  state.memo.clear();
+}
 
 async function get(path: string, query?: Record<string, string | number>): Promise<unknown> {
   return apiFetch<unknown>(path, { locale: "en", query, timeoutMs: TIMEOUT_MS });
@@ -44,7 +75,7 @@ async function getAll(path: string, query: Record<string, string | number> = {},
 }
 
 async function load(): Promise<CatalogIndex | null> {
-  lastAttempt = Date.now();
+  state.lastAttempt = Date.now();
   try {
     const parsed = parseSitemapIndex(await get("/site/sitemap-entries/"));
     if (parsed) return parsed;
@@ -65,18 +96,20 @@ async function load(): Promise<CatalogIndex | null> {
 }
 
 function reload(): Promise<CatalogIndex | null> {
-  inflight ??= load()
+  if (state.inflight) return state.inflight;
+  state.stale = false;
+  state.inflight = load()
     .then((ix) => {
-      if (ix) current = { index: ix, at: Date.now() };
-      return current?.index ?? null;
+      if (ix) state.current = { index: ix, at: Date.now() };
+      return state.current?.index ?? null;
     })
     .finally(() => {
-      inflight = null;
+      state.inflight = null;
     });
-  return inflight;
+  return state.inflight;
 }
 
-const memo = new Map<string, { value: unknown; until: number }>();
+const memo = state.memo;
 
 async function memoised<T>(key: string, fn: () => Promise<T | undefined>, ttl: (v: T) => number): Promise<T | undefined> {
   const hit = memo.get(key);
@@ -92,14 +125,23 @@ async function memoised<T>(key: string, fn: () => Promise<T | undefined>, ttl: (
 export const catalogLookup: CatalogLookup = {
   async index(opts) {
     const now = Date.now();
+    const { current, inflight } = state;
     if (!current) {
       if (inflight) return inflight;
-      if (now - lastAttempt < RETRY_MS) return null;
+      if (now - state.lastAttempt < RETRY_MS) return null;
       return reload();
     }
-    const age = now - current.at;
-    if (opts?.refresh && age > MIN_RELOAD_MS) return reload();
-    if (age > FRESH_MS) void reload(); // stale-while-revalidate
+    // Revalidated since the last load: the cached copy may lack new slugs.
+    if (state.stale) return reload();
+    if (opts?.refresh) {
+      // A reload is already running: its result is fresher than ours.
+      if (inflight) return inflight;
+      if (now - current.at > MIN_RELOAD_MS) return reload();
+      // Reloaded within the last minute and nothing was published since
+      // (publishing revalidates → `stale`): the miss is genuine.
+      return current.index;
+    }
+    if (now - current.at > FRESH_MS) void reload(); // stale-while-revalidate
     return current.index;
   },
 
