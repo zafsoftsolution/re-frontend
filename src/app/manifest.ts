@@ -3,9 +3,9 @@ import type { MetadataRoute } from "next";
 /** /manifest.webmanifest — install metadata; icons are the src/app file-convention icons. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Rakib Enterprise — Industrial sewing machine spare parts",
+    name: "Rakib Enterprise — Spare parts & devices for industrial sewing machines",
     short_name: "Rakib",
-    description: "Genuine and compatible spare parts for industrial garment sewing machines, Dhaka. Search by part number or machine model and request a quote.",
+    description: "Genuine and compatible spare parts and devices for industrial garment sewing machines, Dhaka. We supply parts, not machines. Search by part number or machine model and request a quote.",
     id: "/",
     start_url: "/",
     scope: "/",

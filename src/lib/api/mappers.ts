@@ -139,6 +139,7 @@ export function mapCategory(d: unknown): CategorySummary | null {
     description: str(d, "description"),
     productCount: num(d.product_count),
     isFeatured: bool(d.is_featured),
+    ...(typeof d.is_device === "boolean" ? { isDevice: d.is_device } : {}),
     parentId: str(d, "parent"),
     children: arr(d.children)
       .filter(isObj)

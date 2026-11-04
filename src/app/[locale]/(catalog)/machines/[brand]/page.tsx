@@ -89,7 +89,7 @@ export default async function MachineBrandPage({ params }: Props) {
 
   const crumbs = [
     { label: t("nav.home"), href: "/" },
-    { label: t("catalog.machines.title"), href: "/machines" },
+    { label: t("catalog.machines.crumb"), href: "/machines" },
     { label: brand.name },
   ];
 

@@ -55,6 +55,8 @@ export interface CategorySummary {
   description: string;
   productCount: number;
   isFeatured: boolean;
+  /** Admin's "device" flag (servo motor, control box, light…); undefined when the API predates it. */
+  isDevice?: boolean;
   /** Parent category id (list endpoint) — "" for top-level. */
   parentId: string;
   children: { id: string; name: string; slug: string }[];

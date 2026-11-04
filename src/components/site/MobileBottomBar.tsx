@@ -1,12 +1,14 @@
-import { ClipboardList, Factory, Search } from "lucide-react";
+import { ClipboardList, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/brand";
+import { HookIcon } from "@/components/icons/parts";
 import { QuoteCount } from "@/components/ui/ListCount";
 import { whatsappHref } from "@/lib/format";
 
 /**
- * Sticky bottom bar on phones: Search · Brands · Quote list (count) · WhatsApp.
+ * Sticky bottom bar on phones: Search · By machine (find parts for your
+ * machine → /machines) · Quote list (count) · WhatsApp.
  * ≥ 56px tall cells, padded for the iOS/Android gesture area.
  */
 export function MobileBottomBar({ whatsapp }: { whatsapp: string }) {
@@ -29,8 +31,8 @@ export function MobileBottomBar({ whatsapp }: { whatsapp: string }) {
         </li>
         <li className="flex flex-1">
           <Link href="/machines" className={cell}>
-            <Factory aria-hidden className="size-5" strokeWidth={1.75} />
-            {t("mobileBar.brands")}
+            <HookIcon className="size-5" />
+            {t("mobileBar.byMachine")}
           </Link>
         </li>
         <li className="flex flex-1">

@@ -54,7 +54,7 @@ test("mobile menu loads its dialog on demand, opens, closes and restores focus",
   await button.click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("link", { name: /machines/i }).first()).toBeVisible();
+  await expect(dialog.getByRole("link", { name: /by machine/i }).first()).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(button).toBeFocused();

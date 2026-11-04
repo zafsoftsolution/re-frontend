@@ -13,6 +13,7 @@ import { Analytics } from "@/components/site/Analytics";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { MobileBottomBar } from "@/components/site/MobileBottomBar";
+import { navData } from "@/components/site/nav";
 import "./site.css";
 
 // Latin display/body — variable, with the width axis for condensed headings.
@@ -115,6 +116,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const clientMessages = Object.fromEntries(CLIENT_NAMESPACES.map((ns) => [ns, messages[ns]]));
   const s = boot.settings;
   const meta = messages.meta as Record<string, string>;
+  const nav = navData(boot.categories, boot.machineBrands);
 
   return (
     <html
@@ -129,11 +131,11 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
           >
             {t("skipToContent")}
           </a>
-          <Header settings={boot.settings} />
+          <Header settings={boot.settings} nav={nav} />
           <main id="main" className="flex-1">
             {children}
           </main>
-          <Footer settings={boot.settings} year={year} />
+          <Footer settings={boot.settings} year={year} showDevices={nav.devices.length > 0} />
           <MobileBottomBar whatsapp={boot.settings.whatsappNumber || boot.settings.contactPhone} />
         </NextIntlClientProvider>
         <JsonLd

@@ -1,9 +1,10 @@
 {
   "meta": {
     "siteName": "Rakib Enterprise",
-    "title": "Rakib Enterprise — Industrial sewing machine spare parts, Dhaka",
-    "description": "Genuine and compatible spare parts for industrial garment sewing machines — needles, hooks, loopers, feed dogs, presser feet, bobbin cases, servo motors and control boxes for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special. Search by part number, order on WhatsApp.",
-    "tagline": "Sewing machine spare parts"
+    "title": "Rakib Enterprise — Spare parts & devices for industrial sewing machines, Dhaka",
+    "description": "Genuine and compatible spare parts and devices for industrial garment sewing machines — needles, hooks, loopers, feed dogs, presser feet, servo motors, control boxes, trimmers and LED lights for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special. Search by part number, order on WhatsApp.",
+    "tagline": "Spare parts & devices for garment machines",
+    "taglineShort": "Machine parts & devices"
   },
   "a11y": {
     "skipToContent": "Skip to content",
@@ -15,16 +16,34 @@
     "home": "Rakib Enterprise home"
   },
   "nav": {
-    "machines": "Machines",
-    "categories": "Categories",
-    "brands": "Brands",
+    "brands": "Parts brands",
     "rfq": "Quote list",
     "rfqLong": "Request a quote",
     "guides": "Guides",
     "contact": "Contact",
     "home": "Home",
     "search": "Search",
-    "cart": "Cart"
+    "cart": "Cart",
+    "parts": "Parts",
+    "devices": "Devices",
+    "byMachine": "Parts by machine",
+    "allParts": "All spare parts",
+    "allDevices": "All devices",
+    "allMachineBrands": "All machine brands",
+    "partsTitle": "Spare parts",
+    "partsBody": "Wear and replacement parts, listed under their OEM part numbers — genuine and compatible.",
+    "devicesTitle": "Devices",
+    "devicesBody": "Units that fit on your machine — servo motors, control boxes, thread trimmers, LED lights, attachments and pullers.",
+    "machinesTitle": "Find parts by machine",
+    "machinesBody": "Pick the brand on your machine's nameplate, then the model, to see every part and device that fits. We supply parts — not machines.",
+    "partsCount": "{count, plural, =0 {on request} one {# part listed} other {# parts listed}}",
+    "models": "{count, plural, =0 {models soon} one {# model} other {# models}}",
+    "whatsapp": "WhatsApp us",
+    "language": "Language",
+    "statTypes": "Types",
+    "statParts": "Parts listed",
+    "statBrands": "Brands",
+    "statModels": "Models"
   },
   "header": {
     "searchLabel": "Search parts",
@@ -37,17 +56,18 @@
     "switchTo": "বাংলা",
     "switchToShort": "বাং",
     "switchToLabel": "View this page in Bangla",
-    "topline": "Spare parts for industrial sewing machines · Dhaka",
-    "cartItems": "Cart: {count, plural, =0 {empty} one {# item} other {# items}}"
+    "topline": "Genuine & compatible spare parts and devices for industrial sewing machines · Dhaka",
+    "cartItems": "Cart: {count, plural, =0 {empty} one {# item} other {# items}}",
+    "toplineShort": "Parts & devices for sewing machines · Dhaka"
   },
   "mobileBar": {
     "search": "Search",
-    "brands": "Brands",
     "rfq": "Quote",
-    "whatsapp": "WhatsApp"
+    "whatsapp": "WhatsApp",
+    "byMachine": "By machine"
   },
   "footer": {
-    "about": "Spare parts for industrial garment sewing machines. Genuine and compatible parts, correct part numbers, dispatched from Dhaka.",
+    "about": "Spare parts and devices for industrial garment sewing machines — genuine and compatible, with correct part numbers, dispatched from Dhaka. We supply parts, not machines.",
     "contactHeading": "Contact",
     "phone": "Phone",
     "whatsapp": "WhatsApp",
@@ -96,9 +116,9 @@
     "askWhatsapp": "Ask about this part"
   },
   "home": {
-    "eyebrow": "Industrial sewing machine parts · Dhaka",
+    "eyebrow": "Spare parts & devices for industrial sewing machines · Dhaka",
     "title": "Type the part number. Keep the line running.",
-    "lead": "Needles, hooks, loopers, feed dogs, presser feet, motors and control boxes for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special — listed under their OEM part numbers.",
+    "lead": "Needles, hooks, loopers, feed dogs and presser feet — plus servo motors, control boxes, trimmers and LED lights — for Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special, listed under their OEM part numbers.",
     "searchPlaceholder": "Part number, e.g. B1830-227-000",
     "searchNote": "Spaces, dashes and old numbers are matched too.",
     "examples": "Try",
@@ -145,13 +165,13 @@
         "needle": "needle"
       }
     },
-    "machinesHeading": "Shop by machine brand",
+    "machinesHeading": "Find parts by machine brand",
     "machinesSub": "Pick the brand on your machine plate, then the model.",
     "machinesAll": "All machine brands",
     "models": "{count, plural, =0 {Models coming soon} one {# model} other {# models}}",
-    "categoriesHeading": "Shop by part type",
+    "categoriesHeading": "Parts & devices by type",
     "categoriesSub": "Every part listed with its OEM part number.",
-    "categoriesAll": "All categories",
+    "categoriesAll": "All parts & devices",
     "parts": "{count, plural, =0 {—} one {# part} other {# parts}}",
     "featuredHeading": "Featured parts",
     "featuredSub": "From the catalogue, with live stock. Add any line to your quote list.",
@@ -204,10 +224,10 @@
   "about": {
     "_note": "EDITABLE PLACEHOLDER COPY — replace with the owner's own words. Keep it factual: no founding year, client names or figures unless they are true and can be shown.",
     "metaTitle": "About us",
-    "metaDescription": "Rakib Enterprise is based in Dhaka and supplies genuine and compatible spare parts for industrial sewing machines to garment factories, workshops and mechanics — with formal quotes, VAT invoices and delivery.",
+    "metaDescription": "Rakib Enterprise is based in Dhaka and supplies genuine and compatible spare parts and devices for industrial sewing machines to garment factories, workshops and mechanics — with formal quotes, VAT invoices and delivery.",
     "eyebrow": "About Rakib Enterprise",
-    "title": "Spare parts for the machines that keep garment lines running.",
-    "lead": "Based in Dhaka, we supply spare parts for industrial sewing machines to garment factories, maintenance teams, workshops and mechanics.",
+    "title": "Spare parts and devices for the machines that keep garment lines running.",
+    "lead": "Based in Dhaka, we supply spare parts and devices for industrial sewing machines — not the machines themselves — to garment factories, maintenance teams, workshops and mechanics.",
     "story": {
       "p1": "When a machine stops, a line stops. Our work is getting the right part to the floor quickly — the correct part number, for the right machine, genuine or a compatible part made to the same specification.",
       "p2": "We work from part numbers, machine models and photos of the old part. If we are not sure a part fits, we ask before we quote."
@@ -216,14 +236,14 @@
     "facts": {
       "base": "Based in",
       "baseValue": "Dhaka, Bangladesh",
-      "machines": "Machine brands listed",
+      "machines": "Machine brands covered",
       "types": "Part types",
       "grades": "Grades",
       "gradesValue": "Genuine · Compatible"
     },
     "stockHeading": "What we stock",
-    "stockSub": "Parts for these machine brands, by part type — all searchable by part number.",
-    "machinesLabel": "Machine brands",
+    "stockSub": "Parts and devices for these machine brands, by type — all searchable by part number.",
+    "machinesLabel": "Parts for machine brands",
     "typesLabel": "Part types",
     "brandsLabel": "Parts brands",
     "genuineTag": "Genuine",
@@ -299,7 +319,7 @@
     "price": "Price",
     "viewPart": "View part",
     "related": "Other matches",
-    "machines": "Machines matching your search",
+    "machines": "Parts by machine — matching brands and models",
     "sendPhoto": "Send a photo on WhatsApp",
     "waPhoto": "Hello, I'm looking for this part: {query}. Photo attached.",
     "quoteNumber": "Request a quote for {query}",
@@ -477,10 +497,10 @@
       "other": "Other"
     },
     "machines": {
-      "title": "Machine brands",
+      "title": "Find parts by machine",
       "eyebrow": "Parts by machine",
-      "lead": "Pick the brand on your machine's nameplate, then the model. Every part we list for a model fits it — with the OEM part number to check against your old part.",
-      "metaDescription": "Spare parts by industrial sewing machine brand — {brands}. Pick your model to see every compatible part with its part number.",
+      "lead": "Pick the brand on your machine's nameplate, then the model. Every part and device we list for a model fits it — with the OEM part number to check against your old part. We supply parts, not machines.",
+      "metaDescription": "Spare parts and devices by industrial sewing machine brand — {brands}. Pick your model to see every compatible part with its part number.",
       "finderTitle": "Find parts by machine",
       "finderBody": "Brand, then model — straight to the compatible parts list.",
       "finderBrand": "Machine brand",
@@ -488,7 +508,7 @@
       "finderChooseBrand": "Choose a brand",
       "finderAnyModel": "All models",
       "finderSubmit": "Show parts",
-      "indexHeading": "All machine brands",
+      "indexHeading": "Parts by machine brand",
       "indexSub": "{count, plural, one {# brand} other {# brands}} · A–Z",
       "models": "{count, plural, =0 {Models coming soon} one {# model} other {# models}}",
       "country": "Origin",
@@ -498,13 +518,14 @@
       "notListedTitle": "Machine not listed?",
       "notListedBody": "We stock parts for many more machines than are online. Send the brand and model from the nameplate.",
       "notListedText": "Hello, I need parts for this machine: ",
-      "notListedCta": "Send the model on WhatsApp"
+      "notListedCta": "Send the model on WhatsApp",
+      "crumb": "Find by machine"
     },
     "brand": {
-      "title": "{brand} sewing machine parts",
-      "eyebrow": "Machine brand · {brand}",
-      "lead": "Spare parts for {count, plural, one {# {brand} model} other {# {brand} models}}, grouped by machine type. Pick your model to see every compatible part.",
-      "metaDescription": "{brand} industrial sewing machine spare parts in Dhaka{types}. Genuine and compatible parts with OEM part numbers, stock and quick quotes.",
+      "title": "{brand} spare parts",
+      "eyebrow": "Parts for · {brand}",
+      "lead": "Spare parts and devices for {count, plural, one {# {brand} model} other {# {brand} models}}, grouped by machine type. Pick your model to see every compatible part.",
+      "metaDescription": "{brand} industrial sewing machine spare parts and devices in Dhaka{types}. Genuine and compatible, with OEM part numbers, stock and quick quotes.",
       "modelsHeading": "{brand} models",
       "modelsSub": "Model codes as printed on the machine plate.",
       "colModel": "Model",
@@ -517,28 +538,28 @@
       "about": "About {brand}"
     },
     "model": {
-      "title": "{brand} {model} spare parts",
-      "eyebrow": "{brand} · {type}",
+      "title": "{brand} {model} spare parts & devices",
+      "eyebrow": "Parts for · {brand} · {type}",
       "lead": "{count, plural, =0 {Parts for the {brand} {model} are supplied on request.} one {# part listed for the {brand} {model}.} other {# parts listed for the {brand} {model}.}} Check the part number against your old part, then add it to your quote list.",
-      "metaDescription": "{brand} {model} spare parts{categories} — part numbers, stock and quick quotes from Dhaka.",
+      "metaDescription": "{brand} {model} spare parts and devices{categories} — part numbers, stock and quick quotes from Dhaka.",
       "brand": "Brand",
       "type": "Machine type",
       "partsCount": "Parts listed",
       "partTypes": "Part types",
-      "partsHeading": "Compatible parts",
+      "partsHeading": "Compatible parts & devices",
       "partsSub": "Grouped by part type. Prices are quoted per order.",
       "jumpTo": "Part types",
       "seeAll": "All {count} {category} for {model}",
       "diagram": "Parts diagram",
       "diagramMissing": "No exploded diagram for this model yet. Send a photo of the part (or of the parts-book page) on WhatsApp and we'll identify it.",
-      "machineImage": "{brand} {model}",
+      "machineImage": "{brand} {model} — machine shown for identification",
       "noPartsTitle": "No parts listed for the {model} yet",
       "noPartsBody": "We supply parts for this machine on request. Send the part number or a photo of the old part.",
       "context": "{brand} {model}"
     },
     "modelCategory": {
       "title": "{category} for {brand} {model}",
-      "eyebrow": "{brand} {model} · {category}",
+      "eyebrow": "Parts for · {brand} {model} · {category}",
       "lead": "{count, plural, one {# {category} part fits} other {# {category} parts fit}} the {brand} {model}. Compare the part number with the one stamped on your old part — alternative numbers are listed on each part.",
       "metaDescription": "{count} {category} for {brand} {model}: part numbers, genuine and compatible options, stock and quick quotes from Dhaka.",
       "back": "All parts for the {model}",
@@ -579,15 +600,19 @@
       "brandCompatible": "Compatible part made to the OEM specification."
     },
     "categories": {
-      "title": "Part types",
+      "title": "Parts & devices",
       "eyebrow": "Catalogue",
-      "lead": "Every part type we stock for industrial sewing machines. Filter by machine brand and model inside each one.",
-      "metaDescription": "Industrial sewing machine spare parts by type: {categories}. Genuine and compatible, with part numbers.",
+      "lead": "Every spare part and device we stock for industrial sewing machines. Filter by machine brand and model inside each one.",
+      "metaDescription": "Industrial sewing machine spare parts and devices by type: {categories}. Genuine and compatible, with part numbers.",
       "count": "{count, plural, =0 {On request} one {# part} other {# parts}}",
       "subtypes": "Includes",
       "empty": "No part types are listed yet.",
       "types": "Part types",
-      "partsTotal": "Parts listed"
+      "partsTotal": "Parts listed",
+      "partsHeading": "Spare parts",
+      "partsSub": "Wear and replacement parts by part type.",
+      "devicesHeading": "Devices",
+      "devicesSub": "Motors, control boxes, trimmers, lights and attachments that fit on your machine."
     },
     "category": {
       "eyebrow": "Part type",
@@ -779,7 +804,7 @@
   },
   "contact": {
     "title": "Contact",
-    "metaDescription": "Phone, WhatsApp, email and address of Rakib Enterprise — industrial sewing machine spare parts, Bangladesh.",
+    "metaDescription": "Phone, WhatsApp, email and address of Rakib Enterprise — spare parts and devices for industrial sewing machines, Bangladesh.",
     "eyebrow": "Contact",
     "heading": "Talk to the parts desk",
     "lead": "The quickest way is WhatsApp with a part number or a photo. For a list of parts, send a quote request.",
@@ -852,7 +877,7 @@
   },
   "delivery": {
     "title": "Delivery & payment",
-    "metaDescription": "Where Rakib Enterprise delivers sewing machine spare parts in Bangladesh, how payment works (cash on delivery, bank transfer) and VAT invoices with BIN.",
+    "metaDescription": "Where Rakib Enterprise delivers spare parts and devices for sewing machines in Bangladesh, how payment works (cash on delivery, bank transfer) and VAT invoices with BIN.",
     "eyebrow": "Delivery",
     "heading": "Delivery, payment and VAT invoices",
     "lead": "We deliver spare parts across Bangladesh, from Dhaka. Timing depends on stock and where you are — we confirm it with every quotation and order.",

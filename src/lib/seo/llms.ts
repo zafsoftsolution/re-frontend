@@ -3,6 +3,7 @@
  * LLM agents. Pure; src/app/llms.txt/route.ts passes bootstrap data in.
  */
 import type { SiteBootstrap } from "@/lib/api/types";
+import { splitPartsAndDevices } from "@/lib/catalog/devices";
 
 export interface LlmsInput {
   siteUrl: string;
@@ -21,9 +22,9 @@ export function llmsTxt({ siteUrl, boot, guides }: LlmsInput): string {
 
   out.push(`# ${name}`, "");
   out.push(
-    `> ${name} supplies genuine (OEM) and compatible spare parts for industrial garment sewing machines in Bangladesh — needles, rotary hooks, bobbin cases, loopers, feed dogs, presser feet, belts, motors and control boxes for brands such as ${
+    `> ${name} supplies genuine (OEM) and compatible spare parts and devices for industrial garment sewing machines in Bangladesh. Parts: needles, rotary hooks, loopers, bobbin cases, feed dogs, presser feet, knives, belts and gears. Devices: servo motors, control boxes, thread-trimmer units, LED machine lights, attachments and pullers. For machine brands such as ${
       boot.machineBrands.length ? boot.machineBrands.slice(0, 8).map((b) => b.name).join(", ") : "Juki, Brother, Pegasus, Jack, Siruba, Yamato and Kansai Special"
-    }. It sells to garment factories, workshops and resellers. It sells parts, not clothing or whole machines.`,
+    }. It sells to garment factories, workshops and resellers. It sells spare parts and devices only — not sewing machines, and not clothing.`,
     "",
   );
   out.push(
@@ -32,10 +33,12 @@ export function llmsTxt({ siteUrl, boot, guides }: LlmsInput): string {
   );
 
   out.push("## Catalogue", "");
-  out.push(link("Machines", u("/machines"), "browse by sewing-machine brand and model; each model page lists its compatible parts"));
+  const { parts, devices } = splitPartsAndDevices(boot.categories);
+  out.push(link("Find parts by machine", u("/machines"), "browse by sewing-machine brand and model; each model page lists the parts and devices that fit it (machines themselves are not sold)"));
   for (const b of boot.machineBrands.slice(0, 12)) out.push(link(`${b.name} parts`, u(`/machines/${b.slug}`)));
-  out.push(link("Part types", u("/categories"), "browse by category"));
-  for (const c of boot.categories.slice(0, 16)) out.push(link(c.name, u(`/categories/${c.slug}`)));
+  out.push(link("Spare parts and devices by type", u("/categories"), "browse by category"));
+  for (const c of parts.slice(0, 16)) out.push(link(c.name, u(`/categories/${c.slug}`)));
+  for (const c of devices.slice(0, 10)) out.push(link(c.name, u(`/categories/${c.slug}`), "device"));
   out.push(link("Parts brands", u("/brands"), "genuine/OEM and compatible manufacturers"));
   out.push(link("Search", `${u("/search")}?q={part-number}`, "exact part-number matches are listed first"));
   out.push("");

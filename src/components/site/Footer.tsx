@@ -9,7 +9,7 @@ import { PRIMARY_NAV } from "./nav";
 
 const POLICIES = ["shipping", "returns", "payment", "privacy", "terms"] as const;
 
-export function Footer({ settings, year }: { settings: SiteSettings; year: number }) {
+export function Footer({ settings, year, showDevices }: { settings: SiteSettings; year: number; showDevices: boolean }) {
   const t = useTranslations();
   const tel = telHref(settings.contactPhone);
   const wa = whatsappHref(settings.whatsappNumber || settings.contactPhone);
@@ -72,13 +72,18 @@ export function Footer({ settings, year }: { settings: SiteSettings; year: numbe
         <nav aria-label={t("footer.catalogueHeading")} className="md:col-span-2">
           <h2 className="re-label !text-white/55">{t("footer.catalogueHeading")}</h2>
           <ul className="mt-4 space-y-1 text-[0.9375rem]">
-            {PRIMARY_NAV.map((item) => (
+            {PRIMARY_NAV.filter((item) => item.key !== "devices" || showDevices).map((item) => (
               <li key={item.key}>
                 <Link href={item.href} className="inline-block py-1 hover:text-white">
-                  {item.key === "rfq" ? t("nav.rfqLong") : t(`nav.${item.key}`)}
+                  {t(`nav.${item.key}`)}
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/rfq" className="inline-block py-1 font-semibold text-white hover:underline">
+                {t("nav.rfqLong")}
+              </Link>
+            </li>
           </ul>
         </nav>
 

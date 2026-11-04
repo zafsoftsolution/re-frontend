@@ -110,7 +110,7 @@ export default async function PartPage({ params }: Props) {
 
   const crumbs = [
     { label: t("nav.home"), href: "/" },
-    { label: t("nav.categories"), href: "/categories" },
+    { label: t("nav.parts"), href: "/categories" },
     ...(part.category ? [{ label: part.category.name, href: `/categories/${part.category.slug}` }] : []),
     { label: part.partNumber || part.name },
   ];

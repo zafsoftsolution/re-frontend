@@ -83,7 +83,7 @@ export default async function ModelCategoryPage({ params }: Props) {
 
   const crumbs = [
     { label: t("nav.home"), href: "/" },
-    { label: t("catalog.machines.title"), href: "/machines" },
+    { label: t("catalog.machines.crumb"), href: "/machines" },
     { label: model.brandName, href: `/machines/${model.brandSlug}` },
     { label: model.name, href: base },
     { label: cat.name },

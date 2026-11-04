@@ -5,6 +5,8 @@ export interface CategoryNode {
   name: string;
   /** Parts in the category itself plus its direct children. */
   total: number;
+  /** Admin "device" flag, when the API sends it (see lib/catalog/devices.ts). */
+  isDevice?: boolean;
   children: { slug: string; name: string; productCount: number }[];
 }
 
@@ -34,6 +36,7 @@ export function categoryTree(categories: CategorySummary[]): CategoryNode[] {
         slug: c.slug,
         name: c.name,
         total: c.productCount + children.reduce((n, k) => n + k.productCount, 0),
+        ...(c.isDevice !== undefined ? { isDevice: c.isDevice } : {}),
         children,
       };
     });

@@ -56,7 +56,7 @@ export default async function MachinesPage({ params }: PageProps<"/[locale]/mach
     }))
     .filter((b) => b.models.length > 0 || brands.length < 30);
 
-  const crumbs = [{ label: t("nav.home"), href: "/" }, { label: t("catalog.machines.title") }];
+  const crumbs = [{ label: t("nav.home"), href: "/" }, { label: t("catalog.machines.crumb") }];
 
 
   return (

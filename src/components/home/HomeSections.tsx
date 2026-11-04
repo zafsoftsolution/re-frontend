@@ -27,8 +27,7 @@ const FALLBACK_MACHINE_BRANDS: { name: string; country: string }[] = [
   { name: "Typical", country: "CN" },
 ];
 
-const FALLBACK_PART_TYPES: PartIconKey[] = ["needle", "hook", "bobbinCase", "presserFoot", "feedDog", "servoMotor", "controlBox", "knife"];
-const FALLBACK_QUERY: Record<PartIconKey, string> = {
+const FALLBACK_QUERY = {
   needle: "needle",
   hook: "hook",
   bobbinCase: "bobbin case",
@@ -37,7 +36,8 @@ const FALLBACK_QUERY: Record<PartIconKey, string> = {
   servoMotor: "servo motor",
   controlBox: "control box",
   knife: "knife",
-};
+} satisfies Partial<Record<PartIconKey, string>>;
+const FALLBACK_PART_TYPES = Object.keys(FALLBACK_QUERY) as (keyof typeof FALLBACK_QUERY)[];
 
 const tileGrid = "grid gap-px border border-re-steel-200 bg-re-steel-200";
 
