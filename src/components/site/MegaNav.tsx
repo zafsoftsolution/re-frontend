@@ -130,14 +130,14 @@ export function MegaNav({ data }: { data: NavData }) {
                 stuck ? "opacity-100" : "pointer-events-none opacity-0",
               )}
             >
-              <Image src="/logo/rakib-enterprise.png" alt="" width={434} height={240} sizes="48px" className="h-7 w-auto" />
+              <Image src="/logo/rakib-enterprise.png" alt="" width={434} height={240} sizes="48px" className="h-6 w-auto max-w-none shrink-0" />
             </Link>
           </div>
 
           <ul
             className={cn(
               "-ml-3 flex items-stretch transition-transform duration-180 ease-re",
-              stuck && "translate-x-14",
+              stuck && "translate-x-16",
             )}
           >
             {visibleItems.map((item) => {

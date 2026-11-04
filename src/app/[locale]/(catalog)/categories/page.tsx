@@ -128,6 +128,13 @@ function CategoryGrid({
           </li>
         );
       })}
+      {/* Paper fillers so a short last row shows no grey hole (2 cols at sm, 3 at lg). */}
+      {Array.from({ length: (2 - (nodes.length % 2)) % 2 }, (_, i) => (
+        <li key={`f2-${i}`} aria-hidden className="hidden bg-re-paper sm:block lg:hidden" />
+      ))}
+      {Array.from({ length: (3 - (nodes.length % 3)) % 3 }, (_, i) => (
+        <li key={`f3-${i}`} aria-hidden className="hidden bg-re-paper lg:block" />
+      ))}
     </ol>
   );
 }

@@ -55,7 +55,7 @@ export function Header({ settings, nav }: { settings: SiteSettings; nav: NavData
 
         {/* Main row */}
         <div className="re-shell flex items-center gap-3 py-3 lg:gap-8 lg:py-4">
-          <Link href="/" aria-label={t("a11y.home")} className="group flex min-w-0 shrink-0 items-center gap-2.5 lg:gap-3">
+          <Link href="/" aria-label={t("a11y.home")} className="group flex min-w-0 items-center gap-2 sm:gap-2.5 md:shrink-0 lg:gap-3">
             <Image
               src="/logo/rakib-enterprise.png"
               alt=""
@@ -63,11 +63,11 @@ export function Header({ settings, nav }: { settings: SiteSettings; nav: NavData
               height={240}
               priority
               sizes="88px"
-              className="h-9 w-auto lg:h-12"
+              className="h-8 w-auto shrink-0 xs:h-9 lg:h-12"
             />
             <span aria-hidden className="hidden h-9 w-px bg-re-steel-200 lg:block" />
             <span className="flex min-w-0 flex-col leading-none">
-              <span className="font-re-sans text-[1.0625rem] font-extrabold tracking-[0.02em] text-re-ink [font-stretch:78%] lg:text-[1.375rem]">
+              <span className="font-re-sans text-[1rem] font-extrabold tracking-[0.02em] whitespace-nowrap text-re-ink [font-stretch:78%] xs:text-[1.0625rem] lg:text-[1.375rem]">
                 RAKIB ENTERPRISE
               </span>
               <span className="re-label mt-1 truncate !text-[0.625rem] bn:!text-[0.75rem] lg:mt-1.5 lg:!text-[0.6875rem] lg:bn:!text-[0.8125rem]">
