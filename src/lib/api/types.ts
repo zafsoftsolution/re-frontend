@@ -31,6 +31,20 @@ export interface SiteSettings {
   /** True only when at least one product is direct — gates cart/checkout nav. */
   directOrdersEnabled: boolean;
   shipping: { flatFee: number; freeThreshold: number; codExtraFee: number };
+  /** Admin-set site-wide SEO defaults (bootstrap `seo`). Empty = use messages. */
+  seo: {
+    title: string;
+    description: string;
+    /** e.g. "index,follow"; containing "noindex" switches the whole site off
+     *  for crawlers (staging) — robots.txt `Disallow: /` + meta noindex. */
+    defaultRobots: string;
+    twitterHandle: string;
+    ogImageUrl: string;
+  };
+  /** Search-console ownership tokens (bootstrap `verification`). */
+  verification: { google: string; bing: string; pinterest: string; facebook: string };
+  /** Tag ids (bootstrap `analytics`); nothing loads when both are empty. */
+  analytics: { ga4: string; gtm: string };
 }
 
 export interface CategorySummary {
@@ -208,11 +222,14 @@ export interface SearchResults {
   live: boolean;
 }
 
-export interface SitemapEntry {
-  type: "part" | "category" | "machine_brand" | "machine_model" | "brand" | "page";
-  path: string;
-  lastModified: string | null;
-  images: string[];
+/** GET /api/site/sitemap-entries/ — every indexable catalogue entity. */
+export interface SitemapFeed {
+  products: { slug: string; updatedAt: string | null; image: string }[];
+  machineBrands: { slug: string; updatedAt: string | null; modelCount: number }[];
+  machineModels: { slug: string; brandSlug: string; updatedAt: string | null; partsCount: number }[];
+  modelCategories: { brandSlug: string; modelSlug: string; categorySlug: string; count: number }[];
+  categories: { slug: string; parentSlug: string | null; updatedAt: string | null; productCount: number }[];
+  brands: { slug: string; updatedAt: string | null; productCount: number; isOem: boolean }[];
 }
 
 export interface RfqItemInput {

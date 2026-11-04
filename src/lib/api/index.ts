@@ -17,7 +17,7 @@ export {
   getPart,
   getCatalogIndex,
   searchParts,
-  getSitemapEntries,
+  getSitemapFeed,
   getRedirects,
   submitRfq,
 } from "./site";

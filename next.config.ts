@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
     globalNotFound: true,
   },
 
+  // /sitemap.xml is the sitemap index. src/app/sitemap.ts (generateSitemaps
+  // → /sitemap/<id>.xml) also claims the /sitemap.xml route, so the index
+  // handler lives at /sitemap-index.xml and this serves it under the
+  // conventional name robots.txt points to.
+  async rewrites() {
+    return { beforeFiles: [{ source: "/sitemap.xml", destination: "/sitemap-index.xml" }], afterFiles: [], fallback: [] };
+  },
+
   images: {
     formats: ["image/avif", "image/webp"],
     ...(backendMedia?.local ? { dangerouslyAllowLocalIP: true } : {}),

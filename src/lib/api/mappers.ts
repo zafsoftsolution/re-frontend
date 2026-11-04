@@ -18,7 +18,6 @@ import type {
   PartsBrandSummary,
   PartSummary,
   SiteSettings,
-  SitemapEntry,
 } from "./types";
 
 type Raw = Record<string, unknown>;
@@ -70,6 +69,9 @@ export const FALLBACK_SETTINGS: SiteSettings = {
   salesMode: "quote_only",
   directOrdersEnabled: false,
   shipping: { flatFee: 0, freeThreshold: 0, codExtraFee: 0 },
+  seo: { title: "", description: "", defaultRobots: "", twitterHandle: "", ogImageUrl: "" },
+  verification: { google: "", bing: "", pinterest: "", facebook: "" },
+  analytics: { ga4: "", gtm: "" },
 };
 
 /**
@@ -80,6 +82,9 @@ export function mapSettings(input: unknown): SiteSettings {
   if (!isObj(input)) return FALLBACK_SETTINGS;
   const social = isObj(input.social) ? input.social : input;
   const shipping = isObj(input.shipping) ? input.shipping : input;
+  const seo = isObj(input.seo) ? input.seo : input;
+  const verification = isObj(input.verification) ? input.verification : input;
+  const analytics = isObj(input.analytics) ? input.analytics : input;
   return {
     siteName: str(input, "site_name") || FALLBACK_SETTINGS.siteName,
     tagline: str(input, "tagline", "site_tagline"),
@@ -101,8 +106,28 @@ export function mapSettings(input: unknown): SiteSettings {
       freeThreshold: num(shipping.free_shipping_threshold ?? shipping.free_threshold),
       codExtraFee: num(shipping.cod_extra_fee),
     },
+    seo: {
+      title: str(seo, "title", "seo_title"),
+      description: str(seo, "description", "seo_description"),
+      defaultRobots: str(seo, "default_robots"),
+      twitterHandle: str(seo, "twitter_handle"),
+      ogImageUrl: str(input, "og_image_url"),
+    },
+    verification: {
+      google: str(verification, "google", "google_site_verification"),
+      bing: str(verification, "bing", "bing_site_verification"),
+      pinterest: str(verification, "pinterest", "pinterest_site_verification"),
+      facebook: str(verification, "facebook", "facebook_domain_verification"),
+    },
+    analytics: {
+      ga4: tagId(str(analytics, "ga4_measurement_id", "ga4"), /^G-[A-Z0-9]{4,20}$/i),
+      gtm: tagId(str(analytics, "gtm_container_id", "gtm"), /^GTM-[A-Z0-9]{4,20}$/i),
+    },
   };
 }
+
+/** Analytics ids end up in script URLs — accept only the documented shapes. */
+const tagId = (v: string, shape: RegExp) => (shape.test(v) ? v : "");
 
 export function mapCategory(d: unknown): CategorySummary | null {
   if (!isObj(d) || !str(d, "slug")) return null;
@@ -342,28 +367,6 @@ export function mapPartDetail(d: unknown): PartDetail | null {
     priceTiers: tiers,
     relatedIds: arr(d.related_product_ids).map(String),
     updatedAt: str(d, "updated_at"),
-  };
-}
-
-const SITEMAP_TYPES: readonly SitemapEntry["type"][] = [
-  "part",
-  "category",
-  "machine_brand",
-  "machine_model",
-  "brand",
-  "page",
-];
-
-export function mapSitemapEntry(d: unknown): SitemapEntry | null {
-  if (!isObj(d)) return null;
-  const path = str(d, "path", "url");
-  if (!path) return null;
-  const t = str(d, "type");
-  return {
-    type: (SITEMAP_TYPES as readonly string[]).includes(t) ? (t as SitemapEntry["type"]) : "page",
-    path,
-    lastModified: str(d, "last_modified", "lastmod", "updated_at") || null,
-    images: arr(d.images).filter((x): x is string => typeof x === "string"),
   };
 }
 

@@ -25,10 +25,11 @@ import {
   mapPartsBrand,
   mapPartsBrandDetail,
   mapSettings,
-  mapSitemapEntry,
 } from "./mappers";
 import { indexFromLists, parseSitemapIndex, PLACEHOLDER_SLUG } from "./catalog-index";
 import { TAGS } from "./tags";
+import { parseRedirects } from "@/lib/redirects";
+import { parseSitemapFeed } from "@/lib/seo/sitemap";
 import type {
   CatalogIndex,
   CategoryDetail,
@@ -45,7 +46,7 @@ import type {
   RfqReceipt,
   SearchResults,
   SiteBootstrap,
-  SitemapEntry,
+  SitemapFeed,
   SiteRedirect,
 } from "./types";
 import { normalizePartNumber } from "@/lib/part-number";
@@ -386,19 +387,22 @@ export async function searchParts(locale: string, rawQuery: string): Promise<Sea
 
 // ─── Sitemap feed ────────────────────────────────────────────────────────────
 
-export async function getSitemapEntries(locale: string): Promise<SitemapEntry[]> {
+/**
+ * GET /api/site/sitemap-entries/ for the sitemaps and llms.txt. null when the
+ * backend is unreachable (or the endpoint isn't deployed yet) — callers then
+ * list static pages only, and the short cacheLife lets them heal quickly.
+ * Revalidated by `sitemap` and by every entity tag the backend sends.
+ */
+export async function getSitemapFeed(): Promise<SitemapFeed | null> {
   "use cache";
-  cacheTag(TAGS.sitemap);
-  // NEW endpoint.
-  const data = await tryFetch<unknown>("/site/sitemap-entries/", locale);
-  if (data) cacheLife("hours");
+  cacheTag(TAGS.sitemap, TAGS.products, TAGS.machines, TAGS.machineBrands, TAGS.machineModels, TAGS.categories, TAGS.brands);
+  const feed = parseSitemapFeed(await tryFetch<unknown>("/site/sitemap-entries/", "en"));
+  if (feed) cacheLife("hours");
   else cacheLife("minutes");
-  if (!data) return [];
-  const list = Array.isArray(data) ? data : ((data as Raw).results ?? (data as Raw).entries);
-  return mapList(list, mapSitemapEntry);
+  return feed;
 }
 
-// ─── Redirects (admin-managed, consumed by proxy/next.config in Phase 2) ────
+// ─── Redirects (admin-managed; the proxy keeps its own copy — redirect-store.ts) ─
 
 export async function getRedirects(): Promise<SiteRedirect[]> {
   "use cache";
@@ -407,16 +411,7 @@ export async function getRedirects(): Promise<SiteRedirect[]> {
   const data = await tryFetch<unknown>("/site/redirects/", "en");
   if (data) cacheLife("hours");
   else cacheLife("minutes");
-  const list = Array.isArray(data) ? data : ((data as Raw | null)?.results ?? []);
-  return (list as unknown[]).flatMap((r) => {
-    if (!r || typeof r !== "object") return [];
-    const o = r as Raw;
-    const fromPath = typeof o.from_path === "string" ? o.from_path : "";
-    const toPath = typeof o.to_path === "string" ? o.to_path : "";
-    const code = Number(o.status_code);
-    if (!fromPath.startsWith("/") || !toPath) return [];
-    return [{ fromPath, toPath, statusCode: ([301, 302, 307, 308].includes(code) ? code : 301) as SiteRedirect["statusCode"] }];
-  });
+  return parseRedirects(data);
 }
 
 // ─── RFQ (not cached — a write) ──────────────────────────────────────────────
