@@ -9,7 +9,8 @@ names, personal address or photo from the licence.
 | Legal / trading name | Rakib Enterprise (রাকিব এন্টারপ্রাইজ) |
 | Type | Sole proprietorship |
 | Proprietor | Md. Abul Hossain (মোঃ আবুল হোসেন) |
-| Business since | 21 October 2019 |
+| Experience | In the garment-machine parts trade for **about 37 years** (since ~1989, per client). Public copy: **"35+ years in the trade"** / "৩৫+ বছরের অভিজ্ঞতা" — don't state an exact founding year. |
+| Current registration | Trade licence business start 21 October 2019; BIN effective 14 Nov 2019 (current entity registration — don't present 2019 as the founding year). JSON-LD: omit `foundingDate`. |
 | Activity (licence) | Importer & supplier |
 | Trade licence | TRAD/DNCC/019449/2022 — Dhaka North City Corporation, valid to 30 June 2027 |
 | BIN (VAT) | **002328131-0401** — NBR Mushak-2.3, entity RAKIB ENTERPRISE, Customs Excise & VAT Commissionerate Dhaka (West), Mirpur Division, effective 14/11/2019, retail/wholesale trading. Show on quotations, invoices, Contact/About and footer. (Ignore the other certificate 002659038-0401 — that is Rajdhani Sewing Center.) Do NOT publish the e-TIN. |
