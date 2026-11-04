@@ -221,3 +221,14 @@ html[lang="bn"] .re-label {
     scroll-behavior: auto !important;
   }
 }
+
+/* =========================================================================
+   mobile shell — sticky 56px app bar (below md) and the bottom tab bar
+   (below lg). Owned by the site shell (components/site/**).
+   ========================================================================= */
+@layer base {
+  html {
+    /* In-page jumps and keyboard focus clear the sticky phone header. */
+    @media (width < 48rem) { scroll-padding-top: 4rem; }
+  }
+}

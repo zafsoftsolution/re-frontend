@@ -8,6 +8,7 @@ import { telHref, whatsappHref } from "@/lib/format";
 import { BUSINESS } from "@/config/business";
 import { useHoursShort } from "@/components/content/BusinessFacts";
 import { PRIMARY_NAV } from "./nav";
+import { MobileFooter } from "./mobile/MobileFooter";
 
 const POLICIES = ["shipping", "returns", "payment", "privacy", "terms"] as const;
 
@@ -19,11 +20,14 @@ export function Footer({ settings, year, showDevices }: { settings: SiteSettings
   const hours = useHoursShort();
 
   return (
-    <footer className="re-pb-bottom-bar mt-20 bg-re-ink text-white/80">
+    <footer className="re-pb-bottom-bar mt-14 bg-re-ink md:mt-20 text-white/80">
       {/* The page's single swoosh. */}
       <Swoosh className="block h-6 w-full -translate-y-px bg-re-paper md:h-8" />
 
-      <div className="re-shell grid gap-10 py-12 md:grid-cols-12">
+      {/* Phones: app-style footer. Tablet/desktop: the columns below. */}
+      <MobileFooter settings={settings} year={year} showDevices={showDevices} />
+
+      <div className="re-shell hidden gap-10 py-12 md:grid md:grid-cols-12">
         <div className="md:col-span-4">
           <p className="text-[1.375rem] font-extrabold tracking-[0.02em] text-white [font-stretch:78%]">
             RAKIB ENTERPRISE
@@ -127,7 +131,7 @@ export function Footer({ settings, year, showDevices }: { settings: SiteSettings
         </nav>
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="hidden border-t border-white/10 md:block">
         <div className="re-shell flex flex-wrap items-center justify-between gap-2 py-5 text-[0.8125rem] text-white/50">
           <p>{t("footer.rights", { year })}</p>
           <p className="re-mono">rakibenterprise-bd.com</p>

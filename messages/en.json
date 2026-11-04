@@ -85,7 +85,57 @@
     "paymentMethods": "Cash on delivery · bKash · Nagad · Bank transfer",
     "about_link": "About us",
     "delivery": "Delivery areas",
-    "rights": "© {year} Rakib Enterprise. All rights reserved."
+    "rights": "© {year} Rakib Enterprise. All rights reserved.",
+    "partsHeading": "Parts & devices",
+    "companyHeading": "Company"
+  },
+  "site": {
+    "tabs": {
+      "home": "Home",
+      "parts": "Parts",
+      "byMachine": "By machine",
+      "quote": "Quote",
+      "whatsapp": "WhatsApp"
+    },
+    "search": {
+      "open": "Search parts",
+      "title": "Search parts",
+      "close": "Close search",
+      "placeholder": "Part no. or model",
+      "submit": "Search",
+      "clearField": "Clear the search field",
+      "recent": "Recent searches",
+      "clearRecent": "Clear",
+      "removeRecent": "Remove “{query}” from recent searches",
+      "examples": "Try a part number",
+      "hint": "Spaces, dashes and old numbers still match.",
+      "popular": "Popular part types",
+      "allParts": "All parts & devices",
+      "photoTitle": "No part number?",
+      "photoBody": "Send a photo of the old part or the machine's nameplate on WhatsApp — we'll identify it.",
+      "photoCta": "Send a photo on WhatsApp",
+      "photoMessage": "Hello, I need this part (photo attached):"
+    },
+    "menu": {
+      "title": "Menu",
+      "rfq": "Request a quote",
+      "rfqSub": "Send your list — we reply with prices",
+      "catalogue": "Catalogue",
+      "company": "Company",
+      "about": "About us",
+      "delivery": "Delivery areas",
+      "policies": "Policies",
+      "popularMachines": "Popular machine brands",
+      "talk": "Talk to us",
+      "callMobile": "Call mobile / WhatsApp",
+      "callLandline": "Call landline",
+      "hours": "Opening hours",
+      "language": "Language"
+    },
+    "lang": {
+      "en": "English",
+      "bn": "বাংলা"
+    }
   },
   "ui": {
     "copy": "Copy",

@@ -14,6 +14,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { MobileBottomBar } from "@/components/site/MobileBottomBar";
 import { navData } from "@/components/site/nav";
+import { exampleNumbers, getHomeParts } from "@/components/home/data";
 import { organizationFacts } from "@/config/business";
 import "./site.css";
 
@@ -101,18 +102,20 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
 }
 
 /** NextIntlClientProvider only ships the namespaces client components use. */
-const CLIENT_NAMESPACES = ["a11y", "header", "nav", "rfq", "ui", "fixes"] as const;
+const CLIENT_NAMESPACES = ["a11y", "header", "nav", "site", "rfq", "ui", "fixes"] as const;
 
 export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const [boot, year, messages, t] = await Promise.all([
+  const [boot, year, messages, t, homeParts] = await Promise.all([
     getBootstrap(locale),
     getCurrentYear(),
     getMessages(),
     getTranslations("a11y"),
+    // Same cached call as Home: real part numbers for the search sheet chips.
+    getHomeParts(locale),
   ]);
   const clientMessages = Object.fromEntries(CLIENT_NAMESPACES.map((ns) => [ns, messages[ns]]));
   const s = boot.settings;
@@ -132,7 +135,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
           >
             {t("skipToContent")}
           </a>
-          <Header settings={boot.settings} nav={nav} />
+          <Header settings={boot.settings} nav={nav} examples={exampleNumbers(homeParts, 4)} />
           <main id="main" className="flex-1">
             {children}
           </main>
