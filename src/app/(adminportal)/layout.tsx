@@ -44,9 +44,9 @@ export const metadata: Metadata = {
     googleBot: { index: false, follow: false, noimageindex: true },
   },
   referrer: "same-origin",
-  // With no app-level root layout, the src/app/opengraph-image.png file
-  // convention resolves before metadataBase applies (→ localhost), so point
-  // at it explicitly. Icons still come from the file conventions.
+  // The share image is a plain public/ file (a root-level opengraph-image
+  // file convention resolves before any layout's metadataBase → localhost
+  // + a build warning). Icons still come from the file conventions.
   openGraph: { images: [{ url: "/opengraph-image.png", width: 1200, height: 630 }] },
 };
 

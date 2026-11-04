@@ -11,11 +11,11 @@ const handleI18nRouting = createMiddleware(routing);
 
 /**
  * Top-level public sections (see docs/REBUILD_BRIEF.md → IA). Anything else is
- * rewritten to a two-segment path that only [locale]/[...rest] matches; that
- * page throws notFound() before anything streams, so the response is a real
- * HTTP 404 inside the localized shell. (A notFound() after awaiting params in
- * a partially-prerendered page can only send 200 + noindex, and a rewrite's
- * `status` option is ignored for app pages.) Add a section when you add its route.
+ * answered with the prerendered /<locale>/404/not-found page ([locale]/[...rest])
+ * and a real HTTP 404 — see notFound() below. (A rewrite's `status` option is
+ * ignored for app pages, and notFound() there only streams an empty error
+ * shell, so documents fetch the page and re-send it with 404.) Add a
+ * section when you add its route.
  *
  * Catalogue detail paths (/machines/…, /parts/…, /categories/…, /brands/…)
  * are validated the same way against a cached slug index — see
@@ -54,9 +54,34 @@ export default async function proxy(request: NextRequest) {
   const section = rest[0] ?? "";
   const locale = prefixed ? segments[0] : routing.defaultLocale;
 
-  const notFound = () => {
+  // The prerendered 404 page itself (also the target of the internal fetch below).
+  if (prefixed && rest.length === 2 && rest[0] === "404" && rest[1] === "not-found") return NextResponse.next();
+
+  const notFound = async () => {
+    const target = `/${locale}/404/not-found`;
+    // Client-side navigations want the RSC payload: plain rewrite.
+    if (!request.headers.get("rsc")) {
+      // Documents: a rewrite's status is ignored for app pages, and notFound()
+      // streams an empty shell — so fetch the prerendered page and send its
+      // HTML with a real 404.
+      try {
+        const port = process.env.PORT || request.nextUrl.port || "3000";
+        const res = await fetch(`http://127.0.0.1:${port}${target}`, {
+          headers: { accept: "text/html" },
+          signal: AbortSignal.timeout(3000),
+        });
+        if (res.ok) {
+          return new NextResponse(res.body, {
+            status: 404,
+            headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },
+          });
+        }
+      } catch {
+        /* fall back to the rewrite */
+      }
+    }
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}/404/not-found`;
+    url.pathname = target;
     return NextResponse.rewrite(url);
   };
 
@@ -83,7 +108,7 @@ export const config = {
   //  - /admin (own root layout, not localised), /api, /_next, /_vercel
   //  - sitemap*.xml, robots.txt, llms.txt
   //  - anything with a file extension: public/ assets and the metadata files
-  //    (favicon.ico, icon.png, apple-icon.png, opengraph-image.png)
+  //    (favicon.ico, icon.png, apple-icon.png) and public/opengraph-image.png
   // Keep in sync with tests/unit/proxy-matcher.test.ts.
   matcher: [
     "/((?!(?:admin|api|_next|_vercel)(?:/|$)|sitemap[^/]*\\.xml|robots\\.txt|llms\\.txt|.*\\..*).*)",

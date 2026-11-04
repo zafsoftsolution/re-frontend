@@ -83,8 +83,8 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
       siteName: t("siteName"),
       locale: locale === "bn" ? "bn_BD" : "en_BD",
       alternateLocale: locale === "bn" ? ["en_BD"] : ["bn_BD"],
-      // Setting openGraph here replaces the inherited file-convention image,
-      // so reference src/app/opengraph-image.png explicitly.
+      // public/opengraph-image.png (not a file convention: a root-level one
+      // resolves before metadataBase and falls back to localhost).
       images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: t("siteName") }],
     },
     twitter: { card: "summary_large_image", ...(twitterHandle ? { site: twitterHandle } : {}) },
