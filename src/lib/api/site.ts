@@ -117,7 +117,7 @@ const usable = (slug: string) => Boolean(slug) && slug !== PLACEHOLDER_SLUG && s
 
 export async function getBootstrap(locale: string): Promise<SiteBootstrap> {
   "use cache";
-  cacheTag(TAGS.bootstrap, TAGS.settings, TAGS.categories, TAGS.machineBrands);
+  cacheTag(TAGS.bootstrap, TAGS.settings, TAGS.categories, TAGS.machineBrands, TAGS.machines, TAGS.products, TAGS.brands);
 
   // NEW endpoint: one round trip for the shell.
   const boot = await tryFetch<Raw>("/site/bootstrap/", locale);
