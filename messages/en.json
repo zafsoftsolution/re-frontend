@@ -286,14 +286,25 @@
   },
   "search": {
     "title": "Search",
+    "titleFor": "Search: {query}",
     "resultsFor": "Results for “{query}”",
     "empty": "Type a part number, machine model or part name.",
     "noResults": "Nothing found for “{query}”.",
-    "noResultsHelp": "Send us the part number or a photo of the old part on WhatsApp — we'll find it.",
+    "noResultsHelp": "Send us the part number or a photo of the old part on WhatsApp, or request a quote — we can often source parts that are not listed yet.",
     "exactMatch": "Exact part-number match",
     "count": "{count, plural, one {# part} other {# parts}}",
+    "models": "{count, plural, one {# model} other {# models}}",
+    "part": "Part",
     "stock": "Stock",
-    "price": "Price"
+    "price": "Price",
+    "viewPart": "View part",
+    "related": "Other matches",
+    "machines": "Machines matching your search",
+    "sendPhoto": "Send a photo on WhatsApp",
+    "waPhoto": "Hello, I'm looking for this part: {query}. Photo attached.",
+    "quoteNumber": "Request a quote for {query}",
+    "quoteIt": "Request a quote for this part",
+    "offline": "Search is temporarily limited — results may be incomplete."
   },
   "notFound": {
     "code": "404",
@@ -308,18 +319,148 @@
   },
   "rfq": {
     "title": "Quote list",
-    "lead": "Parts you have added while browsing. Adjust quantities, then send the list — we reply with prices and availability.",
+    "metaTitle": "Request a quote",
+    "metaDescription": "Send your spare-parts list — part numbers, quantities, Excel or photos — and get a formal quotation from Rakib Enterprise. No login needed.",
+    "eyebrow": "Request for quotation",
+    "heading": "Request a quote",
+    "lead": "Send part numbers, an Excel list or photos of the old parts. We check stock and reply with prices, availability and a formal quotation.",
+    "meta": {
+      "reply": "Reply",
+      "replyValue": "By your preferred channel",
+      "files": "Upload",
+      "login": "Account",
+      "loginValue": "Not needed"
+    },
     "empty": "Your quote list is empty.",
     "emptyHelp": "Search by part number and tap “Add to quote”, or send your list straight to WhatsApp.",
+    "emptyListHint": "Your quote list is empty — add parts while browsing, or type part numbers below.",
+    "fromList": "{count, plural, one {# part from your quote list} other {# parts from your quote list}}",
     "qty": "Qty",
     "item": "Part",
+    "increase": "Increase quantity",
+    "decrease": "Decrease quantity",
     "remove": "Remove {name}",
+    "noteFor": "Note for {name}",
+    "notePlaceholder": "Note (optional) — e.g. genuine only, urgent",
     "clear": "Clear list",
     "sendWhatsapp": "Send list on WhatsApp",
-    "formSoon": "The full quote form (company, BIN, Excel/photo upload) is coming soon.",
     "waHeader": "Quote request — Rakib Enterprise",
     "lines": "{count, plural, one {# line} other {# lines}}",
-    "browse": "Search parts"
+    "browse": "Search parts",
+    "searchedFor": "Searched for “{query}”",
+    "partsTitle": "Parts",
+    "partsLead": "One line per part. A part number is best; a description and the machine model also work.",
+    "freeLines": "Type part numbers",
+    "col": {
+      "partNumber": "Part no.",
+      "description": "Description",
+      "qty": "Qty",
+      "machine": "Machine model"
+    },
+    "descPlaceholder": "e.g. bobbin case, feed dog",
+    "addLine": "Add a line",
+    "removeLine": "Remove line {n}",
+    "filesTitle": "Files",
+    "filesLead": "Attach your Excel/CSV parts list, a PDF, or photos of the old parts and the machine's model plate.",
+    "dropHere": "Drop files here, or choose them",
+    "fileRules": "Up to 5 files · 10 MB each · XLSX XLS CSV PDF JPG PNG WEBP",
+    "chooseFiles": "Choose files",
+    "takePhoto": "Take a photo",
+    "removeFile": "Remove {name}",
+    "contactTitle": "Your details",
+    "contactLead": "Only the phone number is required. Add the company name and BIN if you need a formal quotation or VAT invoice.",
+    "optional": "Optional",
+    "field": {
+      "phone": "Mobile number",
+      "contactName": "Your name",
+      "company": "Company / factory",
+      "email": "Email",
+      "bin": "BIN (VAT registration)",
+      "area": "Delivery area",
+      "areaOther": "Area / district",
+      "preferred": "How should we reply?",
+      "notes": "Notes"
+    },
+    "hint": {
+      "phone": "Bangladesh number, e.g. 01711-123456 or +880 1711 123456.",
+      "bin": "For the VAT invoice. 9–13 digits.",
+      "notes": "Urgency, genuine-only, delivery address, anything else we should know."
+    },
+    "areaChoose": "Choose an area",
+    "areas": {
+      "dhakaCity": "Dhaka city",
+      "gazipur": "Gazipur",
+      "tongi": "Tongi",
+      "savarAshulia": "Savar / Ashulia",
+      "narayanganj": "Narayanganj",
+      "narsingdi": "Narsingdi",
+      "chattogram": "Chattogram",
+      "cumilla": "Cumilla",
+      "mymensingh": "Mymensingh",
+      "other": "Other area"
+    },
+    "preferred": {
+      "whatsapp": "WhatsApp",
+      "call": "Phone call",
+      "email": "Email"
+    },
+    "summary": "Request summary",
+    "summaryLines": "Lines",
+    "summaryFiles": "Files",
+    "submit": "Send quote request",
+    "sending": "Sending…",
+    "noPrices": "No payment now. We confirm prices and stock in a quotation before anything is ordered.",
+    "orWhatsapp": "Prefer chat?",
+    "whatsappLink": "Send the list on WhatsApp",
+    "errors": {
+      "phone_required": "Enter your mobile number.",
+      "phone_invalid": "Enter a valid Bangladesh phone number, e.g. 01711-123456.",
+      "email_invalid": "Enter a valid email address.",
+      "email_required_for_contact": "Add an email address if you want us to reply by email.",
+      "bin_invalid": "A BIN has 9–13 digits.",
+      "too_long": "This is too long.",
+      "qty_invalid": "Enter a quantity of 1 or more.",
+      "item_empty": "Each line needs a part number or a description.",
+      "too_many_items": "At most 200 lines per request — attach the rest as a file.",
+      "file_type": "File type not accepted. Use XLSX, XLS, CSV, PDF, JPG, PNG or WEBP.",
+      "file_size": "File is larger than 10 MB.",
+      "file_empty": "File is empty.",
+      "file_count": "At most 5 files per request.",
+      "file_rejected": "One of the files was rejected — check its type and size.",
+      "items_rejected": "Some lines could not be read. Check the part numbers and try again.",
+      "empty": "Add at least one part, a file or a note.",
+      "fixFields": "Please check the highlighted fields.",
+      "validation": "Some details were missing or invalid. Please check the form.",
+      "throttled": "Too many requests from this connection. Please try again later, or send the list on WhatsApp.",
+      "unavailable": "We couldn't send your request just now. Please try again in a minute, or use WhatsApp.",
+      "forbidden": "The request was blocked. Please reload the page and try again.",
+      "bad_request": "The form could not be read. Please try again.",
+      "failed": "Your request could not be sent. Please check the form and try again."
+    },
+    "sent": {
+      "metaTitle": "Quote request sent",
+      "crumb": "Sent",
+      "eyebrow": "Received",
+      "title": "Your quote request is in.",
+      "reference": "Reference number",
+      "keepRef": "Keep this number — quote it on WhatsApp, by phone or by email and we find your request immediately.",
+      "nextTitle": "What happens next",
+      "step1Title": "We check every line",
+      "step1Body": "Part numbers, compatibility with your machines and stock — genuine and compatible options where both exist.",
+      "step2Title": "You get a quotation",
+      "step2Body": "Prices, availability and validity, by the channel you chose. Tell us your BIN if you need a VAT invoice.",
+      "step3Title": "Confirm and we deliver",
+      "step3Body": "Confirm the quotation and we arrange delivery and payment with you.",
+      "followTitle": "Urgent?",
+      "followBody": "If a line is down, message us with your reference and we'll look at it first.",
+      "followWhatsapp": "Follow up on WhatsApp",
+      "waText": "Hello, I sent quote request {ref}.",
+      "call": "Call",
+      "continue": "Continue browsing parts",
+      "errorTitle": "Request not sent",
+      "errorHelp": "Nothing was submitted. Go back to the form, or send your list on WhatsApp instead.",
+      "tryAgain": "Back to the form"
+    }
   },
   "catalog": {
     "machineType": {
@@ -514,5 +655,475 @@
       "colPrice": "Price",
       "fits": "{count, plural, =0 {—} one {# model} other {# models}}"
     }
+  },
+  "cart": {
+    "title": "Cart",
+    "lead": "Parts with a listed price can be ordered online. For bulk or quote-only parts, use the quote list.",
+    "empty": "Your cart is empty.",
+    "emptyHelp": "Only parts with a listed price can go in the cart. Everything else: add it to a quote.",
+    "browse": "Search parts",
+    "toQuote": "Request a quote",
+    "qty": "Quantity",
+    "increase": "Increase quantity",
+    "decrease": "Decrease quantity",
+    "remove": "Remove {name}",
+    "summary": "Summary",
+    "subtotal": "Subtotal",
+    "shippingNote": "Delivery and VAT are calculated at checkout.",
+    "checkout": "Go to checkout",
+    "bulkQuote": "Buying in bulk? Request a quote instead",
+    "quoteOnly": "{count, plural, one {# part is now sold by quotation only.} other {# parts are now sold by quotation only.}}",
+    "lineQuoteOnly": "Quotation only — move it to your quote list",
+    "moveToQuote": "Move to quote list",
+    "moved": "{count, plural, one {# part moved to your quote list.} other {# parts moved to your quote list.}}",
+    "moveAll": "{count, plural, one {Move # part to the quote list} other {Move # parts to the quote list}}",
+    "disabledTitle": "Online ordering isn't enabled yet",
+    "disabledBody": "Prices are given by quotation. Send your parts list and we reply with prices, stock and delivery — no account needed."
+  },
+  "checkout": {
+    "title": "Checkout",
+    "lead": "Guest checkout — no account needed. We call to confirm before dispatch.",
+    "empty": "There is nothing to check out.",
+    "toQuote": "Request a quote",
+    "browse": "Search parts",
+    "optional": "Optional",
+    "choose": "Choose…",
+    "contactTitle": "Contact",
+    "addressTitle": "Delivery address",
+    "paymentTitle": "Payment",
+    "field": {
+      "name": "Full name",
+      "phone": "Mobile number",
+      "email": "Email",
+      "division": "Division",
+      "district": "District",
+      "area": "Area / thana",
+      "postcode": "Post code",
+      "street": "House, road, factory name",
+      "notes": "Delivery notes"
+    },
+    "hint": {
+      "phone": "We call this number to confirm the order.",
+      "email": "For the order confirmation and invoice.",
+      "area": "e.g. Mirpur 10, Konabari, Ashulia",
+      "street": "Include the factory or building name and floor.",
+      "notes": "Gate number, contact person, best time to deliver."
+    },
+    "divisions": {
+      "dhaka": "Dhaka",
+      "chattogram": "Chattogram",
+      "rajshahi": "Rajshahi",
+      "khulna": "Khulna",
+      "barishal": "Barishal",
+      "sylhet": "Sylhet",
+      "rangpur": "Rangpur",
+      "mymensingh": "Mymensingh"
+    },
+    "cod": "Cash on delivery",
+    "codHelp": "Pay in cash when the parts arrive. We call first to confirm.",
+    "bankTransfer": "Bank transfer",
+    "bankHelp": "We send our bank details with the order confirmation.",
+    "otherMethods": "bKash, Nagad or bank transfer for company orders: ask us after placing the order — we never ask you to pay into an account that is not on our invoice.",
+    "summary": "Order summary",
+    "coupon": "Coupon code",
+    "apply": "Apply",
+    "couponOk": "Coupon applied (confirmed when the order is placed).",
+    "couponBad": "This coupon is not valid.",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Delivery",
+    "free": "Free",
+    "vat": "VAT",
+    "total": "Total",
+    "estimate": "Estimated total",
+    "totalsNote": "Final total, including any VAT, is confirmed on the order.",
+    "quoteOnlyShort": "Quote",
+    "place": "Place order",
+    "movedToQuote": "{count, plural, one {# part is sold by quotation only and was moved to your quote list.} other {# parts are sold by quotation only and were moved to your quote list.}}",
+    "openQuote": "Open quote list",
+    "rejected": "The order could not be placed: {detail}",
+    "errors": {
+      "name_required": "Enter your name.",
+      "phone_required": "Enter your mobile number.",
+      "phone_invalid": "Enter a valid Bangladesh phone number, e.g. 01711-123456.",
+      "email_invalid": "Enter a valid email address.",
+      "division_required": "Choose a division.",
+      "district_required": "Enter the district.",
+      "area_required": "Enter the area or thana.",
+      "street_required": "Enter the street address.",
+      "postcode_invalid": "A post code has 4 digits.",
+      "too_long": "This is too long.",
+      "throttled": "Too many attempts. Please wait a little and try again.",
+      "unavailable": "We couldn't place the order just now. Please try again, or order on WhatsApp."
+    },
+    "success": {
+      "metaTitle": "Order placed",
+      "crumb": "Order placed",
+      "eyebrow": "Order received",
+      "title": "Thank you — your order is placed.",
+      "orderNumber": "Order number",
+      "next": "We will call {phone} to confirm the order and delivery before dispatch.",
+      "item": "Item",
+      "qty": "Qty",
+      "lineTotal": "Amount",
+      "payment": "Payment",
+      "deliverTo": "Deliver to",
+      "invoice": "Download invoice (PDF)",
+      "askWhatsapp": "Questions? WhatsApp us",
+      "waText": "Hello, about my order {order}.",
+      "waHelp": "Hello, I need help with my order.",
+      "continue": "Continue browsing parts",
+      "notFound": "Order not found",
+      "notFoundBody": "This order link is not valid. If you just placed an order, check the link in your confirmation or contact us."
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "metaDescription": "Phone, WhatsApp, email and address of Rakib Enterprise — industrial sewing machine spare parts, Bangladesh.",
+    "eyebrow": "Contact",
+    "heading": "Talk to the parts desk",
+    "lead": "The quickest way is WhatsApp with a part number or a photo. For a list of parts, send a quote request.",
+    "phone": "Phone",
+    "phoneNote": "Best for urgent, line-down requests.",
+    "whatsapp": "WhatsApp",
+    "whatsappNote": "Send part numbers, photos or your Excel list.",
+    "email": "Email",
+    "emailNote": "For quotations, invoices and documents.",
+    "address": "Address",
+    "waText": "Hello Rakib Enterprise, I have a question about a spare part.",
+    "noDetails": "Contact details are being updated. Please use the form — we reply by phone or email.",
+    "hoursTitle": "Opening hours",
+    "hours": {
+      "satThu": {
+        "days": "Saturday – Thursday",
+        "time": "10:00 – 19:00"
+      },
+      "fri": {
+        "days": "Friday",
+        "time": "Closed"
+      }
+    },
+    "hoursNote": "Hours may change on public holidays — WhatsApp messages are read as soon as we open.",
+    "openMap": "Open in Google Maps",
+    "showMap": "Show map",
+    "mapTitle": "Map of our location",
+    "quoteTitle": "Have a list of parts?",
+    "quoteBody": "Upload your Excel list or photos and get a formal quotation.",
+    "formTitle": "Send a message",
+    "formLead": "We reply by phone or email.",
+    "field": {
+      "name": "Your name",
+      "phone": "Mobile number",
+      "email": "Email",
+      "topic": "Topic",
+      "message": "Message"
+    },
+    "hint": {
+      "email": "We send our reply here.",
+      "message": "Part numbers, machine model, quantity — the more detail, the faster the answer."
+    },
+    "topics": {
+      "parts": "Finding a part",
+      "quote": "A quotation",
+      "order": "An order or delivery",
+      "other": "Something else"
+    },
+    "send": "Send message",
+    "sentTitle": "Message sent",
+    "sentBody": "Thank you — we will get back to you soon. For anything urgent, call or WhatsApp us.",
+    "sendAnother": "Send another message",
+    "notSent": "Message not sent",
+    "tryAgain": "Back to the form",
+    "continue": "Search parts",
+    "errors": {
+      "name_required": "Enter your name.",
+      "phone_required": "Enter your mobile number.",
+      "phone_invalid": "Enter a valid Bangladesh phone number, e.g. 01711-123456.",
+      "email_required": "Enter your email address.",
+      "email_invalid": "Enter a valid email address.",
+      "message_short": "Please write a little more (at least 10 characters).",
+      "too_long": "This is too long.",
+      "validation": "Some details were missing or invalid. Please check the form.",
+      "throttled": "Too many messages from this connection. Please try again later or use WhatsApp.",
+      "unavailable": "We couldn't send your message just now. Please try again or use WhatsApp.",
+      "forbidden": "The message was blocked. Please reload the page and try again.",
+      "failed": "Your message could not be sent. Please check the form and try again."
+    }
+  },
+  "delivery": {
+    "title": "Delivery & payment",
+    "metaDescription": "Where Rakib Enterprise delivers sewing machine spare parts in Bangladesh, how payment works (cash on delivery, bank transfer) and VAT invoices with BIN.",
+    "eyebrow": "Delivery",
+    "heading": "Delivery, payment and VAT invoices",
+    "lead": "We deliver spare parts across Bangladesh, from Dhaka. Timing depends on stock and where you are — we confirm it with every quotation and order.",
+    "areas": {
+      "title": "Delivery areas",
+      "lead": "Typical arrangements. Ask us for the exact timing for your parts and location.",
+      "colArea": "Area",
+      "colHow": "How we deliver",
+      "colTiming": "Timing",
+      "rows": [
+        {
+          "area": "Dhaka city",
+          "how": "Our own delivery or courier",
+          "timing": "Confirmed with your order — ask us about urgent, line-down requests"
+        },
+        {
+          "area": "Gazipur, Tongi, Savar / Ashulia, Narayanganj",
+          "how": "Our own delivery or courier",
+          "timing": "Confirmed with your order — ask us"
+        },
+        {
+          "area": "Chattogram, Cumilla and other divisional cities",
+          "how": "Courier service",
+          "timing": "Depends on the courier and route — ask us"
+        },
+        {
+          "area": "Rest of Bangladesh",
+          "how": "Courier service",
+          "timing": "Ask us for your district"
+        }
+      ],
+      "note": "Parts that are not in stock in Dhaka need extra time to source; the quotation says so for each line."
+    },
+    "waText": "Hello, how soon can you deliver to my area?",
+    "askWhatsapp": "Ask about delivery to your area",
+    "shippingPolicy": "Shipping policy",
+    "payment": {
+      "title": "Payment",
+      "items": [
+        "**Cash on delivery** where available — pay when the parts arrive.",
+        "**Bank transfer** for company orders, against our quotation or invoice.",
+        "**bKash / Nagad** — ask us for the current details.",
+        "Only pay into accounts printed on our quotation or invoice. If anything looks different, call us before paying."
+      ]
+    },
+    "vat": {
+      "title": "VAT invoice & BIN",
+      "items": [
+        "Need a VAT invoice? Add your company name and **BIN** to the quote request.",
+        "We confirm on the quotation what invoice we can issue for your order.",
+        "Every quotation and invoice lists part numbers and quantities, ready for your purchase records."
+      ]
+    },
+    "ctaTitle": "Know what you need?",
+    "ctaBody": "Send the part numbers or a photo — we reply with price, stock and delivery time."
+  },
+  "policies": {
+    "title": "Policies",
+    "eyebrow": "Policy",
+    "lead": "How we handle delivery, returns, payment and your data.",
+    "metaDescription": "Shipping, returns, payment, privacy and terms of Rakib Enterprise, Bangladesh.",
+    "draftNotice": "Draft — this policy is being reviewed and may change. If anything is unclear, contact us before ordering.",
+    "questions": "Questions about this policy?",
+    "contactLink": "Contact us",
+    "items": {
+      "shipping": {
+        "title": "Shipping & delivery",
+        "summary": "Where we deliver, how delivery time is confirmed, and what to check when your parts arrive.",
+        "sections": [
+          {
+            "h": "Where we deliver",
+            "p": [
+              "We deliver across Bangladesh from Dhaka — by our own delivery in and around Dhaka and the main garment areas, and by courier service elsewhere."
+            ]
+          },
+          {
+            "h": "Delivery time",
+            "p": [
+              "Delivery time depends on stock and location. We confirm the expected time on your quotation or when we confirm your order. Parts that we need to source take longer; the quotation says so.",
+              "For urgent, line-down requests, contact us by phone or WhatsApp and ask what is possible."
+            ]
+          },
+          {
+            "h": "Delivery charges",
+            "p": [
+              "Delivery charges, if any, are stated on the quotation or shown at checkout before you confirm."
+            ]
+          },
+          {
+            "h": "When your parts arrive",
+            "list": [
+              "Check that the parcel is sealed and undamaged.",
+              "Check the part numbers and quantities against the invoice.",
+              "Report damage, missing items or a wrong part within 2 days of delivery, with your order or quote reference and photos."
+            ]
+          }
+        ]
+      },
+      "returns": {
+        "title": "Returns & wrong-part exchange",
+        "summary": "What happens if we send the wrong part, if you ordered the wrong one, or if a part is faulty.",
+        "sections": [
+          {
+            "h": "We sent the wrong part",
+            "p": [
+              "If the part does not match the part number we confirmed on your quotation or order, we exchange it or refund it, and we cover the delivery. Tell us within 7 days of delivery with your reference and photos."
+            ]
+          },
+          {
+            "h": "You ordered the wrong part",
+            "p": [
+              "We can usually exchange a part within 7 days of delivery if it is unused, undamaged and in its original packaging. Delivery costs for the exchange may be charged."
+            ]
+          },
+          {
+            "h": "Faulty parts",
+            "p": [
+              "Report a fault as soon as you notice it. We check the part — with the supplier if needed — and repair, replace or refund it if the fault is confirmed. Warranty applies only where it is stated on the quotation or invoice."
+            ]
+          },
+          {
+            "h": "What we can't take back",
+            "list": [
+              "Parts that have been installed or used, except for confirmed faults.",
+              "Electrical and electronic parts (motors, control boxes) once installed, except for confirmed faults.",
+              "Parts sourced or imported specially for your order, unless we sent the wrong part.",
+              "Consumables cut or opened from bulk packs."
+            ]
+          },
+          {
+            "h": "How to return",
+            "p": [
+              "Contact us by phone or WhatsApp with your order or quote reference before sending anything back. We tell you how to return it."
+            ]
+          }
+        ]
+      },
+      "payment": {
+        "title": "Payment",
+        "summary": "Quotations, payment methods and how to pay safely.",
+        "sections": [
+          {
+            "h": "Prices and quotations",
+            "p": [
+              "Most prices are given by quotation. A quotation states the price, currency (BDT), availability and how long it is valid. Prices may change after the validity date."
+            ]
+          },
+          {
+            "h": "Payment methods",
+            "list": [
+              "Cash on delivery, where available.",
+              "Bank transfer, for company orders.",
+              "bKash / Nagad — ask us for the current details."
+            ]
+          },
+          {
+            "h": "Pay safely",
+            "p": [
+              "Only pay into the accounts printed on our quotation or invoice. We will never ask you to pay into a personal account in a chat. If payment details look different, call us before paying."
+            ]
+          },
+          {
+            "h": "Invoices",
+            "p": [
+              "We issue an invoice for every order. If you need a VAT invoice, give your company name and BIN with your quote request or order, and we confirm what we can issue."
+            ]
+          }
+        ]
+      },
+      "privacy": {
+        "title": "Privacy",
+        "summary": "What information we collect when you request a quote or order, and how we use it.",
+        "sections": [
+          {
+            "h": "What we collect",
+            "list": [
+              "Contact details you give us: name, phone, email, company name, BIN and delivery address.",
+              "Your requests: parts lists, files and photos you upload, messages and orders.",
+              "Technical data such as IP address and browser type, used to keep the site working and to prevent abuse."
+            ]
+          },
+          {
+            "h": "How we use it",
+            "p": [
+              "To answer your requests, prepare quotations, deliver orders, issue invoices and provide support. We do not sell your information."
+            ]
+          },
+          {
+            "h": "Who we share it with",
+            "p": [
+              "Delivery partners receive what they need to deliver (name, phone, address). We share information with authorities only when the law requires it."
+            ]
+          },
+          {
+            "h": "Your quote list and cart",
+            "p": [
+              "The quote list and cart are kept in your own browser until you send them; we receive them only when you submit a request or an order."
+            ]
+          },
+          {
+            "h": "How long we keep it",
+            "p": [
+              "We keep business records — quotations, orders, invoices — for as long as needed for business and legal purposes."
+            ]
+          },
+          {
+            "h": "Your choices",
+            "p": [
+              "You can ask us to see, correct or delete your information through our [contact page](/contact)."
+            ]
+          }
+        ]
+      },
+      "terms": {
+        "title": "Terms",
+        "summary": "The basic terms for using this site, quotations and orders.",
+        "sections": [
+          {
+            "h": "Catalogue information",
+            "p": [
+              "We work to keep part numbers, compatibility, stock and descriptions accurate, but errors can happen and images may be illustrative. Please confirm the part number and machine model before ordering — we are happy to check for you."
+            ]
+          },
+          {
+            "h": "Quotations",
+            "p": [
+              "A quotation is valid for the period stated on it. Stock is not reserved until you confirm and we accept the order."
+            ]
+          },
+          {
+            "h": "Orders",
+            "p": [
+              "An order is accepted when we confirm it by phone, message or email. We may decline or cancel an order, for example if a part is no longer available or a price was wrong — any payment made is then refunded."
+            ]
+          },
+          {
+            "h": "Genuine and compatible parts",
+            "p": [
+              "Parts are labelled Genuine, OEM or Compatible as supplied to us. Brand and machine names are used only to identify which machines a part fits."
+            ]
+          },
+          {
+            "h": "Liability",
+            "p": [
+              "Our liability for a part is limited to its price. We are not responsible for losses from production downtime or incorrect installation, to the extent the law allows."
+            ]
+          },
+          {
+            "h": "Law",
+            "p": [
+              "These terms are governed by the laws of Bangladesh."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "guides": {
+    "title": "Guides",
+    "metaDescription": "Practical guides for maintenance teams: reading sewing machine part numbers, genuine vs compatible parts, needle systems and sizes.",
+    "eyebrow": "Knowledge",
+    "heading": "Guides for maintenance teams",
+    "lead": "Short, practical notes that help you order the right spare part the first time.",
+    "read": "Read",
+    "updated": "Updated",
+    "toc": "On this page",
+    "more": "More guides",
+    "ctaTitle": "Need a part?",
+    "ctaBody": "Send the part number, a photo or your list — we reply with price, stock and delivery.",
+    "searchParts": "Search parts",
+    "askTopic": "Want a guide on something else?",
+    "askLink": "Tell us"
   }
 }

@@ -3,6 +3,7 @@ import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { guardCatalogPath } from "./lib/api/catalog-index";
 import { catalogLookup } from "./lib/api/catalog-index-store";
+import { SUBPATHS } from "./content/slugs";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -54,6 +55,11 @@ export default async function proxy(request: NextRequest) {
   };
 
   if (!SECTIONS.has(section)) return notFound();
+
+  // Conversion + content sections: only their known sub-pages exist
+  // (/rfq/sent, /policies/returns, /guides/<slug>, …).
+  const allowed = SUBPATHS[section];
+  if (allowed && rest.length > 1 && (rest.length > 2 || !allowed.includes(rest[1]))) return notFound();
 
   if (CATALOG.has(section) && (rest.length > 1 || section === "parts")) {
     const verdict = await guardCatalogPath(rest, catalogLookup);
