@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle2, ChevronDown, Download, FileText, Loader2, Plus, RefreshCw, X } from "lucide-react";
 import { djangoAdmin, type PaginatedResponse } from "@/lib/django-admin";
 import { useToast } from "@/context/FeedbackContext";
@@ -93,18 +94,25 @@ export default function AdminOrders() {
 
   useEffect(() => {
     load();
-    // Deep link from a converted quote: /admin/orders?order=<number>.
-    const wanted = new URLSearchParams(window.location.search).get("order");
-    if (wanted) {
-      djangoAdmin.orders
-        .list({ search: wanted })
-        .then((r) => {
-          const hit = (r.results as AdminOrder[]).find((o) => o.order_number === wanted);
-          if (hit) setActive(hit);
-        })
-        .catch(() => {});
-    }
   }, []);
+
+  // Deep link from a converted quote: /admin/orders?order=<number>. Reacts
+  // to client-side navigations that only change the query string.
+  const wanted = useSearchParams().get("order");
+  useEffect(() => {
+    if (!wanted) return;
+    let cancelled = false;
+    djangoAdmin.orders
+      .list({ search: wanted })
+      .then((r) => {
+        const hit = (r.results as AdminOrder[]).find((o) => o.order_number === wanted);
+        if (hit && !cancelled) setActive(hit);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [wanted]);
 
   const filtered = useMemo(() => {
     if (!orders) return [];

@@ -4,10 +4,13 @@ import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const FOCUSABLE =
+  'a[href], button:not([tabindex="-1"]), input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
 /**
  * Minimal modal dialog for admin action forms (send quote, convert…).
- * Escape / backdrop click closes, focus moves into the panel on open and
- * returns to the opener on close.
+ * Escape / backdrop click closes, focus moves into the panel on open, Tab
+ * is trapped inside it, and focus returns to the opener on close.
  */
 export default function AdminDialog({
   open,
@@ -28,6 +31,13 @@ export default function AdminDialog({
 }) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  // Latest onClose without re-running the focus effect: parents pass inline
+  // arrows, and re-running on every render would yank focus back to the
+  // first field while the admin types.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -38,14 +48,37 @@ export default function AdminDialog({
     );
     (first ?? panel)?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+      // Trap Tab inside the panel (aria-modal).
+      const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0,
+      );
+      if (!items.length) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
+      const firstEl = items[0];
+      const lastEl = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === firstEl || active === panel || !panel.contains(active))) {
+        e.preventDefault();
+        lastEl.focus();
+      } else if (!e.shiftKey && (active === lastEl || !panel.contains(active))) {
+        e.preventDefault();
+        firstEl.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
       opener?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
   return (
@@ -55,7 +88,7 @@ export default function AdminDialog({
         aria-label="Close dialog"
         data-dialog-close
         tabIndex={-1}
-        onClick={onClose}
+        onClick={() => onCloseRef.current()}
         className="absolute inset-0 bg-black/45"
       />
       <div

@@ -1229,7 +1229,21 @@ export function readCachedUser(): AdminUserShape | null {
 
 // ─── Request helper ──────────────────────────────────────────────────────────
 
-async function tryRefresh(): Promise<string | null> {
+let refreshInflight: Promise<string | null> | null = null;
+
+/**
+ * Single-flight token refresh: parallel 401s share one POST /auth/refresh/
+ * (with refresh-token rotation, a second concurrent refresh would send an
+ * already-blacklisted token and log the user out).
+ */
+function tryRefresh(): Promise<string | null> {
+  refreshInflight ??= doRefresh().finally(() => {
+    refreshInflight = null;
+  });
+  return refreshInflight;
+}
+
+async function doRefresh(): Promise<string | null> {
   const refresh = getRefresh();
   if (!refresh) return null;
   try {
@@ -1239,10 +1253,15 @@ async function tryRefresh(): Promise<string | null> {
       body: JSON.stringify({ refresh }),
     });
     if (!res.ok) {
-      clearTokens();
+      // Another tab may have rotated the tokens meanwhile: keep its new pair.
+      if (getRefresh() !== refresh) return getAccess();
+      // Only a rejected token ends the session — not a 5xx / throttle.
+      if (res.status === 400 || res.status === 401 || res.status === 403) clearTokens();
       return null;
     }
     const json = (await res.json()) as { access: string; refresh?: string };
+    // Logged out (or re-logged in) while the request was in flight.
+    if (getRefresh() !== refresh) return getAccess();
     if (json.refresh) setTokens(json.access, json.refresh);
     else localStorage.setItem(ACCESS_KEY, json.access);
     return json.access;

@@ -125,25 +125,6 @@ function lineFromProduct(p: ProductLite): DraftLine {
   };
 }
 
-function blankCustomLine(): DraftLine {
-  return {
-    key: rid(),
-    product: null,
-    product_name: "",
-    sku: "",
-    color: "",
-    size: "",
-    ordered_quantity: 1,
-    unit_cost: "0",
-    discount_pct: "0",
-    tax_pct: "0",
-    notes: "",
-    image: null,
-    colorOptions: [],
-    sizeOptions: [],
-  };
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // POS-style product quick search
 // ─────────────────────────────────────────────────────────────────────────────
@@ -510,9 +491,6 @@ export default function NewPurchaseOrderPage() {
   }
   function removeLine(key: string) {
     setLines((prev) => prev.filter((l) => l.key !== key));
-  }
-  function addCustomLine() {
-    setLines((prev) => [...prev, blankCustomLine()]);
   }
 
   // Live totals.

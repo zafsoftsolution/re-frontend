@@ -89,62 +89,70 @@ export default function AdminOrderCreate({
   // ── Customer ────────────────────────────────────────────────────────────────
   const [customer, setCustomer] = useState<AdminUserShape | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
-  const [fetchedCustomers, setCustomerResults] = useState<AdminUserShape[]>([]);
-  // Empty search → no results, derived rather than reset from the effect
-  // (react-hooks/set-state-in-effect).
-  const customerResults = customerSearch.trim() ? fetchedCustomers : [];
+  // Results are keyed to the query they answer; anything else (stale
+  // responses, an emptied box) shows nothing.
+  const [fetchedCustomers, setCustomerResults] = useState<{ q: string; items: AdminUserShape[] }>({ q: "", items: [] });
+  const customerQuery = customerSearch.trim();
+  const customerResults = customerQuery && fetchedCustomers.q === customerQuery ? fetchedCustomers.items : [];
   const [customerOpen, setCustomerOpen] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
 
   // Lookup customers (debounced)
   useEffect(() => {
-    if (!customerSearch.trim()) return;
+    if (!customerQuery) return;
+    let cancelled = false;
     const t = setTimeout(async () => {
       try {
         const data = await djangoAdmin.users.list({
           account_type: "customer",
-          search: customerSearch.trim(),
+          search: customerQuery,
         });
         const items =
           (data as PaginatedResponse<AdminUserShape>).results ??
           (data as unknown as AdminUserShape[]);
-        setCustomerResults(items.slice(0, 8));
+        if (!cancelled) setCustomerResults({ q: customerQuery, items: items.slice(0, 8) });
       } catch {
-        setCustomerResults([]);
+        if (!cancelled) setCustomerResults({ q: customerQuery, items: [] });
       }
     }, 250);
-    return () => clearTimeout(t);
-  }, [customerSearch]);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [customerQuery]);
 
   // ── Items ──────────────────────────────────────────────────────────────────
   const [productSearch, setProductSearch] = useState("");
-  const [fetchedProducts, setProductResults] = useState<AdminProduct[]>([]);
-  const productResults = productSearch.trim() ? fetchedProducts : [];
-  const [productSearching, setProductSearching] = useState(false);
+  const productQuery = productSearch.trim();
+  const [fetchedProducts, setProductResults] = useState<{ q: string; items: AdminProduct[] }>({ q: "", items: [] });
+  const productResults = productQuery && fetchedProducts.q === productQuery ? fetchedProducts.items : [];
+  // Searching = a query is typed whose results haven't arrived yet.
+  const productSearching = !!productQuery && fetchedProducts.q !== productQuery;
   const [lines, setLines] = useState<OrderLine[]>([]);
 
   useEffect(() => {
-    if (!productSearch.trim()) return;
+    if (!productQuery) return;
+    let cancelled = false;
     const t = setTimeout(async () => {
-      setProductSearching(true);
       try {
         const data = await djangoAdmin.products.list({
-          search: productSearch.trim(),
+          search: productQuery,
           status: "active",
         } as Parameters<typeof djangoAdmin.products.list>[0]);
         const items =
           (data as PaginatedResponse<AdminProduct>).results ??
           (data as unknown as AdminProduct[]);
-        setProductResults(items.slice(0, 8));
+        if (!cancelled) setProductResults({ q: productQuery, items: items.slice(0, 8) });
       } catch {
-        setProductResults([]);
-      } finally {
-        setProductSearching(false);
+        if (!cancelled) setProductResults({ q: productQuery, items: [] });
       }
     }, 250);
-    return () => clearTimeout(t);
-  }, [productSearch]);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [productQuery]);
 
   function addLine(product: AdminProduct) {
     const color = product.colors?.[0]?.name ?? "";
@@ -154,7 +162,7 @@ export default function AdminOrderCreate({
       { product, color, size, quantity: 1 },
     ]);
     setProductSearch("");
-    setProductResults([]);
+    setProductResults({ q: "", items: [] });
   }
 
   function updateLine(i: number, patch: Partial<OrderLine>) {
@@ -321,7 +329,7 @@ export default function AdminOrderCreate({
                           onClick={() => {
                             setCustomer(u);
                             setCustomerSearch("");
-                            setCustomerResults([]);
+                            setCustomerResults({ q: "", items: [] });
                             setCustomerOpen(false);
                           }}
                           className="w-full text-left px-3 py-2 hover:bg-[#F4F5F7] flex items-center gap-3"

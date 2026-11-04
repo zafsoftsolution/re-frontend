@@ -12,6 +12,7 @@ import React, {
 import type { AdminUser } from "@/types/admin";
 import {
   djangoAdmin,
+  DjangoApiError,
   sessionSnapshot,
   subscribeSession,
   type AdminUserShape,
@@ -80,7 +81,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   // server-rendering / hydrating, "" when signed out, "1|<json>" otherwise.
   const snapshot = useSyncExternalStore(subscribeSession, sessionSnapshot, serverSnapshot);
   // Has /auth/me/ confirmed the stored session in this page load?
-  const [verified, setVerified] = useState<"pending" | "ok" | "failed">("pending");
+  // "unreachable": /me failed for a network / 5xx reason — keep the
+  // session (the cached identity) instead of logging the admin out.
+  const [verified, setVerified] = useState<"pending" | "ok" | "failed" | "unreachable">("pending");
   const hasToken = !!snapshot;
 
   useEffect(() => {
@@ -89,10 +92,15 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     // me() refreshes the cached user (→ snapshot) on success.
     djangoAdmin.me().then(
       () => !cancelled && setVerified("ok"),
-      () => {
+      (err: unknown) => {
         if (cancelled) return;
-        djangoAdmin.logout().catch(() => {});
-        setVerified("failed");
+        // Only a rejected session (401/403 after the refresh attempt) logs out.
+        if (err instanceof DjangoApiError && (err.status === 401 || err.status === 403)) {
+          djangoAdmin.logout().catch(() => {});
+          setVerified("failed");
+        } else {
+          setVerified("unreachable");
+        }
       },
     );
     return () => {

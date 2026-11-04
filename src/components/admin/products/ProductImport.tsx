@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { ArrowLeft, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload, XCircle } from "lucide-react";
-import { djangoAdmin, type ProductImportResult } from "@/lib/django-admin";
+import { djangoAdmin, DjangoApiError, type ProductImportResult } from "@/lib/django-admin";
 import { useConfirm, useToast } from "@/context/FeedbackContext";
 import PageHeader from "@/components/admin/PageHeader";
 import { btn } from "@/components/admin/ui/AdminDialog";
@@ -37,11 +37,14 @@ export default function ProductImport() {
   const [report, setReport] = useState<ProductImportResult | null>(null);
   const [busy, setBusy] = useState<"dry" | "apply" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Field-level errors from a rejected upload (e.g. {file: [...], dry_run: [...]}).
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [showUnchanged, setShowUnchanged] = useState(false);
 
   function pick(f: File | null) {
     setReport(null);
     setError(null);
+    setFieldErrors({});
     if (!f) return setFile(null);
     if (!/\.(csv|xlsx)$/i.test(f.name)) {
       setFile(null);
@@ -66,6 +69,7 @@ export default function ProductImport() {
     }
     setBusy(dryRun ? "dry" : "apply");
     setError(null);
+    setFieldErrors({});
     try {
       const r = await djangoAdmin.products.importFile(file, dryRun);
       setReport(r);
@@ -75,7 +79,12 @@ export default function ProductImport() {
         toast.error("Nothing imported", `${r.error_count} row(s) have errors.`);
       }
     } catch (e) {
-      setError((e as Error).message);
+      if (e instanceof DjangoApiError && Object.keys(e.fields).length) {
+        setFieldErrors(e.fields);
+        setError(typeof e.body.detail === "string" ? e.body.detail : "The file was rejected:");
+      } else {
+        setError((e as Error).message);
+      }
     } finally {
       setBusy(null);
     }
@@ -133,10 +142,28 @@ export default function ProductImport() {
                 accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 className="sr-only"
                 data-testid="import-file"
-                onChange={(e) => pick(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  pick(e.target.files?.[0] ?? null);
+                  // Reset so choosing the same (fixed) file again fires onChange.
+                  e.target.value = "";
+                }}
               />
             </label>
-            {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
+            {error && (
+              <div role="alert" className="mt-3 text-sm text-rose-700" data-testid="import-error">
+                <p>{error}</p>
+                {Object.keys(fieldErrors).length > 0 && (
+                  <ul className="mt-1 list-disc pl-5">
+                    {Object.entries(fieldErrors).map(([f, msgs]) => (
+                      <li key={f}>
+                        {f !== "non_field_errors" && f !== "__all__" && <span className="part-no text-[12px] mr-1">{f}:</span>}
+                        {msgs.join(" ")}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" className={btn.primary} disabled={!file || !!busy} onClick={() => run(true)} data-testid="import-dry-run">
                 {busy === "dry" ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} aria-hidden />}

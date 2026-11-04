@@ -1164,14 +1164,29 @@ function ConvertDialog({
 
   const unlinked = quote.items.filter((it) => !it.product);
 
+  // Blank = none; anything else must be a non-negative amount (never
+  // silently sent as 0).
+  const moneyError = (v: string) => {
+    if (!v.trim()) return "";
+    const n = toNumber(v);
+    return n === null || n < 0 ? "Enter an amount like 250 or 250.50." : "";
+  };
+  const shippingError = moneyError(shipping);
+  const taxError = moneyError(tax);
+  const [showMoneyErrors, setShowMoneyErrors] = useState(false);
+
   async function submit() {
+    if (shippingError || taxError) {
+      setShowMoneyErrors(true);
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
       const r = await djangoAdmin.rfq.convertToOrder(quote.id, {
         ...opts,
-        shipping: shipping ? toMoneyString(toNumber(shipping) ?? 0) : undefined,
-        tax: tax ? toMoneyString(toNumber(tax) ?? 0) : undefined,
+        shipping: shipping.trim() ? toMoneyString(toNumber(shipping) ?? 0) : undefined,
+        tax: tax.trim() ? toMoneyString(toNumber(tax) ?? 0) : undefined,
       });
       setDone({ number: r.order.order_number });
       onConverted(r.quote);
@@ -1267,11 +1282,13 @@ function ConvertDialog({
             </label>
             <label className="block">
               <span className={field.label}>Freight / delivery ({quote.currency})</span>
-              <input inputMode="decimal" className={field.input + " tabular"} value={shipping} onChange={(e) => setShipping(e.target.value)} placeholder="0.00" />
+              <input inputMode="decimal" className={field.input + " tabular"} value={shipping} onChange={(e) => setShipping(e.target.value)} onBlur={() => setShowMoneyErrors(true)} placeholder="0.00" aria-invalid={showMoneyErrors && !!shippingError} aria-describedby={showMoneyErrors && shippingError ? "convert-shipping-err" : undefined} data-testid="convert-shipping" />
+              {showMoneyErrors && shippingError && <p id="convert-shipping-err" className={field.error}>{shippingError}</p>}
             </label>
             <label className="block">
               <span className={field.label}>VAT / tax ({quote.currency})</span>
-              <input inputMode="decimal" className={field.input + " tabular"} value={tax} onChange={(e) => setTax(e.target.value)} placeholder="0.00" />
+              <input inputMode="decimal" className={field.input + " tabular"} value={tax} onChange={(e) => setTax(e.target.value)} onBlur={() => setShowMoneyErrors(true)} placeholder="0.00" aria-invalid={showMoneyErrors && !!taxError} aria-describedby={showMoneyErrors && taxError ? "convert-tax-err" : undefined} data-testid="convert-tax" />
+              {showMoneyErrors && taxError && <p id="convert-tax-err" className={field.error}>{taxError}</p>}
             </label>
           </div>
           <label className="block">
