@@ -16,6 +16,8 @@ interface Category extends Record<string, unknown> {
   banner_image: string;
   description: string;
   is_featured: boolean;
+  /** Listed under "Devices" in the site navigation instead of "Parts". */
+  is_device?: boolean;
   is_active: boolean;
   order: number;
   children: Array<{ id: string; name: string; slug: string }>;
@@ -71,6 +73,17 @@ const columns: Column<Category>[] = [
     ),
   },
   {
+    key: "device",
+    header: "Devices",
+    sortable: true,
+    accessor: (c) => (c.is_device ? "yes" : "no"),
+    render: (c) => (
+      <span className={`text-[11px] tracking-[0.18em] uppercase ${c.is_device ? "text-navy" : "text-ink/30"}`}>
+        {c.is_device ? "Device" : "—"}
+      </span>
+    ),
+  },
+  {
     key: "order",
     header: "Order",
     sortable: true,
@@ -119,10 +132,12 @@ export default function AdminCategories() {
         { key: "top", label: "Top level", predicate: (c) => !c.parent },
         { key: "sub", label: "Sub-categories", predicate: (c) => !!c.parent },
         { key: "featured", label: "Featured", predicate: (c) => c.is_featured },
+        { key: "devices", label: "Devices", predicate: (c) => !!c.is_device },
       ]}
       initialValues={{
         is_active: true,
         is_featured: false,
+        is_device: false,
         order: 0,
       }}
       fields={[
@@ -148,6 +163,12 @@ export default function AdminCategories() {
         { name: "banner_image", label: "Banner image", type: "imageUrl", full: true },
         ...descriptionFields(4),
         { name: "is_featured", label: "Featured", type: "boolean", placeholder: "Home page category grid" },
+        {
+          name: "is_device",
+          label: "Show under Devices",
+          type: "boolean",
+          placeholder: "List in the site's Devices menu (motors, control boxes, attachments…) instead of Parts",
+        },
         { name: "is_active", label: "Active", type: "boolean", placeholder: "Visible on the site" },
         ...seoFields(),
       ]}
