@@ -1,4 +1,4 @@
-import { ArrowRight, Check, FileSpreadsheet, MapPin, Phone, Truck, Wallet } from "lucide-react";
+import { ArrowRight, Check, Clock, FileSpreadsheet, MapPin, Phone, Truck, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PART_ICONS, partIconFor, type PartIconKey } from "@/components/icons/parts";
@@ -9,6 +9,8 @@ import { ScrollStage } from "@/components/scroll/ScrollStage";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Badge } from "@/components/ui/Badge";
 import { buttonClass } from "@/components/ui/button-styles";
+import { BUSINESS } from "@/config/business";
+import { HoursTable, useHoursShort } from "@/components/content/BusinessFacts";
 import type { CategorySummary, MachineBrandSummary, PartSummary, SiteSettings } from "@/lib/api/types";
 import type { HomeCopy } from "./content";
 
@@ -313,9 +315,18 @@ export function QuoteSteps({
   );
 }
 
-/** Facts only: address/phone from settings, delivery + payment + grades from messages. */
+/** Facts only: a spec strip (experience · BIN · area · hours, config/business),
+ *  address/phone from settings, delivery + payment + grades from messages. */
 export function TrustFacts({ settings, index, tel }: { settings: SiteSettings; index: string; tel: string }) {
   const t = useTranslations("home.trust");
+  const tb = useTranslations("business");
+  const hours = useHoursShort();
+  const strip = [
+    { label: tb("experienceLabel"), value: tb("experience"), mono: false },
+    { label: tb("vatRegistered"), value: `BIN ${BUSINESS.vatBin}`, mono: true },
+    { label: t("address"), value: tb("area"), mono: false },
+    { label: tb("hours"), value: hours, mono: false },
+  ];
   const pay = [...(settings.codEnabled ? (["cod"] as const) : []), "bkash", "nagad", "bank"] as const;
   const cell = "bg-re-paper p-5 sm:p-6";
   const head = "flex items-center gap-2 re-label";
@@ -328,15 +339,24 @@ export function TrustFacts({ settings, index, tel }: { settings: SiteSettings; i
         subtitle={t("sub")}
         action={<AllLink href="/about">{t("about")}</AllLink>}
       />
-      <div className="mt-6 grid gap-px border border-re-steel-200 bg-re-steel-200 md:grid-cols-2 lg:grid-cols-4">
+      <dl className="mt-6 grid grid-cols-2 border-y border-re-ink lg:grid-cols-4" data-testid="trust-strip">
+        {strip.map((f, i) => (
+          <div
+            key={f.label}
+            className={`px-3 py-3 sm:px-5 ${i % 2 ? "border-l border-re-steel-200" : ""} ${i > 1 ? "border-t border-re-steel-200 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
+          >
+            <dt className="re-label">{f.label}</dt>
+            <dd className={`mt-1 font-semibold text-re-ink ${f.mono ? "re-mono text-[0.875rem] whitespace-nowrap sm:text-[1rem]" : "text-[1rem]"}`}>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-4 grid gap-px border border-re-steel-200 bg-re-steel-200 md:grid-cols-2 lg:grid-cols-4">
         <div className={cell}>
           <p className={head}>
             <MapPin aria-hidden className="size-4 text-re-red" strokeWidth={1.75} />
             {t("address")}
           </p>
-          <address className="mt-3 not-italic whitespace-pre-line text-re-ink">
-            {settings.businessAddress || t("addressFallback")}
-          </address>
+          <address className="mt-3 not-italic whitespace-pre-line text-re-ink">{settings.businessAddress}</address>
           {settings.contactPhone && (
             <>
               <p className={`${head} mt-5`}>
@@ -348,6 +368,11 @@ export function TrustFacts({ settings, index, tel }: { settings: SiteSettings; i
               </a>
             </>
           )}
+          <p className={`${head} mt-5`}>
+            <Clock aria-hidden className="size-4 text-re-red" strokeWidth={1.75} />
+            {t("hours")}
+          </p>
+          <HoursTable className="mt-2 text-[0.875rem]" />
         </div>
         <div className={cell}>
           <p className={head}>

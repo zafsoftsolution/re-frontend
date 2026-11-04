@@ -13,6 +13,8 @@ import { ProcessScene } from "@/components/scroll/ProcessScene";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Badge } from "@/components/ui/Badge";
 import { buttonClass } from "@/components/ui/button-styles";
+import { BUSINESS, businessLocale } from "@/config/business";
+import { mono, SisterConcernNote } from "@/components/content/BusinessFacts";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/about">): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -29,10 +31,11 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/about">)
 const STEPS = ["1", "2", "3", "4", "5"] as const;
 
 /**
- * About — placeholder company story (editable in messages → about), what we
- * stock (live from the catalogue), the genuine/compatible policy, how we
- * work with factories (the page's one light scroll scene: a process rule
- * that draws as you read), and contact.
+ * About — the company story from the verified facts (messages → about,
+ * config/business: 35+ years, Mirpur-1, proprietor, licence, BIN, sister
+ * concern — no founding year), what we stock (live from the catalogue), the
+ * genuine/compatible policy, how we work with factories (the page's one
+ * light scroll scene: a process rule that draws as you read), and contact.
  */
 export default async function AboutPage({ params }: PageProps<"/[locale]/about">) {
   const locale = await resolveLocale(params);
@@ -41,10 +44,13 @@ export default async function AboutPage({ params }: PageProps<"/[locale]/about">
   const { settings, machineBrands, categories, partsBrands } = boot;
   const wa = whatsappHref(settings.whatsappNumber || settings.contactPhone, t("ui.askWhatsapp"));
   const tel = telHref(settings.contactPhone);
+  const tel2 = telHref(settings.contactPhoneSecondary ?? "");
+  const l = businessLocale(locale);
   const byName = <T extends { name: string }>(a: T, b: T) => a.name.localeCompare(b.name, "en", { sensitivity: "base" });
 
   const meta = [
     { label: t("about.facts.base"), value: t("about.facts.baseValue") },
+    { label: t("about.facts.experience"), value: t("about.facts.experienceValue") },
     ...(machineBrands.length ? [{ label: t("about.facts.machines"), value: machineBrands.length }] : []),
     ...(categories.length ? [{ label: t("about.facts.types"), value: categories.length }] : []),
     { label: t("about.facts.grades"), value: t("about.facts.gradesValue") },
@@ -68,30 +74,52 @@ export default async function AboutPage({ params }: PageProps<"/[locale]/about">
       <section aria-label={t("about.eyebrow")} className="re-shell mt-12 grid gap-8 lg:grid-cols-12">
         <div className="relative border-l-[3px] border-re-red pl-5 lg:col-span-8 sm:pl-7">
           <p className="text-[1.25rem] leading-[1.55] text-re-ink sm:text-[1.5rem] bn:leading-[1.75]">{t("about.story.p1")}</p>
-          <p className="mt-5 max-w-2xl text-[1.0625rem] text-re-steel-600">{t("about.story.p2")}</p>
+          <p className="mt-5 max-w-2xl text-[1.0625rem] text-re-ink">{t.rich("about.story.p2", { bin: BUSINESS.vatBin, mono })}</p>
+          <p className="mt-4 max-w-2xl text-[1.0625rem] text-re-steel-600">{t("about.story.p3")}</p>
+          <SisterConcernNote className="mt-6 max-w-2xl border-t border-dashed border-re-steel-200 pt-4 text-[0.9375rem] text-re-steel-600" />
         </div>
         <dl className="self-start border border-re-ink bg-re-paper text-[0.9375rem] lg:col-span-4">
           <div className="border-b border-re-ink px-4 py-2.5">
             <dt className="re-label text-re-ink">{t("about.factsLabel")}</dt>
           </div>
-          <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-3 border-b border-re-steel-200 px-4 py-3">
-            <dt className="text-re-steel-600">{t("home.trust.address")}</dt>
-            <dd className="whitespace-pre-line text-re-ink">{settings.businessAddress || t("home.trust.addressFallback")}</dd>
-          </div>
-          {settings.contactPhone && (
-            <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-3 border-b border-re-steel-200 px-4 py-3">
-              <dt className="text-re-steel-600">{t("home.trust.phone")}</dt>
-              <dd>
+          {[
+            { label: t("business.proprietor"), value: <span className="text-re-ink">{BUSINESS.proprietor[l]}</span> },
+            { label: t("home.trust.address"), value: <address className="not-italic text-re-ink">{settings.businessAddress}</address> },
+            {
+              label: t("business.mobile"),
+              value: (
                 <a href={tel} className="re-mono font-semibold text-re-ink hover:text-re-blue">
                   {settings.contactPhone}
                 </a>
-              </dd>
+              ),
+            },
+            ...(tel2
+              ? [{
+                  label: t("business.landline"),
+                  value: (
+                    <a href={tel2} className="re-mono font-semibold text-re-ink hover:text-re-blue">
+                      {settings.contactPhoneSecondary}
+                    </a>
+                  ),
+                }]
+              : []),
+            { label: t("business.vatRegistered"), value: <span className="re-mono text-re-ink">BIN {BUSINESS.vatBin}</span> },
+            {
+              label: t("business.tradeLicence"),
+              value: (
+                <span className="text-re-ink">
+                  <span className="re-mono break-all">{BUSINESS.tradeLicence.number}</span>
+                  <span className="block text-[0.8125rem] text-re-steel-600">{BUSINESS.tradeLicence.authority[l]}</span>
+                </span>
+              ),
+            },
+            { label: t("home.trust.payment"), value: <span className="text-re-ink">{t("footer.paymentMethods")}</span> },
+          ].map((r) => (
+            <div key={r.label} className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-3 border-b border-re-steel-200 px-4 py-3 last:border-b-0">
+              <dt className="text-re-steel-600">{r.label}</dt>
+              <dd className="min-w-0">{r.value}</dd>
             </div>
-          )}
-          <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-x-3 px-4 py-3">
-            <dt className="text-re-steel-600">{t("home.trust.payment")}</dt>
-            <dd className="text-re-ink">{t("footer.paymentMethods")}</dd>
-          </div>
+          ))}
         </dl>
       </section>
 

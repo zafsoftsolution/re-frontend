@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { Building2, Clock, Mail, MapPin, Phone, Store } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
 import { getBootstrap } from "@/lib/api/site";
+import type { SiteSettings } from "@/lib/api/types";
 import { telHref, whatsappHref } from "@/lib/format";
 import { localeUrl } from "@/lib/seo/metadata";
+import { BUSINESS, businessLocale, mapsSearchUrl } from "@/config/business";
 import { WhatsAppIcon } from "@/components/icons/brand";
 import { buttonClass } from "@/components/ui/button-styles";
 import { ContentPage, contentMetadata } from "@/components/content/ContentPage";
 import { ContactForm } from "@/components/content/ContactForm";
 import { IntlScope } from "@/components/content/IntlScope";
+import { HoursTable, RegistrationLines, SisterConcernNote } from "@/components/content/BusinessFacts";
 
 type Props = PageProps<"/[locale]/contact">;
 
@@ -20,25 +23,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return contentMetadata(locale, "/contact", t("title"), t("metaDescription"));
 }
 
-const HOURS = ["satThu", "fri"] as const;
+type T = Awaited<ReturnType<typeof getTranslations>>;
 
+/**
+ * Contact — two location cards (the walk-in sales centre first, then the
+ * corporate office), each with phones, WhatsApp, email and hours; then
+ * registration (BIN, trade licence) and the sister concern. Phones, email and
+ * the sales-centre address come from admin settings (defaults: config/business).
+ */
 export default async function ContactPage({ params }: Props) {
   const locale = await resolveLocale(params);
   setRequestLocale(locale);
   const [t, boot] = await Promise.all([getTranslations({ locale }), getBootstrap(locale)]);
   const s = boot.settings;
-  const tel = telHref(s.contactPhone);
-  const waNumber = s.whatsappNumber || s.contactPhone;
-  const wa = whatsappHref(waNumber, t("contact.waText"));
-  const address = s.businessAddress.trim();
-  const mapQuery = encodeURIComponent(address);
-
-  const rows = [
-    tel && { icon: <Phone aria-hidden className="size-5" strokeWidth={1.75} />, label: t("contact.phone"), value: <a href={tel} className="re-mono text-[1.25rem] font-semibold hover:text-re-blue">{s.contactPhone}</a>, note: t("contact.phoneNote") },
-    wa && { icon: <WhatsAppIcon className="size-5 text-re-whatsapp" />, label: t("contact.whatsapp"), value: <a href={wa} target="_blank" rel="noopener" className="re-mono text-[1.25rem] font-semibold hover:text-re-whatsapp">{waNumber}</a>, note: t("contact.whatsappNote") },
-    s.contactEmail && { icon: <Mail aria-hidden className="size-5" strokeWidth={1.75} />, label: t("contact.email"), value: <a href={`mailto:${s.contactEmail}`} className="text-[1.0625rem] font-semibold break-all hover:text-re-blue">{s.contactEmail}</a>, note: t("contact.emailNote") },
-    address && { icon: <MapPin aria-hidden className="size-5" strokeWidth={1.75} />, label: t("contact.address"), value: <address className="text-[1.0625rem] not-italic whitespace-pre-line">{address}</address>, note: "" },
-  ].filter(Boolean) as { icon: React.ReactNode; label: string; value: React.ReactNode; note: string }[];
+  const l = businessLocale(locale);
+  const salesAddress = s.businessAddress.trim();
 
   return (
     <ContentPage
@@ -50,71 +49,48 @@ export default async function ContactPage({ params }: Props) {
       lead={<p>{t("contact.lead")}</p>}
       jsonLd={[{ "@context": "https://schema.org", "@type": "ContactPage", name: t("contact.title"), url: localeUrl("/contact", locale), inLanguage: locale }]}
     >
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <div>
-          {rows.length > 0 ? (
-            <dl className="divide-y divide-re-steel-200 border-y border-re-ink">
-              {rows.map((r) => (
-                <div key={r.label} className="grid grid-cols-[2rem_1fr] gap-3 py-4">
-                  <span className="pt-0.5 text-re-steel-600">{r.icon}</span>
-                  <div className="min-w-0">
-                    <dt className="re-label">{r.label}</dt>
-                    <dd className="mt-1">{r.value}</dd>
-                    {r.note && <dd className="mt-1 text-[0.875rem] text-re-steel-600">{r.note}</dd>}
-                  </div>
-                </div>
-              ))}
-            </dl>
-          ) : (
-            <p className="border-l-[3px] border-re-steel-200 pl-3 text-re-steel-600">{t("contact.noDetails")}</p>
-          )}
-
-          <div className="mt-8">
-            <h2 className="re-label flex items-center gap-2">
-              <Clock aria-hidden className="size-4" strokeWidth={1.75} />
-              {t("contact.hoursTitle")}
-            </h2>
-            <dl className="mt-3 space-y-1.5 text-[0.9375rem]">
-              {HOURS.map((h) => (
-                <div key={h} className="flex justify-between gap-4 border-b border-dashed border-re-steel-200 pb-1.5">
-                  <dt>{t(`contact.hours.${h}.days`)}</dt>
-                  <dd className="re-mono">{t(`contact.hours.${h}.time`)}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-2 text-[0.8125rem] text-re-steel-600">{t("contact.hoursNote")}</p>
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)]">
+        <section aria-labelledby="contact-locations">
+          <h2 id="contact-locations" className="sr-only">
+            {t("contact.locationsTitle")}
+          </h2>
+          <div className="space-y-6">
+            <LocationCard
+              t={t}
+              settings={s}
+              icon={<Store aria-hidden className="size-5" strokeWidth={1.75} />}
+              name={BUSINESS.salesCentre.name[l]}
+              tag={t("business.salesCentreTag")}
+              address={salesAddress}
+              primary
+              map
+            />
+            <LocationCard
+              t={t}
+              settings={s}
+              icon={<Building2 aria-hidden className="size-5" strokeWidth={1.75} />}
+              name={BUSINESS.corporateOffice.name[l]}
+              tag={t("business.corporateTag")}
+              address={BUSINESS.corporateOffice.address[l]}
+            />
           </div>
 
-          {address && (
-            <div className="mt-8">
-              <a href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener" className={buttonClass({ variant: "secondary" })}>
-                <MapPin aria-hidden />
-                {t("contact.openMap")}
-              </a>
-              {/* Closed by default: the third-party map only loads when asked for (no JS needed). */}
-              <details className="mt-3 border border-re-steel-200">
-                <summary className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] font-semibold">{t("contact.showMap")}</summary>
-                <iframe
-                  title={t("contact.mapTitle")}
-                  src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="block aspect-[4/3] w-full border-0"
-                />
-              </details>
-            </div>
-          )}
+          <div className="mt-6 border border-re-steel-200 p-4 text-[0.9375rem]">
+            <p className="re-label">{t("business.registration")}</p>
+            <RegistrationLines className="mt-2 text-re-ink" />
+            <SisterConcernNote className="mt-3 border-t border-dashed border-re-steel-200 pt-3 text-[0.875rem] text-re-steel-600" />
+          </div>
 
-          <div className="mt-8 border border-re-steel-200 bg-re-steel-50 p-4 text-[0.9375rem]">
+          <div className="mt-6 border border-re-steel-200 bg-re-steel-50 p-4 text-[0.9375rem]">
             <p className="font-semibold">{t("contact.quoteTitle")}</p>
             <p className="mt-1 text-re-steel-600">{t("contact.quoteBody")}</p>
             <Link href="/rfq" className={buttonClass({ variant: "primary", size: "sm" }, "mt-3")}>
               {t("nav.rfqLong")}
             </Link>
           </div>
-        </div>
+        </section>
 
-        <section aria-labelledby="contact-form" className="relative border-t border-re-ink pt-5">
+        <section aria-labelledby="contact-form" className="relative self-start border-t border-re-ink pt-5">
           <span aria-hidden className="absolute -top-px left-0 h-[3px] w-12 bg-re-red" />
           <h2 id="contact-form" className="text-[1.375rem] font-bold">
             {t("contact.formTitle")}
@@ -126,5 +102,135 @@ export default async function ContactPage({ params }: Props) {
         </section>
       </div>
     </ContentPage>
+  );
+}
+
+function LocationCard({
+  t,
+  settings: s,
+  icon,
+  name,
+  tag,
+  address,
+  primary = false,
+  map = false,
+}: {
+  t: T;
+  settings: SiteSettings;
+  icon: React.ReactNode;
+  name: string;
+  tag: string;
+  address: string;
+  primary?: boolean;
+  map?: boolean;
+}) {
+  const tel = telHref(s.contactPhone);
+  const tel2 = telHref(s.contactPhoneSecondary ?? "");
+  const waNumber = s.whatsappNumber || s.contactPhone;
+  const wa = whatsappHref(waNumber, t("contact.waText"));
+  const mapUrl = address ? mapsSearchUrl(address) : "";
+  const row = "grid grid-cols-[1.5rem_minmax(0,1fr)] gap-3 border-b border-re-steel-200 py-3 last:border-b-0";
+  const value = "re-mono text-[1.0625rem] font-semibold hover:text-re-blue";
+
+  return (
+    <article className={primary ? "relative border border-re-ink" : "relative border border-re-steel-200"}>
+      {primary && <span aria-hidden className="absolute -top-px left-0 h-[3px] w-12 bg-re-red" />}
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-re-steel-200 px-4 py-3">
+        <h3 className="flex items-center gap-2 text-[1.125rem] font-bold text-re-ink">
+          <span className="text-re-steel-600">{icon}</span>
+          {name}
+        </h3>
+        <span className={primary ? "re-label !text-re-red-text" : "re-label"}>{tag}</span>
+      </header>
+
+      <div className="px-4">
+        {address && (
+          <div className={row}>
+            <MapPin aria-hidden className="mt-0.5 size-4 text-re-steel-600" strokeWidth={1.75} />
+            <dl className="min-w-0">
+              <dt className="sr-only">{t("business.address")}</dt>
+              <dd>
+                <address className="text-[1rem] not-italic">{address}</address>
+                <a href={mapUrl} target="_blank" rel="noopener" className="mt-1 inline-flex min-h-9 items-center text-[0.875rem] font-semibold text-re-blue hover:underline">
+                  {t("business.openMap")}
+                </a>
+              </dd>
+            </dl>
+          </div>
+        )}
+        {tel && (
+          <div className={row}>
+            <Phone aria-hidden className="mt-1 size-4 text-re-steel-600" strokeWidth={1.75} />
+            <dl className="min-w-0">
+              <dt className="re-label">{t("business.mobile")}</dt>
+              <dd className="mt-0.5">
+                <a href={tel} className={value}>{s.contactPhone}</a>
+              </dd>
+              {primary && <dd className="mt-0.5 text-[0.8125rem] text-re-steel-600">{t("contact.phoneNote")}</dd>}
+              {tel2 && (
+                <>
+                  <dt className="re-label mt-2">{t("business.landline")}</dt>
+                  <dd className="mt-0.5">
+                    <a href={tel2} className={value}>{s.contactPhoneSecondary}</a>
+                  </dd>
+                </>
+              )}
+            </dl>
+          </div>
+        )}
+        {wa && (
+          <div className={row}>
+            <WhatsAppIcon className="mt-1 size-4 text-re-whatsapp" />
+            <dl className="min-w-0">
+              <dt className="re-label">{t("business.whatsapp")}</dt>
+              <dd className="mt-0.5">
+                <a href={wa} target="_blank" rel="noopener" className="re-mono text-[1.0625rem] font-semibold hover:text-re-whatsapp">{waNumber}</a>
+              </dd>
+              {primary && <dd className="mt-0.5 text-[0.8125rem] text-re-steel-600">{t("contact.whatsappNote")}</dd>}
+            </dl>
+          </div>
+        )}
+        {s.contactEmail && (
+          <div className={row}>
+            <Mail aria-hidden className="mt-1 size-4 text-re-steel-600" strokeWidth={1.75} />
+            <dl className="min-w-0">
+              <dt className="re-label">{t("business.email")}</dt>
+              <dd className="mt-0.5">
+                <a href={`mailto:${s.contactEmail}`} className="text-[1rem] font-semibold break-all hover:text-re-blue">{s.contactEmail}</a>
+              </dd>
+              {primary && <dd className="mt-0.5 text-[0.8125rem] text-re-steel-600">{t("contact.emailNote")}</dd>}
+            </dl>
+          </div>
+        )}
+        <div className={row}>
+          <Clock aria-hidden className="mt-1 size-4 text-re-steel-600" strokeWidth={1.75} />
+          <dl className="min-w-0">
+            <dt className="re-label">{t("business.hours")}</dt>
+            <dd className="mt-1.5">
+              <HoursTable />
+            </dd>
+          </dl>
+        </div>
+      </div>
+
+      {map && address && (
+        <div className="border-t border-re-steel-200 p-4 pt-3">
+          {/* Closed by default: the third-party map only loads when asked for (no JS needed). */}
+          <details className="border border-re-steel-200">
+            <summary className="flex min-h-11 cursor-pointer items-center gap-2 px-3 text-[0.9375rem] font-semibold">
+              <MapPin aria-hidden className="size-4" strokeWidth={1.75} />
+              {t("contact.showMap")}
+            </summary>
+            <iframe
+              title={t("contact.mapTitle")}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="block aspect-[4/3] w-full border-0"
+            />
+          </details>
+        </div>
+      )}
+    </article>
   );
 }

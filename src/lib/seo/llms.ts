@@ -4,6 +4,7 @@
  */
 import type { SiteBootstrap } from "@/lib/api/types";
 import { splitPartsAndDevices } from "@/lib/catalog/devices";
+import { BUSINESS } from "@/config/business";
 
 export interface LlmsInput {
   siteUrl: string;
@@ -56,10 +57,18 @@ export function llmsTxt({ siteUrl, boot, guides }: LlmsInput): string {
 
   out.push("## Contact", "");
   const contact: string[] = [];
-  if (s.contactPhone) contact.push(`- Phone: ${s.contactPhone}`);
+  if (s.contactPhone) contact.push(`- Phone (mobile): ${s.contactPhone}`);
+  if (s.contactPhoneSecondary) contact.push(`- Phone (landline): ${s.contactPhoneSecondary}`);
   if (s.whatsappNumber) contact.push(`- WhatsApp: ${s.whatsappNumber}`);
   if (s.contactEmail) contact.push(`- Email: ${s.contactEmail}`);
-  if (s.businessAddress) contact.push(`- Address: ${oneLine(s.businessAddress)}`);
+  if (s.businessAddress) contact.push(`- Sales centre (walk-in): ${oneLine(s.businessAddress)}`);
+  contact.push(
+    `- Corporate office: ${BUSINESS.corporateOffice.address.en}`,
+    `- Opening hours: Saturday–Thursday ${BUSINESS.hours.open}–${BUSINESS.hours.close}; Friday closed`,
+    `- VAT registration: BIN ${BUSINESS.vatBin}`,
+    `- Trade licence: ${BUSINESS.tradeLicence.number} (${BUSINESS.tradeLicence.authority.en})`,
+    `- Experience: 35+ years in the garment-machine parts trade, Mirpur-1, Dhaka`,
+  );
   for (const [k, v] of Object.entries(s.social)) if (/^https?:\/\//i.test(v)) contact.push(`- ${k[0].toUpperCase()}${k.slice(1)}: ${v}`);
   out.push(...contact, link("Contact page", u("/contact")), link("About", u("/about")), "");
 

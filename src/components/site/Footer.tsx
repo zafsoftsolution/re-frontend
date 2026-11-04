@@ -1,10 +1,12 @@
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, Phone, PhoneCall } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Swoosh, WhatsAppIcon } from "@/components/icons/brand";
 import { buttonClass } from "@/components/ui/button-styles";
 import type { SiteSettings } from "@/lib/api/types";
 import { telHref, whatsappHref } from "@/lib/format";
+import { BUSINESS } from "@/config/business";
+import { useHoursShort } from "@/components/content/BusinessFacts";
 import { PRIMARY_NAV } from "./nav";
 
 const POLICIES = ["shipping", "returns", "payment", "privacy", "terms"] as const;
@@ -12,7 +14,9 @@ const POLICIES = ["shipping", "returns", "payment", "privacy", "terms"] as const
 export function Footer({ settings, year, showDevices }: { settings: SiteSettings; year: number; showDevices: boolean }) {
   const t = useTranslations();
   const tel = telHref(settings.contactPhone);
+  const tel2 = telHref(settings.contactPhoneSecondary ?? "");
   const wa = whatsappHref(settings.whatsappNumber || settings.contactPhone);
+  const hours = useHoursShort();
 
   return (
     <footer className="re-pb-bottom-bar mt-20 bg-re-ink text-white/80">
@@ -35,38 +39,58 @@ export function Footer({ settings, year, showDevices }: { settings: SiteSettings
 
         <div className="md:col-span-3">
           <h2 className="re-label !text-white/55">{t("footer.contactHeading")}</h2>
-          <ul className="mt-4 space-y-3 text-[0.9375rem]">
+          <ul className="mt-4 space-y-1.5 text-[0.9375rem]">
             {tel && (
               <li>
-                <a href={tel} className="inline-flex items-center gap-2.5 py-1 hover:text-white">
+                <a href={tel} className="inline-flex min-h-9 items-center gap-2.5 hover:text-white">
                   <Phone aria-hidden className="size-4 text-white/50" strokeWidth={1.75} />
                   <span className="re-mono">{settings.contactPhone}</span>
+                  <span className="sr-only">({t("business.mobile")})</span>
                 </a>
               </li>
             )}
-            {settings.whatsappNumber && (
+            {tel2 && (
               <li>
-                <a href={wa} target="_blank" rel="noopener" className="inline-flex items-center gap-2.5 py-1 hover:text-white">
+                <a href={tel2} className="inline-flex min-h-9 items-center gap-2.5 hover:text-white">
+                  <PhoneCall aria-hidden className="size-4 text-white/50" strokeWidth={1.75} />
+                  <span className="re-mono">{settings.contactPhoneSecondary}</span>
+                  <span className="text-[0.8125rem] text-white/50">{t("business.landline")}</span>
+                </a>
+              </li>
+            )}
+            {wa && (
+              <li>
+                <a href={wa} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center gap-2.5 hover:text-white">
                   <WhatsAppIcon className="size-4 text-white/50" />
-                  <span className="re-mono">{settings.whatsappNumber}</span>
+                  <span className="re-mono">{settings.whatsappNumber || settings.contactPhone}</span>
+                  <span className="text-[0.8125rem] text-white/50">{t("business.whatsapp")}</span>
                 </a>
               </li>
             )}
             {settings.contactEmail && (
               <li>
-                <a href={`mailto:${settings.contactEmail}`} className="inline-flex items-center gap-2.5 py-1 hover:text-white">
-                  <Mail aria-hidden className="size-4 text-white/50" strokeWidth={1.75} />
+                <a href={`mailto:${settings.contactEmail}`} className="inline-flex min-h-9 items-center gap-2.5 break-all hover:text-white">
+                  <Mail aria-hidden className="size-4 shrink-0 text-white/50" strokeWidth={1.75} />
                   {settings.contactEmail}
                 </a>
               </li>
             )}
-            <li className="flex gap-2.5">
+            <li className="flex gap-2.5 pt-1.5">
               <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-white/50" strokeWidth={1.75} />
-              <address className="not-italic whitespace-pre-line">
-                {settings.businessAddress || t("footer.addressFallback")}
-              </address>
+              <address className="not-italic whitespace-pre-line">{settings.businessAddress}</address>
+            </li>
+            <li className="flex gap-2.5 pt-1.5">
+              <Clock aria-hidden className="mt-0.5 size-4 shrink-0 text-white/50" strokeWidth={1.75} />
+              <span>{hours}</span>
             </li>
           </ul>
+          {/* Registration, spec-sheet style. */}
+          <dl className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 border-t border-white/10 pt-4 text-[0.8125rem]">
+            <dt className="text-white/50">{t("business.bin")}</dt>
+            <dd className="re-mono text-white/85">{BUSINESS.vatBin}</dd>
+            <dt className="text-white/50">{t("business.tradeLicence")}</dt>
+            <dd className="re-mono break-all text-white/85">{BUSINESS.tradeLicence.number}</dd>
+          </dl>
         </div>
 
         <nav aria-label={t("footer.catalogueHeading")} className="md:col-span-2">

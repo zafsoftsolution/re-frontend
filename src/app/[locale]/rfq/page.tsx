@@ -5,6 +5,7 @@ import { getBootstrap } from "@/lib/api/site";
 import { catalogMetadata } from "@/lib/seo/metadata";
 import { SheetHeader } from "@/components/catalog/SheetHeader";
 import { RfqForm } from "@/components/rfq/RfqForm";
+import { ContactLine } from "@/components/content/BusinessFacts";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/rfq">): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -29,7 +30,12 @@ export default async function RfqPage({ params }: PageProps<"/[locale]/rfq">) {
         crumbs={[{ label: t("nav.home"), href: "/" }, { label: t("rfq.title") }]}
         eyebrow={t("rfq.eyebrow")}
         title={t("rfq.heading")}
-        lead={<p>{t("rfq.lead")}</p>}
+        lead={
+          <>
+            <p>{t("rfq.lead")}</p>
+            <ContactLine settings={boot.settings} reply className="mt-3" />
+          </>
+        }
         meta={[
           { label: t("rfq.meta.reply"), value: t("rfq.meta.replyValue") },
           { label: t("rfq.meta.files"), value: "XLSX · CSV · PDF · JPG" },

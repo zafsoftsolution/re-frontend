@@ -125,28 +125,73 @@ export const WEBSITE_ID = `${SITE_URL}/#website`;
 
 const httpUrl = (v: string) => (/^https?:\/\/\S+$/i.test(v.trim()) ? v.trim() : "");
 
+export interface PostalAddressInput {
+  streetAddress: string;
+  addressLocality?: string;
+  postalCode?: string;
+  addressRegion?: string;
+  addressCountry?: string;
+}
+
 export interface OrgInput {
   name: string;
+  legalName?: string;
   description?: string;
   logoUrl?: string;
-  telephone?: string;
+  /** One number or several (first = primary, used for the ContactPoint). */
+  telephone?: string | string[];
   email?: string;
-  address?: string;
+  /** Free text (admin-edited) or structured parts. */
+  address?: string | PostalAddressInput;
+  /** Further premises (e.g. a corporate office), emitted as Organization.location. */
+  locations?: { name: string; address: PostalAddressInput }[];
+  openingHours?: { days: readonly string[]; opens: string; closes: string };
+  /** VAT registration number (Bangladesh BIN). */
+  vatID?: string;
   social?: Record<string, string>;
 }
 
+function postalAddress(a: string | PostalAddressInput | undefined): Thing | null {
+  if (!a) return null;
+  if (typeof a === "string") {
+    const street = a.replace(/\s+/g, " ").trim();
+    return street ? { "@type": "PostalAddress", streetAddress: street, addressCountry: "BD" } : null;
+  }
+  const clean = Object.fromEntries(Object.entries(a).map(([k, v]) => [k, (v ?? "").replace(/\s+/g, " ").trim()]).filter(([, v]) => v));
+  if (!clean.streetAddress) return null;
+  return { "@type": "PostalAddress", addressCountry: "BD", ...clean };
+}
+
 /** Organization + Store (LocalBusiness) as one @graph, from bootstrap
- *  settings. Empty fields are omitted, never invented. */
+ *  settings and the verified business facts. Empty fields are omitted,
+ *  never invented (and there is deliberately no founding date). */
 export function organizationJsonLd(org: OrgInput): Thing {
   const logo = httpUrl(org.logoUrl ?? "") || absoluteUrl("/logo/rakib-enterprise.png");
   const sameAs = Object.values(org.social ?? {}).map(httpUrl).filter(Boolean);
-  const telephone = org.telephone?.trim();
+  const phones = (Array.isArray(org.telephone) ? org.telephone : [org.telephone ?? ""]).map((p) => p.trim()).filter(Boolean);
+  const telephone = phones.length > 1 ? phones : phones[0];
   const email = org.email?.trim();
-  const address = org.address?.replace(/\s+/g, " ").trim();
+  const address = postalAddress(org.address);
+  const vatID = org.vatID?.trim();
+  const legalName = org.legalName?.trim();
+  const locations = (org.locations ?? [])
+    .map((l) => ({ name: l.name, address: postalAddress(l.address) }))
+    .filter((l) => l.address)
+    .map((l) => ({ "@type": "Place", name: l.name, address: l.address }));
   const contact = {
     ...(telephone ? { telephone } : {}),
     ...(email ? { email } : {}),
   };
+  const hours = org.openingHours?.days.length
+    ? [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: [...org.openingHours.days],
+          opens: org.openingHours.opens,
+          closes: org.openingHours.closes,
+        },
+      ]
+    : null;
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -154,19 +199,24 @@ export function organizationJsonLd(org: OrgInput): Thing {
         "@type": "Organization",
         "@id": ORG_ID,
         name: org.name,
+        ...(legalName ? { legalName } : {}),
         url: absoluteUrl("/"),
         logo: { "@type": "ImageObject", url: logo },
         ...(org.description ? { description: org.description } : {}),
         ...contact,
+        ...(address ? { address } : {}),
+        ...(vatID ? { vatID } : {}),
+        ...(locations.length ? { location: locations } : {}),
         ...(sameAs.length ? { sameAs } : {}),
-        ...(telephone || email
+        ...(phones.length || email
           ? {
               contactPoint: {
                 "@type": "ContactPoint",
                 contactType: "sales",
                 areaServed: "BD",
                 availableLanguage: ["en", "bn"],
-                ...contact,
+                ...(phones[0] ? { telephone: phones[0] } : {}),
+                ...(email ? { email } : {}),
               },
             }
           : {}),
@@ -175,13 +225,16 @@ export function organizationJsonLd(org: OrgInput): Thing {
         "@type": "Store",
         "@id": STORE_ID,
         name: org.name,
+        ...(legalName ? { legalName } : {}),
         url: absoluteUrl("/"),
         image: absoluteUrl("/opengraph-image.png"),
         logo,
         ...(org.description ? { description: org.description } : {}),
         parentOrganization: { "@id": ORG_ID },
         ...contact,
-        ...(address ? { address: { "@type": "PostalAddress", streetAddress: address, addressCountry: "BD" } } : {}),
+        ...(address ? { address } : {}),
+        ...(vatID ? { vatID } : {}),
+        ...(hours ? { openingHoursSpecification: hours } : {}),
         ...(sameAs.length ? { sameAs } : {}),
       },
     ],

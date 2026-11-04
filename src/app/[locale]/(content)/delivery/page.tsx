@@ -8,6 +8,7 @@ import { ContentPage, contentMetadata, Prose } from "@/components/content/Conten
 import { Inline } from "@/components/content/RichText";
 import { WhatsAppLink } from "@/components/catalog/WhatsAppLink";
 import { buttonClass } from "@/components/ui/button-styles";
+import { ContactLine } from "@/components/content/BusinessFacts";
 
 type Props = PageProps<"/[locale]/delivery">;
 
@@ -20,9 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * Delivery areas, payment and VAT invoice info. All copy is draft placeholder
+ * Delivery areas, payment and VAT invoice info. Area/timing copy is draft
  * text in messages (`delivery.*`) for the client to edit — timings are
- * phrased as "ask us", never promised.
+ * phrased as "ask us", never promised. Contact numbers, hours and our BIN
+ * are the verified facts (settings / config/business).
  */
 export default async function DeliveryPage({ params }: Props) {
   const locale = await resolveLocale(params);
@@ -118,6 +120,7 @@ export default async function DeliveryPage({ params }: Props) {
         <div>
           <p className="font-semibold">{t("delivery.ctaTitle")}</p>
           <p className="mt-1 text-[0.9375rem] text-re-steel-600">{t("delivery.ctaBody")}</p>
+          <ContactLine settings={boot.settings} className="mt-2" />
         </div>
         <Link href="/rfq" className={buttonClass({ variant: "primary" }, "mt-4 md:mt-0")}>
           {t("nav.rfqLong")}

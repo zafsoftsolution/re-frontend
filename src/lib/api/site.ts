@@ -50,6 +50,7 @@ import type {
   SiteRedirect,
 } from "./types";
 import { normalizePartNumber } from "@/lib/part-number";
+import { withBusinessDefaults } from "@/config/business";
 
 type Raw = Record<string, unknown>;
 
@@ -142,11 +143,15 @@ export async function getBootstrap(locale: string): Promise<SiteBootstrap> {
     const rawSettings = (boot.settings && typeof boot.settings === "object" ? boot.settings : boot) as Raw;
     return {
       // `direct_orders_enabled` / `sales_mode` may sit at the top level.
-      settings: mapSettings({
-        ...rawSettings,
-        direct_orders_enabled: boot.direct_orders_enabled ?? rawSettings.direct_orders_enabled,
-        sales_mode: boot.sales_mode ?? rawSettings.sales_mode,
-      }),
+      // Empty contact fields fall back to the verified facts (config/business).
+      settings: withBusinessDefaults(
+        mapSettings({
+          ...rawSettings,
+          direct_orders_enabled: boot.direct_orders_enabled ?? rawSettings.direct_orders_enabled,
+          sales_mode: boot.sales_mode ?? rawSettings.sales_mode,
+        }),
+        locale,
+      ),
       categories: mapList(boot.categories, mapCategory),
       machineBrands: mapList(boot.machine_brands, mapMachineBrand),
       partsBrands: mapList(boot.parts_brands, mapPartsBrand),
@@ -165,7 +170,7 @@ export async function getBootstrap(locale: string): Promise<SiteBootstrap> {
   if (live) cacheLife("hours");
   else cacheLife("minutes");
   return {
-    settings: settings ? mapSettings(settings) : FALLBACK_SETTINGS,
+    settings: withBusinessDefaults(settings ? mapSettings(settings) : FALLBACK_SETTINGS, locale),
     // Top-level categories only (children are listed inside their parent).
     categories: (categories ?? []).filter((c, _i, all) =>
       !all.some((p) => p.children.some((ch) => ch.slug === c.slug)),

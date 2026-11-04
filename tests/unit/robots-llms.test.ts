@@ -120,7 +120,10 @@ describe("llms.txt", () => {
   });
 
   it("lists only the contact fields that are set", () => {
-    expect(txt).toContain("- Phone: 01711-000000");
+    expect(txt).toContain("- Phone (mobile): 01711-000000");
+    expect(txt).toContain("- VAT registration: BIN 002328131-0401");
+    expect(txt).toContain("- Opening hours: Saturday–Thursday 10:00–20:00; Friday closed");
+    expect(txt).not.toMatch(/landline|Sales centre/i);
     expect(txt).toContain("- Facebook: https://facebook.com/rakib");
     expect(txt).not.toMatch(/Email:|Address:|Instagram:|Youtube:/);
   });

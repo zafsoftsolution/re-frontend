@@ -14,6 +14,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { MobileBottomBar } from "@/components/site/MobileBottomBar";
 import { navData } from "@/components/site/nav";
+import { organizationFacts } from "@/config/business";
 import "./site.css";
 
 // Latin display/body — variable, with the width axis for condensed headings.
@@ -143,10 +144,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
             name: s.siteName || meta.siteName,
             description: meta.description,
             logoUrl: s.logoUrl,
-            telephone: s.contactPhone,
-            email: s.contactEmail,
-            address: s.businessAddress,
             social: s.social,
+            ...organizationFacts(s),
           })}
         />
         <Analytics analytics={s.analytics} />

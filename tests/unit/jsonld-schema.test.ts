@@ -17,6 +17,8 @@ import {
 } from "@/lib/seo/jsonld";
 import { mapPartDetail } from "@/lib/api/mappers";
 import { GUIDES } from "@/content/guides";
+import { FALLBACK_SETTINGS } from "@/lib/api/mappers";
+import { BUSINESS, organizationFacts, withBusinessDefaults } from "@/config/business";
 
 type Node = Record<string, unknown>;
 
@@ -39,6 +41,8 @@ const KNOWN_TYPES = new Set([
   "PostalAddress",
   "ContactPoint",
   "ContactPage",
+  "Place",
+  "OpeningHoursSpecification",
 ]);
 
 const isUrl = (v: unknown) => typeof v === "string" && /^https:\/\/[^\s]+$/.test(v);
@@ -153,6 +157,57 @@ describe("site-wide: Organization + Store", () => {
       parentOrganization: { "@id": ORG_ID },
       address: { "@type": "PostalAddress", streetAddress: "Shop 12, Nawabpur Road, Dhaka", addressCountry: "BD" },
     });
+  });
+
+  it("verified business facts (empty admin settings → defaults)", () => {
+    const s = withBusinessDefaults(FALLBACK_SETTINGS, "en");
+    const ld = roundTrip(organizationJsonLd({ name: s.siteName, logoUrl: s.logoUrl, social: s.social, ...organizationFacts(s) }));
+    expect(validate(ld)).toEqual([]);
+    const [org, store] = ld["@graph"] as Node[];
+    const address = {
+      "@type": "PostalAddress",
+      streetAddress: "4 No. S.N Mansion (Ground Floor), 1 No. Super Market, Kalwalapara",
+      addressLocality: "Mirpur-1, Dhaka",
+      postalCode: "1216",
+      addressRegion: "Dhaka",
+      addressCountry: "BD",
+    };
+    expect(org).toMatchObject({
+      name: "Rakib Enterprise",
+      legalName: "Rakib Enterprise",
+      telephone: ["+8801711279319", "+880248036796"],
+      email: "rakibenterprise2020@gmail.com",
+      vatID: "002328131-0401",
+      address,
+      contactPoint: { telephone: "+8801711279319" },
+    });
+    expect((org.location as Node[]).map((l) => (l.address as Node).streetAddress)).toEqual([
+      address.streetAddress,
+      "23 Chowdhury Mansion (1st Floor)",
+    ]);
+    expect(store).toMatchObject({
+      "@type": "Store",
+      telephone: ["+8801711279319", "+880248036796"],
+      vatID: "002328131-0401",
+      address,
+      openingHoursSpecification: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+          opens: "10:00",
+          closes: "20:00",
+        },
+      ],
+    });
+    const json = JSON.stringify(ld);
+    expect(json).not.toMatch(/foundingDate|founder|employee|2019|002659038/);
+  });
+
+  it("admin-edited address stays free text", () => {
+    const s = withBusinessDefaults({ ...FALLBACK_SETTINGS, business_address: "", businessAddress: "Shop 9, New Market, Dhaka" } as never, "en");
+    const [, store] = roundTrip(organizationJsonLd({ name: "Rakib Enterprise", ...organizationFacts(s) }))["@graph"] as Node[];
+    expect(store.address).toEqual({ "@type": "PostalAddress", streetAddress: "Shop 9, New Market, Dhaka", addressCountry: "BD" });
+    expect(BUSINESS.salesCentre.postal.postalCode).toBe("1216");
   });
 
   it("empty settings: nothing invented", () => {

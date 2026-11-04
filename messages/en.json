@@ -74,7 +74,6 @@
     "whatsappCta": "Message us on WhatsApp",
     "email": "Email",
     "address": "Address",
-    "addressFallback": "Dhaka, Bangladesh",
     "catalogueHeading": "Catalogue",
     "policiesHeading": "Policies",
     "shipping": "Shipping & delivery",
@@ -203,8 +202,7 @@
     "trust": {
       "heading": "Before you order",
       "sub": "How we work, in plain terms.",
-      "address": "Shop",
-      "addressFallback": "Dhaka, Bangladesh",
+      "address": "Sales centre",
       "phone": "Phone / WhatsApp",
       "delivery": "Delivery",
       "deliveryBody": "Dispatched from Dhaka by courier to anywhere in Bangladesh, or collect from us. Ask on WhatsApp for the time to your area.",
@@ -218,28 +216,31 @@
       "genuine": "Made or approved by the machine maker, under the original part number. Best for electronics, timing parts and anything under warranty.",
       "compatible": "Made to the OEM dimensions by a specialist maker. Same fit and part number, often easier to get.",
       "gradesNote": "Every listing says which one it is.",
-      "about": "About us"
+      "about": "About us",
+      "hours": "Opening hours"
     }
   },
   "about": {
-    "_note": "EDITABLE PLACEHOLDER COPY — replace with the owner's own words. Keep it factual: no founding year, client names or figures unless they are true and can be shown.",
     "metaTitle": "About us",
-    "metaDescription": "Rakib Enterprise is based in Dhaka and supplies genuine and compatible spare parts and devices for industrial sewing machines to garment factories, workshops and mechanics — with formal quotes, VAT invoices and delivery.",
+    "metaDescription": "Rakib Enterprise, Mirpur-1, Dhaka — 35+ years in the garment-machine parts trade. Importer and supplier of spare parts and devices for industrial sewing machines, with VAT invoices (BIN 002328131-0401).",
     "eyebrow": "About Rakib Enterprise",
     "title": "Spare parts and devices for the machines that keep garment lines running.",
-    "lead": "Based in Dhaka, we supply spare parts and devices for industrial sewing machines — not the machines themselves — to garment factories, maintenance teams, workshops and mechanics.",
+    "lead": "From Mirpur-1, Dhaka, we import and supply spare parts and devices for industrial sewing machines — not the machines themselves — to garment factories, maintenance teams, mechanics and resellers.",
     "story": {
-      "p1": "When a machine stops, a line stops. Our work is getting the right part to the floor quickly — the correct part number, for the right machine, genuine or a compatible part made to the same specification.",
-      "p2": "We work from part numbers, machine models and photos of the old part. If we are not sure a part fits, we ask before we quote."
+      "p1": "Rakib Enterprise is a garment-machine parts house in Mirpur-1, Dhaka, with more than 35 years in the trade. Under its proprietor, Md. Abul Hossain, we import and supply spare parts and devices for industrial sewing machines — for garment factories, mechanics and resellers.",
+      "p2": "We are a registered business, with a trade licence from Dhaka North City Corporation and VAT registration (BIN <mono>{bin}</mono>), so factories can get a proper VAT invoice for what they buy.",
+      "p3": "We work from part numbers, machine models and photos of the old part. If we are not sure a part fits, we ask before we quote."
     },
     "factsLabel": "At a glance",
     "facts": {
       "base": "Based in",
-      "baseValue": "Dhaka, Bangladesh",
+      "baseValue": "Mirpur-1, Dhaka",
       "machines": "Machine brands covered",
       "types": "Part types",
       "grades": "Grades",
-      "gradesValue": "Genuine · Compatible"
+      "gradesValue": "Genuine · Compatible",
+      "experience": "Experience",
+      "experienceValue": "35+ years"
     },
     "stockHeading": "What we stock",
     "stockSub": "Parts and devices for these machine brands, by type — all searchable by part number.",
@@ -804,32 +805,14 @@
   },
   "contact": {
     "title": "Contact",
-    "metaDescription": "Phone, WhatsApp, email and address of Rakib Enterprise — spare parts and devices for industrial sewing machines, Bangladesh.",
+    "metaDescription": "Phone, WhatsApp, email, opening hours and both addresses of Rakib Enterprise in Mirpur-1, Dhaka — spare parts and devices for industrial sewing machines.",
     "eyebrow": "Contact",
     "heading": "Talk to the parts desk",
     "lead": "The quickest way is WhatsApp with a part number or a photo. For a list of parts, send a quote request.",
-    "phone": "Phone",
     "phoneNote": "Best for urgent, line-down requests.",
-    "whatsapp": "WhatsApp",
     "whatsappNote": "Send part numbers, photos or your Excel list.",
-    "email": "Email",
     "emailNote": "For quotations, invoices and documents.",
-    "address": "Address",
     "waText": "Hello Rakib Enterprise, I have a question about a spare part.",
-    "noDetails": "Contact details are being updated. Please use the form — we reply by phone or email.",
-    "hoursTitle": "Opening hours",
-    "hours": {
-      "satThu": {
-        "days": "Saturday – Thursday",
-        "time": "10:00 – 19:00"
-      },
-      "fri": {
-        "days": "Friday",
-        "time": "Closed"
-      }
-    },
-    "hoursNote": "Hours may change on public holidays — WhatsApp messages are read as soon as we open.",
-    "openMap": "Open in Google Maps",
     "showMap": "Show map",
     "mapTitle": "Map of our location",
     "quoteTitle": "Have a list of parts?",
@@ -873,7 +856,38 @@
       "unavailable": "We couldn't send your message just now. Please try again or use WhatsApp.",
       "forbidden": "The message was blocked. Please reload the page and try again.",
       "failed": "Your message could not be sent. Please check the form and try again."
-    }
+    },
+    "locationsTitle": "Where to find us"
+  },
+  "business": {
+    "experience": "35+ years in the trade",
+    "experienceLabel": "Experience",
+    "area": "Mirpur-1, Dhaka",
+    "mobile": "Mobile / WhatsApp",
+    "landline": "Landline",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "address": "Address",
+    "hours": "Opening hours",
+    "hoursShort": "Sat–Thu {open}–{close} · Fri closed",
+    "satThu": "Saturday – Thursday",
+    "fri": "Friday",
+    "closed": "Closed",
+    "replyHours": "We reply within business hours, Sat–Thu {open}–{close}.",
+    "vatRegistered": "VAT registered",
+    "bin": "BIN",
+    "binLine": "VAT registered · BIN <mono>{bin}</mono>",
+    "tradeLicence": "Trade licence",
+    "tradeLicenceLine": "Trade licence <mono>{number}</mono> ({authority})",
+    "registration": "Registration",
+    "proprietor": "Proprietor",
+    "sisterConcern": "Sister concern",
+    "sisterNote": "Our sister concern <b>{name}</b> — {address} · <mono>{phone}</mono>",
+    "salesCentreTag": "Walk-in · main address",
+    "corporateTag": "Office",
+    "openMap": "Open in Google Maps",
+    "call": "Call",
+    "callOrWhatsapp": "Call or WhatsApp"
   },
   "delivery": {
     "title": "Delivery & payment",
@@ -927,7 +941,7 @@
       "title": "VAT invoice & BIN",
       "items": [
         "Need a VAT invoice? Add your company name and **BIN** to the quote request.",
-        "We confirm on the quotation what invoice we can issue for your order.",
+        "We are VAT registered — our BIN **002328131-0401** is printed on our quotations and invoices.",
         "Every quotation and invoice lists part numbers and quantities, ready for your purchase records."
       ]
     },

@@ -8,6 +8,8 @@ import { POLICY_SLUGS, type PolicySlug } from "@/content/slugs";
 import { ContentPage, contentMetadata, Prose } from "@/components/content/ContentPage";
 import { Inline } from "@/components/content/RichText";
 import { cn } from "@/lib/utils";
+import { getBootstrap } from "@/lib/api/site";
+import { ContactLine } from "@/components/content/BusinessFacts";
 
 type Props = PageProps<"/[locale]/policies/[slug]">;
 
@@ -42,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PolicyPage({ params }: Props) {
   const { locale, slug } = await load(params);
   setRequestLocale(locale);
-  const t = await getTranslations({ locale });
+  const [t, boot] = await Promise.all([getTranslations({ locale }), getBootstrap(locale)]);
   const sections = t.raw(`policies.items.${slug}.sections`) as PolicySection[];
 
   return (
@@ -90,6 +92,7 @@ export default async function PolicyPage({ params }: Props) {
               {t("policies.contactLink")}
             </Link>
           </p>
+          <ContactLine settings={boot.settings} className="mt-2 max-w-[68ch]" />
         </div>
         <nav aria-label={t("policies.title")} className="order-first lg:order-none">
           <p className="re-label">{t("policies.title")}</p>

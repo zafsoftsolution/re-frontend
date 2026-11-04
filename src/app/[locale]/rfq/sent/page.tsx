@@ -8,6 +8,7 @@ import { telHref } from "@/lib/format";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { buttonClass } from "@/components/ui/button-styles";
 import { WhatsAppLink } from "@/components/catalog/WhatsAppLink";
+import { ContactLine } from "@/components/content/BusinessFacts";
 
 type Props = PageProps<"/[locale]/rfq/sent">;
 
@@ -45,6 +46,7 @@ export default async function RfqSentPage({ params, searchParams }: Props) {
           <h1 className="text-[1.75rem] font-bold">{t("rfq.sent.errorTitle")}</h1>
           <p className="mt-3 text-[1.0625rem] text-re-ink">{FIX_CODES.has(code) ? t(`fixes.rfq.${code}` as never, { lines: badLines || "?" } as never) : t(`rfq.errors.${code}` as never)}</p>
           <p className="mt-2 text-re-steel-600">{t("rfq.sent.errorHelp")}</p>
+          <ContactLine settings={boot.settings} reply className="mt-3" />
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/rfq" className={buttonClass({ variant: "primary" })}>
               {t("rfq.sent.tryAgain")}
@@ -103,6 +105,7 @@ export default async function RfqSentPage({ params, searchParams }: Props) {
               {t("rfq.sent.call")} <span className="re-mono">{boot.settings.contactPhone}</span>
             </a>
           )}
+          <ContactLine settings={boot.settings} reply className="mt-4 border-t border-re-steel-200 pt-3 text-[0.875rem]" />
           <Link href="/search" className={buttonClass({ variant: "link" }, "mt-4")}>
             {t("rfq.sent.continue")}
           </Link>

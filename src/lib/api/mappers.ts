@@ -89,6 +89,7 @@ export function mapSettings(input: unknown): SiteSettings {
     siteName: str(input, "site_name") || FALLBACK_SETTINGS.siteName,
     tagline: str(input, "tagline", "site_tagline"),
     contactPhone: str(input, "contact_phone", "phone"),
+    contactPhoneSecondary: str(input, "contact_phone_secondary", "phone_secondary"),
     contactEmail: str(input, "contact_email", "email"),
     whatsappNumber: str(input, "whatsapp_number", "whatsapp"),
     businessAddress: str(input, "business_address", "address"),

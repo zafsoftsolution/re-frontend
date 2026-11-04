@@ -19,6 +19,8 @@ export interface SiteSettings {
   siteName: string;
   tagline: string;
   contactPhone: string;
+  /** Second number (landline). Optional — older backends don't send it. */
+  contactPhoneSecondary?: string;
   contactEmail: string;
   whatsappNumber: string;
   businessAddress: string;
