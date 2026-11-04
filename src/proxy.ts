@@ -3,6 +3,8 @@ import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { guardCatalogPath } from "./lib/api/catalog-index";
 import { catalogLookup } from "./lib/api/catalog-index-store";
+import { redirectTable } from "./lib/api/redirect-store";
+import { legacyRedirect, redirectUrl, resolveRedirect } from "./lib/redirects";
 import { SUBPATHS } from "./content/slugs";
 
 const handleI18nRouting = createMiddleware(routing);
@@ -29,9 +31,6 @@ const SECTIONS = new Set([
   "rfq",
   "cart",
   "checkout",
-  "account",
-  "login",
-  "register",
   "about",
   "contact",
   "delivery",
@@ -42,6 +41,13 @@ const SECTIONS = new Set([
 const CATALOG = new Set(["machines", "parts", "categories", "brands"]);
 
 export default async function proxy(request: NextRequest) {
+  // 1. Admin-managed redirects (in-memory copy; none while the backend is
+  //    unreachable), then the old storefront's URLs. Query strings are kept.
+  const { pathname } = request.nextUrl;
+  const redirect =
+    resolveRedirect(await redirectTable(), pathname) ?? legacyRedirect(pathname, routing.locales);
+  if (redirect) return NextResponse.redirect(redirectUrl(redirect, request.url), redirect.status);
+
   const segments = request.nextUrl.pathname.split("/").filter(Boolean);
   const prefixed = (routing.locales as readonly string[]).includes(segments[0] ?? "");
   const rest = prefixed ? segments.slice(1) : segments;
