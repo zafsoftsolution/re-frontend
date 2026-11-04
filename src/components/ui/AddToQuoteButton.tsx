@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, ListPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQuoteList, quoteItemKey } from "@/lib/stores/quote-list";
+import { announce } from "@/lib/announce";
 import { buttonClass, type ButtonSize } from "./button-styles";
 
 /**
@@ -31,13 +32,19 @@ export function AddToQuoteButton({
   const { items, add } = useQuoteList();
   const [justAdded, setJustAdded] = useState(false);
   const existing = items.find((i) => quoteItemKey(i) === quoteItemKey({ productSlug, partNumber, name }));
+  const label = justAdded ? t("addedToQuote") : existing ? t("inQuote", { qty: existing.qty }) : t("addToQuote");
+  // Distinct name per row ("Add to quote, B1109-552") — starts with the
+  // visible text (WCAG 2.5.3 label in name).
+  const which = partNumber || name;
 
   return (
     <button
       type="button"
+      aria-label={which ? `${label}, ${which}` : undefined}
       onClick={() => {
         add({ productSlug, partNumber, name, qty });
         setJustAdded(true);
+        announce(which ? `${t("addedToQuote")}: ${which}` : t("addedToQuote"));
         setTimeout(() => setJustAdded(false), 1600);
       }}
       className={buttonClass({ variant, size }, className)}
@@ -47,10 +54,7 @@ export function AddToQuoteButton({
       ) : (
         <ListPlus aria-hidden strokeWidth={1.75} />
       )}
-      <span>{justAdded ? t("addedToQuote") : existing ? t("inQuote", { qty: existing.qty }) : t("addToQuote")}</span>
-      <span aria-live="polite" className="sr-only">
-        {justAdded ? t("addedToQuote") : ""}
-      </span>
+      <span>{label}</span>
     </button>
   );
 }

@@ -194,6 +194,8 @@ export async function ListingView({
   );
 
   const activeCount = chips.length + (params.sort !== DEFAULT_SORT ? 1 : 0);
+  // Remount the (uncontrolled) filter forms whenever the URL state changes.
+  const formKey = JSON.stringify(listingQuery(params, { page: 1 }));
 
   return (
     <div className="grid gap-8 md:grid-cols-[15rem_minmax(0,1fr)] lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-10">
@@ -202,7 +204,7 @@ export async function ListingView({
           <h2 id="filters-heading" className="re-label mb-4 text-re-ink">
             {t("filters")}
           </h2>
-          <ListingForm action={action} auto defaultSort={DEFAULT_SORT}>
+          <ListingForm key={formKey} action={action} auto defaultSort={DEFAULT_SORT}>
             {fields("d")}
           </ListingForm>
         </div>
@@ -219,7 +221,7 @@ export async function ListingView({
           </p>
           <div className="md:hidden">
             <FilterSheet label={t("filters")} title={t("filters")} closeLabel={t("close")} activeCount={activeCount}>
-              <ListingForm action={action} defaultSort={DEFAULT_SORT}>
+              <ListingForm key={formKey} action={action} defaultSort={DEFAULT_SORT}>
                 {fields("m")}
               </ListingForm>
             </FilterSheet>
@@ -242,7 +244,7 @@ export async function ListingView({
                 <Link
                   href={href(c.remove)}
                   aria-label={t("removeFilter", { label: c.label })}
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-re border border-re-ink bg-re-paper px-2.5 text-[0.875rem] font-medium hover:bg-re-ink hover:text-white"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-re border border-re-ink bg-re-paper px-2.5 text-[0.875rem] font-medium hover:bg-re-ink hover:text-white"
                 >
                   {c.label}
                   <X aria-hidden className="size-3.5" />

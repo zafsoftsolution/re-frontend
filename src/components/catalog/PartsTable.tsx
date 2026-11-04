@@ -1,4 +1,6 @@
-import { useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
+import { getBootstrap } from "@/lib/api/site";
+import { isDirect } from "@/lib/sales";
 import { Link } from "@/i18n/navigation";
 import type { PartSummary } from "@/lib/api/types";
 import { DataTable, type Column } from "@/components/ui/DataTable";
@@ -23,7 +25,7 @@ export function gradeFor(isOem: boolean | null): PartGrade | null {
  * button (the only client prop that could carry a price) is mounted only
  * for them.
  */
-export function PartsTable({
+export async function PartsTable({
   parts,
   caption,
   showFits = true,
@@ -34,8 +36,11 @@ export function PartsTable({
   showFits?: boolean;
   className?: string;
 }) {
-  const t = useTranslations();
-  const anyDirect = parts.some((p) => p.salesMode === "direct" && p.price !== null);
+  const locale = await getLocale();
+  const [t, boot] = await Promise.all([getTranslations({ locale }), getBootstrap(locale)]);
+  const directOn = boot.settings.directOrdersEnabled;
+  const direct = (p: PartSummary) => isDirect(p, directOn);
+  const anyDirect = parts.some(direct);
 
   const name = (p: PartSummary, withThumb: boolean) => {
     const grade = gradeFor(p.brandIsOem);
@@ -119,7 +124,7 @@ export function PartsTable({
       header: t("catalog.listing.colPrice"),
       align: "right",
       width: "w-28",
-      cell: (p) => <Price amount={p.salesMode === "direct" ? p.price : null} size="sm" />,
+      cell: (p) => <Price amount={direct(p) ? p.price : null} size="sm" />,
     },
     {
       key: "cta",
@@ -129,9 +134,10 @@ export function PartsTable({
       width: anyDirect ? "w-48" : "w-40",
       cell: (p) => (
         <span className="flex flex-wrap justify-stretch gap-2 md:flex-col md:items-end [&>*]:flex-1 md:[&>*]:flex-none">
-          {p.salesMode === "direct" && p.price !== null && (
+          {direct(p) && (
             <AddToCartButton
               salesMode="direct"
+              directOrdersEnabled
               price={p.price}
               productSlug={p.slug}
               partNumber={p.partNumber}
@@ -146,7 +152,7 @@ export function PartsTable({
             name={p.name}
             qty={p.minOrderQuantity}
             size="sm"
-            variant={p.salesMode === "direct" ? "secondary" : "primary"}
+            variant={direct(p) ? "secondary" : "primary"}
             className="min-h-11 md:min-h-9"
           />
         </span>

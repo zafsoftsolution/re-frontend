@@ -6,11 +6,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { resolveLocale } from "@/i18n/params";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { getAllParts, getBootstrap, getCatalogIndex, getPart } from "@/lib/api/site";
+import { getAllParts, getBootstrap, getPart } from "@/lib/api/site";
 import type { MachineModelSummary, PartDetail, PartSummary } from "@/lib/api/types";
 import { imageSource, type ImageSource } from "@/lib/media";
 import { formatBDT } from "@/lib/format";
-import { breadcrumbJsonLd, placeholder, PRERENDER, topParams } from "@/lib/catalog/page";
+import { isDirect } from "@/lib/sales";
+import { breadcrumbJsonLd, placeholder, PRERENDER, topParams, prerenderIndex } from "@/lib/catalog/page";
 import { catalogMetadata, localeUrl } from "@/lib/seo/metadata";
 import { productJsonLd } from "@/lib/seo/jsonld";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -36,7 +37,7 @@ type Props = PageProps<"/[locale]/parts/[slug]">;
 export const instant = false;
 
 export async function generateStaticParams() {
-  const ix = await getCatalogIndex();
+  const ix = await prerenderIndex();
   return topParams(ix?.parts ?? [], PRERENDER.parts, () => 0, (slug) => ({ slug }), { slug: placeholder });
 }
 
@@ -100,7 +101,7 @@ export default async function PartPage({ params }: Props) {
     getBootstrap(locale),
     part.category ? getAllParts(locale, { category: part.category.slug }) : Promise.resolve([] as PartSummary[]),
   ]);
-  const direct = part.salesMode === "direct" && part.price !== null;
+  const direct = isDirect(part, boot.settings.directOrdersEnabled);
   const url = localeUrl(`/parts/${part.slug}`, locale);
   const whatsapp = boot.settings.whatsappNumber || boot.settings.contactPhone;
   const grade = gradeFor(part.brand ? part.brand.isOem : part.brandIsOem);
@@ -164,7 +165,7 @@ export default async function PartPage({ params }: Props) {
       <JsonLd
         data={[
           breadcrumbJsonLd(crumbs, locale, `/parts/${part.slug}`),
-          productJsonLd(part, { url, compatibleWith: part.machineModels.map((m) => `${m.brandName} ${m.name}`) }),
+          productJsonLd(direct ? part : { ...part, price: null }, { url, compatibleWith: part.machineModels.map((m) => `${m.brandName} ${m.name}`) }),
         ]}
       />
       <div className="re-shell py-5 md:py-8">

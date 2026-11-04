@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
-  "h-11 w-full min-w-0 rounded-re border border-re-steel-400 bg-re-paper px-3 text-base text-re-ink " +
+  "h-11 w-full min-w-0 rounded-re border border-re-steel-500 bg-re-paper px-3 text-base text-re-ink " +
   "placeholder:text-re-steel-600 transition-colors duration-150 ease-re " +
   "hover:border-re-steel-600 focus-visible:border-re-blue focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-re-blue " +
   "aria-invalid:border-re-red-text disabled:bg-re-steel-50 disabled:text-re-steel-600";
@@ -66,7 +66,7 @@ export function SearchInput({
       <button
         type="submit"
         className={cn(
-          "shrink-0 rounded-r-re bg-re-ink px-4 font-semibold text-white transition-colors duration-150 ease-re hover:bg-re-red",
+          "shrink-0 rounded-r-re bg-re-ink px-4 font-semibold text-white transition-colors duration-150 ease-re hover:bg-re-red-dark",
           lg ? "h-14 px-6 text-base" : "h-11 text-sm",
         )}
       >

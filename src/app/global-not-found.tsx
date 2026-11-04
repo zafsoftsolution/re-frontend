@@ -24,7 +24,7 @@ export default function GlobalNotFound() {
           <h1 className="mt-6 text-[2rem] md:text-[2.75rem]">This page isn&apos;t in the catalogue</h1>
           <p lang="bn" className="mt-2 text-xl text-re-steel-600">এই পেজটি ক্যাটালগে নেই</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/search" className="inline-flex h-11 items-center bg-re-red px-4 font-semibold text-white hover:bg-re-red-dark">
+            <Link href="/search" className="inline-flex h-11 items-center bg-re-red-dark px-4 font-semibold text-white hover:bg-re-red-deep">
               Search parts
             </Link>
             <Link href="/" className="inline-flex h-11 items-center border border-re-ink px-4 font-semibold hover:bg-re-ink hover:text-white">

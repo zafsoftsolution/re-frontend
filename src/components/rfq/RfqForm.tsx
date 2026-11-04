@@ -5,11 +5,13 @@ import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { Camera, FileSpreadsheet, FileText, ImageIcon, Loader2, Minus, Plus, Trash2, Upload, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { quoteItemKey, useQuoteList } from "@/lib/stores/quote-list";
+import { QUOTE_MAX_QTY, quoteItemKey, useQuoteList } from "@/lib/stores/quote-list";
 import { DELIVERY_AREAS } from "@/lib/forms/areas";
 import { checkFiles, fieldErrors, RFQ_ACCEPT, RFQ_MAX_FILES, rfqContactSchema, type FileError } from "@/lib/forms/schemas";
 import { rfqContactFromForm } from "@/lib/forms/forward";
 import { PartNumber } from "@/components/ui/PartNumber";
+import { QtyInput } from "@/components/ui/QtyInput";
+import { clampQty, qtyDraft } from "@/lib/qty";
 import { inputClass } from "@/components/ui/Input";
 import { buttonClass } from "@/components/ui/button-styles";
 import { cn } from "@/lib/utils";
@@ -80,6 +82,7 @@ const fmtSize = (b: number) => (b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(
  */
 export function RfqForm({ whatsapp }: { whatsapp: string }) {
   const t = useTranslations("rfq");
+  const tf = useTranslations("fixes.rfq");
   const locale = useLocale();
   const router = useRouter();
   const uid = useId();
@@ -174,7 +177,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
         productSlug: "",
         partNumber: l.pn.trim(),
         description: l.desc.trim(),
-        quantity: Math.max(1, Number(l.qty.replace(/\D/g, "")) || 1),
+        quantity: clampQty(l.qty, 1, 1_000_000),
         machineModel: l.model.trim(),
       })),
     ];
@@ -185,7 +188,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
 
     try {
       const res = await fetch("/api/rfq", { method: "POST", body: fd, headers: { Accept: "application/json" } });
-      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; reference?: string; code?: string; fields?: Record<string, string> };
+      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; reference?: string; code?: string; fields?: Record<string, string>; lines?: number[] };
       if (res.ok && body.ok && body.reference) {
         quote.clear();
         router.push(`/rfq/sent?ref=${encodeURIComponent(body.reference)}`);
@@ -194,6 +197,12 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
       const code = body.code ?? "failed";
       if (body.fields && typeof body.fields.phone === "string") setError("phone", { message: body.fields.phone });
       if (body.fields && typeof body.fields.email === "string") setError("email", { message: body.fields.email });
+      if (code === "invalid_lines" || code === "too_large") {
+        // Line numbers count the quote-list lines first, then the free-text lines.
+        const lines = Array.isArray(body.lines) ? body.lines.filter((n) => Number.isInteger(n)).slice(0, 50).join(", ") : "";
+        setSubmitError(tf(code, { lines: lines || "?" }));
+        return;
+      }
       setSubmitError(t.has(`errors.${code}` as never) ? t(`errors.${code}` as never) : t("errors.failed"));
     } catch {
       setSubmitError(t("errors.unavailable"));
@@ -253,20 +262,21 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
                           />
                         </label>
                       </div>
-                      <span className="col-start-2 inline-flex w-max items-stretch border border-re-steel-400 md:col-start-auto">
-                        <button type="button" aria-label={t("decrease")} onClick={() => quote.update(key, { qty: i.qty - 1 })} className="grid size-11 place-items-center hover:bg-re-steel-100">
+                      <span className="col-start-2 inline-flex w-max items-stretch border border-re-steel-500 md:col-start-auto">
+                        <button type="button" aria-label={`${t("decrease")}, ${i.partNumber || i.name}`} onClick={() => quote.update(key, { qty: i.qty - 1 })} className="grid size-11 place-items-center hover:bg-re-steel-100">
                           <Minus aria-hidden className="size-4" />
                         </button>
-                        <label className="flex items-center border-x border-re-steel-400">
-                          <span className="sr-only">{t("qty")}</span>
-                          <input
-                            inputMode="numeric"
+                        <label className="flex items-center border-x border-re-steel-500">
+                          <span className="sr-only">{`${t("qty")}, ${i.partNumber || i.name}`}</span>
+                          <QtyInput
                             value={i.qty}
-                            onChange={(e) => quote.update(key, { qty: Number(e.target.value.replace(/\D/g, "")) || 1 })}
+                            min={1}
+                            max={QUOTE_MAX_QTY}
+                            onCommit={(q) => quote.update(key, { qty: q })}
                             className="re-mono h-11 w-16 bg-transparent text-center outline-none"
                           />
                         </label>
-                        <button type="button" aria-label={t("increase")} onClick={() => quote.update(key, { qty: i.qty + 1 })} className="grid size-11 place-items-center hover:bg-re-steel-100">
+                        <button type="button" aria-label={`${t("increase")}, ${i.partNumber || i.name}`} onClick={() => quote.update(key, { qty: i.qty + 1 })} className="grid size-11 place-items-center hover:bg-re-steel-100">
                           <Plus aria-hidden className="size-4" />
                         </button>
                       </span>
@@ -316,7 +326,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
                   </label>
                   <label>
                     <span className="re-label mb-1 block md:sr-only">{t("col.qty")}</span>
-                    <input name="line_qty" value={l.qty} onChange={(e) => updateLine(l.id, { qty: e.target.value.replace(/[^\d০-৯]/g, "").slice(0, 7) })} inputMode="numeric" className={cn(inputClass, "re-mono text-center")} aria-label={`${t("col.qty")} ${n + 1}`} />
+                    <input name="line_qty" value={l.qty} onChange={(e) => updateLine(l.id, { qty: qtyDraft(e.target.value) })} onBlur={() => updateLine(l.id, { qty: String(clampQty(l.qty, 1, 1_000_000)) })} inputMode="numeric" className={cn(inputClass, "re-mono text-center")} aria-label={`${t("col.qty")} ${n + 1}`} />
                   </label>
                   <label>
                     <span className="re-label mb-1 block md:sr-only">{t("col.machine")}</span>
@@ -474,7 +484,7 @@ export function RfqForm({ whatsapp }: { whatsapp: string }) {
             <legend className="text-[0.9375rem] font-semibold">{t("field.preferred")}</legend>
             <div className="mt-2 flex flex-wrap gap-2">
               {(["whatsapp", "call", "email"] as const).map((v) => (
-                <label key={v} className="relative inline-flex min-h-11 cursor-pointer items-center gap-2 border border-re-steel-400 px-3.5 has-checked:border-re-ink has-checked:bg-re-ink has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-re-blue">
+                <label key={v} className="relative inline-flex min-h-11 cursor-pointer items-center gap-2 border border-re-steel-500 px-3.5 has-checked:border-re-ink has-checked:bg-re-ink has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-re-blue">
                   <input type="radio" value={v} className="sr-only" {...register("preferred_contact")} />
                   <span className="text-[0.9375rem] font-semibold">{t(`preferred.${v}`)}</span>
                 </label>

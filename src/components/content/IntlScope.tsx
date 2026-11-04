@@ -3,7 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 
 /** Namespaces the root layout already ships to client components. */
-const BASE = ["a11y", "header", "nav", "rfq", "ui"] as const;
+const BASE = ["a11y", "header", "nav", "rfq", "ui", "fixes"] as const;
 
 /**
  * Ships extra message namespaces to the client components below it (cart,

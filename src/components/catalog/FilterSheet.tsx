@@ -31,7 +31,7 @@ export function FilterSheet({
           <SlidersHorizontal aria-hidden strokeWidth={1.75} />
           {label}
           {activeCount > 0 && (
-            <span className="re-mono inline-grid h-5 min-w-5 place-items-center rounded-full bg-re-red px-1 text-[0.6875rem] leading-none text-white">
+            <span className="re-mono inline-grid h-5 min-w-5 place-items-center rounded-full bg-re-red-dark px-1 text-[0.6875rem] leading-none text-white">
               {activeCount}
             </span>
           )}

@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { getBootstrap, searchParts } from "@/lib/api/site";
 import type { PartSummary } from "@/lib/api/types";
 import { looksLikePartNumber } from "@/lib/part-number";
+import { isDirect } from "@/lib/sales";
 import { whatsappHref } from "@/lib/format";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { PartNumber } from "@/components/ui/PartNumber";
@@ -25,6 +26,8 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
   const q = query.trim();
   const [t, res, boot] = await Promise.all([getTranslations({ locale }), searchParts(locale, q), getBootstrap(locale)]);
   const number = boot.settings.whatsappNumber || boot.settings.contactPhone;
+  const directOn = boot.settings.directOrdersEnabled;
+  const priceOf = (p: PartSummary) => (isDirect(p, directOn) ? p.price : null);
 
   if (!q) return <p className="mt-8 text-re-steel-600">{t("search.empty")}</p>;
 
@@ -47,14 +50,14 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
       ),
     },
     { key: "stock", header: t("search.stock"), cell: (p) => <StockBadge availability={p.availability} />, width: "w-36" },
-    { key: "price", header: t("search.price"), align: "right", cell: (p) => <Price amount={p.price} size="sm" />, width: "w-40" },
+    { key: "price", header: t("search.price"), align: "right", cell: (p) => <Price amount={priceOf(p)} size="sm" />, width: "w-40" },
     {
       key: "cta",
       header: <span className="sr-only">{t("ui.addToQuote")}</span>,
       align: "right",
       cell: (p) => (
         <span className="inline-flex flex-wrap justify-end gap-2">
-          <AddToCartButton salesMode={p.salesMode} price={p.price} productSlug={p.slug} partNumber={p.partNumber} name={p.name} size="sm" />
+          <AddToCartButton salesMode={p.salesMode} directOrdersEnabled={directOn} price={p.price} productSlug={p.slug} partNumber={p.partNumber} name={p.name} size="sm" />
           <AddToQuoteButton productSlug={p.slug} partNumber={p.partNumber} name={p.name} size="sm" />
         </span>
       ),
@@ -90,11 +93,11 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
                 <StockBadge availability={res.exact.availability} />
                 {res.exact.brandName && <span>{res.exact.brandName}</span>}
                 {res.exact.categoryName && <span>{res.exact.categoryName}</span>}
-                <Price amount={res.exact.price} size="sm" />
+                <Price amount={priceOf(res.exact)} size="sm" />
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <AddToCartButton salesMode={res.exact.salesMode} price={res.exact.price} productSlug={res.exact.slug} partNumber={res.exact.partNumber} name={res.exact.name} />
+              <AddToCartButton salesMode={res.exact.salesMode} directOrdersEnabled={directOn} price={res.exact.price} productSlug={res.exact.slug} partNumber={res.exact.partNumber} name={res.exact.name} />
               <AddToQuoteButton productSlug={res.exact.slug} partNumber={res.exact.partNumber} name={res.exact.name} />
               <Link href={`/parts/${res.exact.slug}`} className={buttonClass({ variant: "ghost" })}>
                 {t("search.viewPart")}
@@ -122,7 +125,7 @@ export async function SearchResultsView({ locale, query }: { locale: Locale; que
               <li key={`m-${m.slug}`}>
                 <Link
                   href={`/machines/${m.brandSlug}/${m.slug}`}
-                  className="inline-flex min-h-11 items-center gap-2 border border-re-steel-400 px-3 text-[0.9375rem] hover:border-re-ink"
+                  className="inline-flex min-h-11 items-center gap-2 border border-re-steel-500 px-3 text-[0.9375rem] hover:border-re-ink"
                 >
                   <span className="text-re-steel-600">{m.brandName}</span>
                   <span className="re-mono font-semibold">{m.name}</span>

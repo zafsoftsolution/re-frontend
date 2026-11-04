@@ -21,7 +21,7 @@ function CountBubble({ count, className }: { count: number; className?: string }
     <span
       aria-hidden
       className={cn(
-        "re-mono inline-grid h-5 min-w-5 place-items-center rounded-full bg-re-red px-1 text-[0.6875rem] font-semibold leading-none text-white",
+        "re-mono inline-grid h-5 min-w-5 place-items-center rounded-full bg-re-red-dark px-1 text-[0.6875rem] font-semibold leading-none text-white",
         className,
       )}
     >

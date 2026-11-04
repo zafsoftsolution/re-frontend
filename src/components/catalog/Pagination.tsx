@@ -22,7 +22,7 @@ export function Pagination({
   return (
     <nav aria-label={t("pagination")} className="mt-8 flex flex-wrap items-center gap-2">
       {page > 1 ? (
-        <Link href={href(page - 1)} rel="prev" className={cn(cell, "gap-1 border-re-steel-400 px-3 hover:border-re-ink")}>
+        <Link href={href(page - 1)} rel="prev" className={cn(cell, "gap-1 border-re-steel-500 px-3 hover:border-re-ink")}>
           <ChevronLeft aria-hidden className="size-4" />
           {t("prev")}
         </Link>
@@ -53,7 +53,7 @@ export function Pagination({
         )}
       </ol>
       {page < pageCount ? (
-        <Link href={href(page + 1)} rel="next" className={cn(cell, "gap-1 border-re-steel-400 px-3 hover:border-re-ink")}>
+        <Link href={href(page + 1)} rel="next" className={cn(cell, "gap-1 border-re-steel-500 px-3 hover:border-re-ink")}>
           {t("next")}
           <ChevronRight aria-hidden className="size-4" />
         </Link>

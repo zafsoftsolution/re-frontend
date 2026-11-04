@@ -8,6 +8,7 @@ import { useCart } from "@/lib/stores/cart";
 import { formatBDT } from "@/lib/format";
 import { CHECKOUT_MAX_QTY } from "@/lib/forms/schemas";
 import { PartNumber } from "@/components/ui/PartNumber";
+import { QtyInput } from "@/components/ui/QtyInput";
 import { buttonClass } from "@/components/ui/button-styles";
 import { moveToQuote, setCartQty, unitPrice, useLiveLines } from "./live-cart";
 
@@ -72,22 +73,23 @@ export function CartView() {
                     </p>
                   )}
                 </div>
-                <span className="row-span-2 inline-flex w-max items-stretch self-start border border-re-steel-400 md:row-span-1 md:self-center">
-                  <button type="button" aria-label={t("decrease")} onClick={() => setCartQty(i.productSlug, i.qty - 1)} className="grid size-11 place-items-center hover:bg-re-steel-100">
+                <span className="row-span-2 inline-flex w-max items-stretch self-start border border-re-steel-500 md:row-span-1 md:self-center">
+                  <button type="button" aria-label={`${t("decrease")}, ${i.partNumber || i.name}`} onClick={() => setCartQty(i.productSlug, i.qty - 1)} className="grid size-11 place-items-center hover:bg-re-steel-100">
                     <Minus aria-hidden className="size-4" />
                   </button>
-                  <label className="flex items-center border-x border-re-steel-400">
-                    <span className="sr-only">{t("qty")}</span>
-                    <input
-                      inputMode="numeric"
+                  <label className="flex items-center border-x border-re-steel-500">
+                    <span className="sr-only">{`${t("qty")}, ${i.partNumber || i.name}`}</span>
+                    <QtyInput
                       value={i.qty}
-                      onChange={(e) => setCartQty(i.productSlug, Number(e.target.value.replace(/\D/g, "")) || 1)}
+                      min={1}
+                      max={CHECKOUT_MAX_QTY}
+                      onCommit={(q) => setCartQty(i.productSlug, q)}
                       className="re-mono h-11 w-14 bg-transparent text-center outline-none"
                     />
                   </label>
                   <button
                     type="button"
-                    aria-label={t("increase")}
+                    aria-label={`${t("increase")}, ${i.partNumber || i.name}`}
                     disabled={i.qty >= CHECKOUT_MAX_QTY}
                     onClick={() => setCartQty(i.productSlug, i.qty + 1)}
                     className="grid size-11 place-items-center hover:bg-re-steel-100 disabled:opacity-40"

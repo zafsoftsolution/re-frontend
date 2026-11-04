@@ -1150,5 +1150,11 @@
     "searchParts": "Search parts",
     "askTopic": "Want a guide on something else?",
     "askLink": "Tell us"
+  },
+  "fixes": {
+    "rfq": {
+      "invalid_lines": "Line {lines} could not be read. Each line needs a part number or a description, and a quantity of 1 or more. Nothing was sent — fix the line and try again.",
+      "too_large": "The upload is too large. Attach at most 5 files of up to 10 MB each, or send the list on WhatsApp."
+    }
   }
 }

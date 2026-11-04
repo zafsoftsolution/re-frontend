@@ -41,7 +41,7 @@ export function Select({
       <BaseSelect.Trigger
         aria-label={label}
         className={cn(
-          "flex h-11 min-w-40 items-center justify-between gap-2 rounded-re border border-re-steel-400 bg-re-paper px-3 text-left text-[0.9375rem]",
+          "flex h-11 min-w-40 items-center justify-between gap-2 rounded-re border border-re-steel-500 bg-re-paper px-3 text-left text-[0.9375rem]",
           "hover:border-re-steel-600 data-popup-open:border-re-ink",
           className,
         )}

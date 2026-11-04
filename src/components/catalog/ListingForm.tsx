@@ -7,7 +7,11 @@ import { cn } from "@/lib/utils";
 /**
  * Filter form island. Without JS it is a plain GET form (works everywhere).
  * With JS it navigates client-side with a clean query string (empty fields
- * and the default sort dropped) and, when `auto`, applies on every change.
+ * and the default sort dropped). With `auto`, checkboxes apply immediately;
+ * selects never do (arrowing through a native <select> fires `change` on
+ * every step, which would navigate per keystroke) — they wait for Apply.
+ * Callers key the form by the current query so removing a chip resets the
+ * uncontrolled fields.
  */
 export function ListingForm({
   action,
@@ -45,7 +49,14 @@ export function ListingForm({
         e.preventDefault();
         go(e.currentTarget);
       }}
-      onChange={auto ? (e) => go(e.currentTarget) : undefined}
+      onChange={
+        auto
+          ? (e) => {
+              const target = e.target as HTMLElement;
+              if (target instanceof HTMLInputElement && target.type === "checkbox") go(e.currentTarget);
+            }
+          : undefined
+      }
       className={cn("transition-opacity duration-150 aria-busy:opacity-60", className)}
     >
       {children}

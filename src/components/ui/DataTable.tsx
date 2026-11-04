@@ -95,9 +95,11 @@ export function DataTable<T>({
             <dl className="grid grid-cols-[minmax(6.5rem,auto)_1fr] gap-x-3 gap-y-1.5 text-[0.9375rem]">
               {rest.map((c) =>
                 c.mobileFull ? (
-                  <dd key={c.key} className="col-span-2 mt-1 min-w-0">
-                    {c.cell(row)}
-                  </dd>
+                  // Every <dd> needs its <dt>; the label is visually hidden here.
+                  <div key={c.key} className="contents">
+                    <dt className="sr-only">{c.header}</dt>
+                    <dd className="col-span-2 mt-1 min-w-0">{c.cell(row)}</dd>
+                  </div>
                 ) : (
                   <div key={c.key} className="contents">
                     <dt className="re-label self-center">{c.header}</dt>

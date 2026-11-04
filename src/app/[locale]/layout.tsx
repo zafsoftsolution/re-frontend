@@ -100,7 +100,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
 }
 
 /** NextIntlClientProvider only ships the namespaces client components use. */
-const CLIENT_NAMESPACES = ["a11y", "header", "nav", "rfq", "ui"] as const;
+const CLIENT_NAMESPACES = ["a11y", "header", "nav", "rfq", "ui", "fixes"] as const;
 
 export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;

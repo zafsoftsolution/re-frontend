@@ -60,7 +60,7 @@ export function Hero({
                     <Link
                       key={pn}
                       href={{ pathname: "/search", query: { q: pn } }}
-                      className="re-mono inline-flex min-h-9 items-center rounded-re-sm border border-re-steel-400 bg-re-paper px-2.5 text-[0.8125rem] text-re-ink transition-colors duration-150 hover:border-re-ink hover:text-re-blue"
+                      className="re-mono inline-flex min-h-11 items-center rounded-re-sm border border-re-steel-500 bg-re-paper px-2.5 text-[0.8125rem] text-re-ink transition-colors duration-150 hover:border-re-ink hover:text-re-blue"
                     >
                       {pn}
                     </Link>

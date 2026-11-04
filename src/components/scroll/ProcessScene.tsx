@@ -29,7 +29,7 @@ export function ProcessScene({ steps, active = 0, className }: { steps: ProcessS
               aria-hidden
               className={cn(
                 "re-mono relative grid size-10 place-items-center border border-re-ink bg-re-paper text-[0.9375rem] font-semibold text-re-ink",
-                "transition-colors duration-150 group-data-[active=true]/s:border-re-red group-data-[active=true]/s:bg-re-red group-data-[active=true]/s:text-white",
+                "transition-colors duration-150 group-data-[active=true]/s:border-re-red-dark group-data-[active=true]/s:bg-re-red-dark group-data-[active=true]/s:text-white",
               )}
             >
               {String(i + 1).padStart(2, "0")}

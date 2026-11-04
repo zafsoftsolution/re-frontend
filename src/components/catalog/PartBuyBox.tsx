@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { AddToQuoteButton } from "@/components/ui/AddToQuoteButton";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { QtyInput } from "@/components/ui/QtyInput";
 import { QUOTE_MAX_QTY } from "@/lib/stores/quote-list";
 
 /**
@@ -36,18 +37,16 @@ export function PartBuyBox({
       <div className="flex flex-wrap items-end gap-3">
         <label className="block">
           <span className="re-label mb-1.5 block">{labels.qty}</span>
-          <span className="inline-flex items-stretch rounded-re border border-re-steel-400 bg-re-paper focus-within:border-re-blue">
+          <span className="inline-flex items-stretch rounded-re border border-re-steel-500 bg-re-paper focus-within:border-re-blue">
             <button type="button" className={btn} aria-label={labels.decrease} disabled={qty <= min} onClick={() => setQty((q) => clamp(q - 1))}>
               <Minus aria-hidden className="size-4" />
             </button>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={min}
-              step={1}
+            <QtyInput
               value={qty}
-              onChange={(e) => setQty(clamp(e.target.valueAsNumber))}
-              className="re-mono w-20 border-x border-re-steel-200 bg-transparent text-center text-lg font-medium outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              min={min}
+              max={QUOTE_MAX_QTY}
+              onCommit={setQty}
+              className="re-mono w-20 border-x border-re-steel-200 bg-transparent text-center text-lg font-medium outline-none"
             />
             <button type="button" className={btn} aria-label={labels.increase} onClick={() => setQty((q) => clamp(q + 1))}>
               <Plus aria-hidden className="size-4" />
@@ -66,13 +65,14 @@ export function PartBuyBox({
         {direct && (
           <AddToCartButton
             salesMode="direct"
+            directOrdersEnabled
             price={direct.price}
             productSlug={productSlug}
             partNumber={partNumber}
             name={name}
             qty={qty}
             size="lg"
-            className="h-12 flex-1 border-re-red bg-re-red text-white hover:border-re-red-dark hover:bg-re-red-dark sm:flex-none"
+            className="h-12 flex-1 border-re-red-dark bg-re-red-dark text-white hover:border-re-red-deep hover:bg-re-red-deep sm:flex-none"
           />
         )}
       </div>
