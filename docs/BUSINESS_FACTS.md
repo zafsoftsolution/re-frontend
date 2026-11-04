@@ -28,7 +28,7 @@ names, personal address or photo from the licence.
 - Admin → Settings (SiteSettings): `contact_phone` = mobile, `whatsapp_number` = mobile,
   `contact_email`, `business_address` (sales centre, en + bn), tagline.
 - Site copy: Contact page (both locations + landline + hours + sister concern),
-  About (since 2019, Mirpur-1, importer & supplier, proprietor), footer.
+  About (35+ years in the trade, Mirpur-1, importer & supplier, proprietor), footer.
 - JSON-LD `Store`: name, address (sales centre, postalCode 1216, addressLocality Dhaka,
   addressRegion Dhaka, addressCountry BD), telephone (mobile + landline),
-  email, openingHoursSpecification (Sa–Th 10:00–20:00), foundingDate 2019-10-21.
+  email, openingHoursSpecification (Sa–Th 10:00–20:00), vatID (BIN); no foundingDate.
