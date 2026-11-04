@@ -62,13 +62,13 @@ test.describe("desktop mega-menu", () => {
 test.describe("mobile", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("bottom bar finds parts by machine; sheet has Parts accordion", async ({ page }) => {
+  test("bottom bar has Devices (no machine tab); sheet has Parts accordion", async ({ page }) => {
     await page.goto("/");
-    const byMachine = page.getByRole("navigation", { name: "Quick actions" }).getByRole("link", { name: "By machine" });
-    await expect(byMachine).toHaveAttribute("href", "/machines");
+    const devices = page.getByRole("navigation", { name: "Quick actions" }).getByRole("link", { name: "Devices" });
+    await expect(devices).toHaveAttribute("href", "/categories#devices");
     await page.getByRole("button", { name: /open menu/i }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("link", { name: "Parts by machine" })).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "Find by model no." })).toBeVisible();
     const acc = dialog.getByRole("button", { name: /^Parts/ });
     if (await acc.count()) {
       await acc.click();

@@ -175,6 +175,17 @@ a { text-underline-offset: 2px; }
   outline-offset: 2px;
 }
 
+/* Composite fields (icon + bare input inside a bordered box, styled with a
+   `focus-within:` utility): ring the whole box once instead of drawing a
+   second ring around the inner input. */
+:where([class*="focus-within:"]):has(:is(input, textarea, select):focus-visible) {
+  outline: 2px solid var(--re-blue);
+  outline-offset: 2px;
+}
+:where([class*="focus-within:"]) :is(input, textarea, select):focus-visible {
+  outline: none;
+}
+
 ::selection {
   background: var(--re-ink);
   color: #ffffff;

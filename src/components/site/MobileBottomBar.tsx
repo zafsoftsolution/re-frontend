@@ -7,18 +7,19 @@ import { WhatsAppIcon } from "@/components/icons/brand";
 import { QuoteCount } from "@/components/ui/ListCount";
 import { whatsappHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { NutIcon, QuoteIcon, SewingMachineIcon, ShopIcon } from "./mobile/tab-icons";
+import { ServoMotorIcon } from "@/components/icons/parts";
+import { NutIcon, QuoteIcon, ShopIcon } from "./mobile/tab-icons";
 import { TAB_HREFS, TEXT_ENTRY_SELECTOR, nextBarState, tabAriaCurrent, type BarScrollState, type TabKey } from "./mobile/tabs";
 
 const TABS: readonly { key: TabKey; Icon: typeof ShopIcon }[] = [
   { key: "home", Icon: ShopIcon },
   { key: "parts", Icon: NutIcon },
-  { key: "byMachine", Icon: SewingMachineIcon },
+  { key: "devices", Icon: ServoMotorIcon },
   { key: "quote", Icon: QuoteIcon },
 ];
 
 /**
- * Phone/tablet tab bar (below lg): Home · Parts · By machine · Quote (count)
+ * Phone/tablet tab bar (below lg): Home · Parts · Devices · Quote (count)
  * · WhatsApp. Search lives in the header (full-screen sheet).
  *  - Active tab: red rule on top + ink label, aria-current.
  *  - 60px + the gesture-area inset; every cell ≥ 44px.
@@ -80,7 +81,7 @@ export function MobileBottomBar({ whatsapp }: { whatsapp: string }) {
     "outline-offset-[-3px] transition-colors duration-150 ease-re [-webkit-tap-highlight-color:transparent]";
 
   return (
-    <nav
+    <nav data-mobile-tabbar=""
       ref={bar}
       aria-label={t("a11y.mobileNav")}
       data-hidden={hidden || undefined}

@@ -22,8 +22,8 @@ describe("mobile tab bar — active tab", () => {
     ["/parts/db-1-needle", "parts"],
     ["/brands/organ", "parts"],
     ["/search?q=B1830", "parts"],
-    ["/machines", "byMachine"],
-    ["/machines/juki/ddl-8700", "byMachine"],
+    ["/machines", "parts"],
+    ["/machines/juki/ddl-8700", "parts"],
     ["/rfq", "quote"],
     ["/rfq/sent", "quote"],
     ["/cart", "quote"],
@@ -43,7 +43,7 @@ describe("mobile tab bar — active tab", () => {
     expect(tabAriaCurrent("parts", "/parts/x")).toBe("true");
     expect(tabAriaCurrent("quote", "/rfq")).toBe("page");
     expect(tabAriaCurrent("home", "/categories")).toBeUndefined();
-    expect(tabAriaCurrent("byMachine", "/about")).toBeUndefined();
+    expect(tabAriaCurrent("devices", "/about")).toBeUndefined();
   });
 
   it("exactly one tab is current on a tabbed page", () => {

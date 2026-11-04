@@ -2,20 +2,24 @@
  * Mobile tab bar logic — pure so it is unit-tested (tests/unit/mobile-shell.test.ts).
  */
 
-export type TabKey = "home" | "parts" | "byMachine" | "quote";
+export type TabKey = "home" | "parts" | "devices" | "quote";
 
 export const TAB_HREFS: Readonly<Record<TabKey, string>> = {
   home: "/",
   parts: "/categories",
-  byMachine: "/machines",
+  devices: "/categories#devices",
   quote: "/rfq",
 };
 
 /**
  * Which tab a (locale-less) pathname belongs to. Part pages, categories,
- * parts brands and search results all live under "Parts"; machine-brand and
- * model pages under "By machine"; the quote list, cart and checkout under
+ * parts brands, search results and the find-by-model-number lookup
+ * (/machines/*) all live under "Parts"; "Devices" is a shortcut into the
+ * devices section of /categories (hash anchors aren't visible server-side, so
+ * it is never the active tab); the quote list, cart and checkout under
  * "Quote". Content pages (about, contact, guides…) have no tab.
+ * The business sells parts and devices only — never machines — so there is
+ * deliberately no machine tab.
  */
 export function activeTab(pathname: string): TabKey | null {
   const seg = pathname.split(/[?#]/)[0].split("/").filter(Boolean);
@@ -25,9 +29,8 @@ export function activeTab(pathname: string): TabKey | null {
     case "parts":
     case "brands":
     case "search":
-      return "parts";
     case "machines":
-      return "byMachine";
+      return "parts";
     case "rfq":
     case "cart":
     case "checkout":
