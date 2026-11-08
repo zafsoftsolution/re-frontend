@@ -26,6 +26,8 @@ interface Props<T> {
   pageSize?: number;
   emptyTitle?: string;
   emptyDescription?: string;
+  /** Button(s) under the empty-state message (only when there are no rows at all). */
+  emptyAction?: ReactNode;
   toolbar?: ReactNode;
   onRowClick?: (row: T) => void;
 }
@@ -40,6 +42,7 @@ export default function DataTable<T>({
   pageSize = 10,
   emptyTitle = "Nothing here yet.",
   emptyDescription,
+  emptyAction,
   toolbar,
   onRowClick,
 }: Props<T>) {
@@ -105,7 +108,11 @@ export default function DataTable<T>({
       )}
 
       {sorted.length === 0 ? (
-        <EmptyState title={emptyTitle} description={emptyDescription} />
+        <EmptyState
+          title={rows.length === 0 ? emptyTitle : "No matches."}
+          description={rows.length === 0 ? emptyDescription : undefined}
+          action={rows.length === 0 ? emptyAction : undefined}
+        />
       ) : (
         <>
           <div className="overflow-x-auto">

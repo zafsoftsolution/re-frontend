@@ -1505,6 +1505,47 @@ async function postMultipart<T>(
   );
 }
 
+// ─── Standard machine catalog (seed + suggestions) ───────────────────────────
+
+export interface MachineCatalogSuggestions {
+  machine_brands: Array<{
+    name: string; slug: string; country: string; is_featured: boolean;
+    model_count: number; exists: boolean;
+  }>;
+  machine_models: Array<{
+    brand_name: string; brand_slug: string; name: string; slug: string;
+    machine_type: string; exists: boolean;
+  }>;
+  parts_brands: Array<{
+    name: string; slug: string; is_oem: boolean; machine_brand_names: string[];
+    description: string; exists: boolean;
+  }>;
+}
+
+export interface MachineCatalogSeedResult {
+  dry_run: boolean;
+  summary: string;
+  stats: Record<
+    | "machine_brands_created" | "machine_brands_existing"
+    | "machine_models_created" | "machine_models_existing"
+    | "parts_brands_created" | "parts_brands_existing"
+    | "fields_filled" | "skipped",
+    number
+  >;
+  rows: Array<{
+    kind: "machine brand" | "machine model" | "parts brand";
+    action: "create" | "keep" | "fill" | "skip";
+    slug: string; name: string; note: string;
+  }>;
+}
+
+export interface CategorySeedResult {
+  dry_run: boolean;
+  summary: string;
+  /** Command output lines, e.g. "create  needles — Needles / নিডল (সুই)". */
+  rows: string[];
+}
+
 // ─── Resource helpers ────────────────────────────────────────────────────────
 
 function crud<T = unknown>(base: string, idField: "slug" | "id" = "slug") {
@@ -1670,9 +1711,29 @@ export const djangoAdmin = {
     exportImportLayout: () =>
       downloadCsv("/site/products/export.csv/", { layout: "import" }, "parts-export.csv"),
   },
-  categories: catalogCrud("/site/categories/"),
+  categories: {
+    ...catalogCrud("/site/categories/"),
+    /** Standard parts + devices categories; `dryRun` previews, nothing is overwritten. */
+    seedStandard: (dryRun: boolean) =>
+      request<CategorySeedResult>("/site/categories/seed-standard/", {
+        method: "POST",
+        body: JSON.stringify({ dry_run: dryRun }),
+      }),
+  },
   brands: catalogCrud("/site/brands/"),
-  machineBrands: catalogCrud("/site/machine-brands/"),
+  machineBrands: {
+    ...catalogCrud("/site/machine-brands/"),
+    /** Known brand / model / parts-brand names for the admin pickers. */
+    catalogSuggestions: () =>
+      request<MachineCatalogSuggestions>("/site/machine-brands/catalog-suggestions/"),
+    /** Load the standard brands, models and parts brands. `dryRun` previews;
+     *  existing rows are never renamed — only blank fields are filled. */
+    seedStandard: (dryRun: boolean) =>
+      request<MachineCatalogSeedResult>("/site/machine-brands/seed-standard/", {
+        method: "POST",
+        body: JSON.stringify({ dry_run: dryRun }),
+      }),
+  },
   machineModels: {
     ...crud("/site/machine-models/", "slug"),
     list: (machineBrandSlug?: string) =>

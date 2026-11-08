@@ -2,6 +2,8 @@
 
 import { djangoAdmin } from "@/lib/django-admin";
 import ResourceManager, { type CrudClient } from "@/components/admin/ResourceManager";
+import StandardCatalogLoader from "@/components/admin/StandardCatalogLoader";
+import { machineBrandSuggestions, useMachineCatalogSuggestions } from "@/lib/admin/machine-catalog";
 import { descriptionFields, seoFields } from "@/lib/admin/catalog-fields";
 import type { Column } from "@/components/admin/DataTable";
 
@@ -61,6 +63,8 @@ const columns: Column<MachineBrand>[] = [
 ];
 
 export default function AdminMachineBrands() {
+  const { data: catalog, reload } = useMachineCatalogSuggestions();
+
   return (
     <ResourceManager<MachineBrand>
       eyebrow="Catalog"
@@ -73,9 +77,42 @@ export default function AdminMachineBrands() {
       columns={columns}
       searchPlaceholder="Search machine brands…"
       searchAccessor={(b) => `${b.name} ${b.country}`}
+      emptyTitle="No machine brands yet."
+      emptyDescription="Load the standard list — Juki, Brother, Pegasus, Yamato, Siruba, Jack and more, with their common models — then edit or add your own."
+      emptyAction={(refresh) => (
+        <StandardCatalogLoader
+          target="machines"
+          onDone={async () => {
+            await refresh();
+            await reload();
+          }}
+        />
+      )}
+      extraActions={(rows, refresh) =>
+        rows && rows.length > 0 ? (
+          <StandardCatalogLoader
+            target="machines"
+            variant="subtle"
+            label="Add missing standard"
+            onDone={async () => {
+              await refresh();
+              await reload();
+            }}
+          />
+        ) : null
+      }
+      onSaved={reload}
       initialValues={{ is_active: true, is_featured: false, order: 0 }}
       fields={[
-        { name: "name", label: "Name", type: "text", required: true, placeholder: "Juki" },
+        {
+          name: "name",
+          label: "Name",
+          type: "combobox",
+          required: true,
+          placeholder: "Choose from the list or type a new brand",
+          hint: "Pick a known brand (fills the country) or type a new one.",
+          suggestions: (values, mode) => machineBrandSuggestions(catalog, values, mode),
+        },
         { name: "slug", label: "Slug", type: "slug", required: true, autoFrom: "name" },
         { name: "country", label: "Country of origin", type: "text", placeholder: "Japan" },
         ...descriptionFields(),

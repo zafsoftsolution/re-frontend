@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { djangoAdmin } from "@/lib/django-admin";
 import ResourceManager, { type CrudClient } from "@/components/admin/ResourceManager";
 import type { Column } from "@/components/admin/DataTable";
+import StandardCatalogLoader from "@/components/admin/StandardCatalogLoader";
 import { descriptionFields, nameBnField, seoFields } from "@/lib/admin/catalog-fields";
 
 interface Category extends Record<string, unknown> {
@@ -98,22 +99,27 @@ const columns: Column<Category>[] = [
 export default function AdminCategories() {
   const [parentOptions, setParentOptions] = useState<Array<{ value: string; label: string }>>([]);
 
+  const loadParents = useCallback(
+    () =>
+      djangoAdmin.categories
+        .list()
+        .then((data) => {
+          const items =
+            (data as { results?: Category[] }).results ??
+            (data as unknown as Category[]);
+          setParentOptions(
+            items.map((c) => ({
+              value: c.id,
+              label: c.parent ? `↳ ${c.name}` : c.name,
+            })),
+          );
+        })
+        .catch(() => {}),
+    [],
+  );
   useEffect(() => {
-    djangoAdmin.categories
-      .list()
-      .then((data) => {
-        const items =
-          (data as { results?: Category[] }).results ??
-          (data as unknown as Category[]);
-        setParentOptions(
-          items.map((c) => ({
-            value: c.id,
-            label: c.parent ? `↳ ${c.name}` : c.name,
-          })),
-        );
-      })
-      .catch(() => {});
-  }, []);
+    loadParents();
+  }, [loadParents]);
 
   return (
     <ResourceManager<Category>
@@ -122,6 +128,17 @@ export default function AdminCategories() {
       singular="category"
       description="Part types (hooks, needles, feed dogs…) — two levels. Shown in the site navigation and category pages."
       client={djangoAdmin.categories as CrudClient<Category>}
+      emptyTitle="No categories yet."
+      emptyDescription="Load the standard spare-parts and devices categories (needles, hooks & loopers, servo motors…) in English and Bangla, then adjust them."
+      emptyAction={(refresh) => (
+        <StandardCatalogLoader
+          target="categories"
+          onDone={async () => {
+            await Promise.all([refresh(), loadParents()]);
+          }}
+        />
+      )}
+      onSaved={loadParents}
       rowKey={(c) => c.slug}
       rowLabel={(c) => c.name}
       columns={columns}

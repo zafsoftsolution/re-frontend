@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -17,6 +17,16 @@ import {
 import { djangoAdmin } from "@/lib/django-admin";
 import { useToast } from "@/context/FeedbackContext";
 import { cn } from "@/lib/utils";
+import {
+  applyFieldChange,
+  fillBlankAuto,
+  sourcesOf,
+  type ComboSuggestion,
+} from "@/lib/admin/form-derive";
+import Combobox from "./ui/Combobox";
+
+export { deriveSku, deriveSlug } from "@/lib/admin/form-derive";
+export type { ComboSuggestion } from "@/lib/admin/form-derive";
 
 export type FormFieldType =
   | "text"
@@ -24,6 +34,8 @@ export type FormFieldType =
   | "number"
   | "boolean"
   | "select"
+  | "combobox" // text input with a pick-list of suggestions (free text allowed)
+  | "multiselect" // string[] — toggle chips from `options`
   | "url"
   | "slug"
   | "date"
@@ -63,8 +75,16 @@ export interface FormField {
    * once when the source first becomes non-empty (so it doesn't shuffle on
    * every keystroke).
    */
-  autoFrom?: string;
+  autoFrom?: string | string[];
   autoDerive?: "slug" | "sku";
+  /** Source text for the derived value when it isn't just `autoFrom`'s
+   *  value — e.g. brand slug + model name for a machine-model slug. */
+  autoValue?: (values: Record<string, unknown>) => string;
+  /** combobox: the pick-list (or a function of the current form values). A
+   *  suggestion's `fill` sets other fields (e.g. country) when picked. */
+  suggestions?:
+    | ComboSuggestion[]
+    | ((values: Record<string, unknown>, mode: "create" | "edit") => ComboSuggestion[]);
 }
 
 interface Props {
@@ -213,45 +233,24 @@ export default function ResourceForm({
     onClose();
   }
 
-  function set(name: string, value: unknown) {
-    setTouched((t) => ({ ...t, [name]: true }));
-    setValues((v) => {
-      const next: Record<string, unknown> = { ...v, [name]: value };
-      // Cascade: any field that derives from `name` and hasn't been edited
-      // by the user picks up the fresh value.
-      for (const f of fields) {
-        if (f.autoFrom !== name) continue;
-        if (touched[f.name]) continue;
-        if (f.autoDerive === "sku") {
-          // SKU only generates the first time — once it has a value it stays
-          // until the user clears or edits it.
-          if (!next[f.name]) {
-            const derived = deriveSku(String(value ?? ""));
-            if (derived) next[f.name] = derived;
-          }
-        } else {
-          // Default: slug. Re-derive on every keystroke until user touches it.
-          next[f.name] = deriveSlug(String(value ?? ""));
-        }
-      }
-      return next;
-    });
+  function set(name: string, value: unknown, fill?: Record<string, unknown>) {
+    // Computed from the current render's state; one change per event.
+    const next = applyFieldChange({ fields, values, touched, mode, name, value, fill });
+    setTouched(next.touched);
+    setValues(next.values);
   }
 
-  /** Required-field check: returns labels of empty required fields. */
-  function findMissingRequired(): string[] {
-    const out: string[] = [];
-    for (const f of fields) {
-      if (!f.required) continue;
-      const v = values[f.name];
-      const empty =
-        v === undefined ||
-        v === null ||
-        v === "" ||
-        (Array.isArray(v) && v.length === 0);
-      if (empty) out.push(f.label);
-    }
-    return out;
+  /** Required-field check: the empty required fields. An auto slug whose
+   *  source is itself empty is left out — the source gets the error. */
+  function findMissingRequired(vals: Record<string, unknown>): FormField[] {
+    const blank = (v: unknown) =>
+      v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
+    return fields.filter(
+      (f) =>
+        f.required &&
+        blank(vals[f.name]) &&
+        !sourcesOf(f).some((src) => blank(vals[src])),
+    );
   }
 
   async function submit(e: React.FormEvent) {
@@ -261,25 +260,18 @@ export default function ResourceForm({
     // Client-side check first — surface every missing required field at once
     // via toast + inline highlight rather than letting the browser pop its
     // own validation tooltip on the first offending input.
-    const missing = findMissingRequired();
+    // A blank auto slug is never a blocker: derive it from its source now.
+    const filled = fillBlankAuto(fields, values);
+    setValues(filled);
+    const missing = findMissingRequired(filled);
     if (missing.length > 0) {
       const fieldErrors: Record<string, string[]> = {};
-      for (const f of fields) {
-        if (f.required) {
-          const v = values[f.name];
-          const isEmpty =
-            v === undefined ||
-            v === null ||
-            v === "" ||
-            (Array.isArray(v) && v.length === 0);
-          if (isEmpty) fieldErrors[f.name] = ["Required"];
-        }
-      }
+      for (const f of missing) fieldErrors[f.name] = ["Required"];
       setErrors(fieldErrors);
       toast.error(
         missing.length === 1
-          ? `${missing[0]} is required`
-          : `Please fill in: ${missing.join(", ")}`,
+          ? `${missing[0].label} is required`
+          : `Please fill in: ${missing.map((f) => f.label).join(", ")}`,
       );
       return;
     }
@@ -287,7 +279,7 @@ export default function ResourceForm({
     setErrors({});
     setSubmitting(true);
     try {
-      const cleaned = clean(fields, values);
+      const cleaned = clean(fields, filled);
       await onSubmit(cleaned);
       toast.success(
         mode === "edit" ? `${title} updated` : `${title} created`,
@@ -366,7 +358,8 @@ export default function ResourceForm({
                 field={f}
                 mode={mode}
                 value={values[f.name]}
-                onChange={(v) => set(f.name, v)}
+                values={values}
+                onChange={(v, fill) => set(f.name, v, fill)}
                 error={errors[f.name]?.[0]}
               />
             ))}
@@ -418,16 +411,19 @@ function Field({
   field,
   mode,
   value,
+  values,
   onChange,
   error,
 }: {
   field: FormField;
   mode: "create" | "edit";
   value: unknown;
-  onChange: (v: unknown) => void;
+  values: Record<string, unknown>;
+  onChange: (v: unknown, fill?: Record<string, unknown>) => void;
   error?: string;
 }) {
   const readOnly = mode === "edit" && field.readOnlyOnEdit;
+  const comboId = useId();
   const wrapClass = field.full || isWideType(field.type) ? "sm:col-span-2" : "";
   const baseInput =
     "w-full bg-white border border-[var(--jmn-line)] rounded-md px-3 h-10 text-sm text-navy placeholder:text-ink/40 focus:border-navy/40 outline-none transition-colors disabled:bg-[#F4F5F7] disabled:text-ink/55";
@@ -480,6 +476,54 @@ function Field({
           </option>
         ))}
       </select>
+    );
+  } else if (field.type === "combobox") {
+    const list =
+      typeof field.suggestions === "function"
+        ? field.suggestions(values, mode)
+        : field.suggestions ?? [];
+    body = (
+      <Combobox
+        id={comboId}
+        value={typeof value === "string" ? value : ""}
+        onChange={(v, picked) => onChange(v, picked?.fill)}
+        suggestions={list}
+        placeholder={field.placeholder}
+        disabled={readOnly}
+        invalid={!!error}
+        className={baseInput}
+      />
+    );
+  } else if (field.type === "multiselect") {
+    const selected = normaliseStringArray(value);
+    body = (
+      <div role="group" aria-label={field.label} className="flex flex-wrap gap-1.5">
+        {(field.options ?? []).length === 0 && (
+          <span className="text-[12px] text-ink/45">{field.placeholder ?? "Nothing to choose yet."}</span>
+        )}
+        {(field.options ?? []).map((o) => {
+          const on = selected.includes(o.value);
+          return (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={on}
+              disabled={readOnly}
+              onClick={() =>
+                onChange(on ? selected.filter((x) => x !== o.value) : [...selected, o.value])
+              }
+              className={cn(
+                "h-8 px-3 rounded-md border text-[12px] transition-colors",
+                on
+                  ? "bg-navy text-cream border-navy"
+                  : "bg-white text-navy border-[var(--jmn-line)] hover:border-navy/40",
+              )}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
     );
   } else if (field.type === "color") {
     body = (
@@ -586,20 +630,38 @@ function Field({
     );
   }
 
+  // Auto slugs fill themselves, so they aren't shown as required input.
+  const isAuto = sourcesOf(field).length > 0;
+  const hint =
+    field.hint ??
+    (isAuto && field.autoDerive !== "sku"
+      ? "Filled in automatically from the name — edit only if you need a different URL."
+      : undefined);
+  // A button group / pick-list can't live inside <label>: clicks inside
+  // would be forwarded to the first control. Those get a div + htmlFor.
+  const isCombo = field.type === "combobox";
+  const Wrapper = field.type === "multiselect" || isCombo ? "div" : "label";
+  const Caption = isCombo ? "label" : "span";
   return (
-    <label className={`block ${wrapClass}`}>
-      <span className="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-1.5">
+    <Wrapper className={`block ${wrapClass}`}>
+      <Caption
+        htmlFor={isCombo ? comboId : undefined}
+        className="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-1.5"
+      >
         {field.label}
-        {field.required && <span className="text-rose-700"> *</span>}
-      </span>
+        {field.required && !isAuto && <span className="text-rose-700"> *</span>}
+        {isAuto && field.autoDerive !== "sku" && (
+          <span className="ml-1.5 normal-case tracking-normal text-ink/40">(auto)</span>
+        )}
+      </Caption>
       {body}
-      {field.hint && !error && (
-        <span className="block mt-1 text-[11px] text-ink/45">{field.hint}</span>
+      {hint && !error && (
+        <span className="block mt-1 text-[11px] text-ink/45">{hint}</span>
       )}
       {error && (
         <span className="block mt-1 text-[11px] text-rose-700">{error}</span>
       )}
-    </label>
+    </Wrapper>
   );
 }
 
@@ -1529,35 +1591,6 @@ function normaliseSizeVariants(v: unknown): SizeVariant[] {
   });
 }
 
-// ─── Auto-derive helpers (slug, sku) ─────────────────────────────────────────
-
-/** Convert any string into a URL-safe kebab-case slug. */
-export function deriveSlug(input: string): string {
-  return String(input ?? "")
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/['"`]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/**
- * Generate a recognisable SKU from a name:
- *   "Eastgate Trench"  →  "RE-EAS-7842"
- * Three-letter prefix + four random digits keeps it unique enough for an
- * initial draft. The user can still type their own value to override.
- */
-export function deriveSku(input: string): string {
-  const cleaned = String(input ?? "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-  if (!cleaned) return "";
-  const prefix = cleaned.slice(0, 3).padEnd(3, "X");
-  const suffix = String(1000 + Math.floor(Math.random() * 9000));
-  return `RE-${prefix}-${suffix}`;
-}
-
 /**
  * On open, treat any field that already has a non-empty value as "touched"
  * so we don't overwrite it on the first source-field keystroke. This is the
@@ -1591,7 +1624,7 @@ function seed(
     if (v === undefined || v === null) v = defaultFor(f.type);
 
     if (f.type === "tags" && Array.isArray(v)) v = v.join(", ");
-    else if (f.type === "chips") v = normaliseStringArray(v);
+    else if (f.type === "chips" || f.type === "multiselect") v = normaliseStringArray(v);
     else if (f.type === "imageList" || f.type === "stringList")
       v = normaliseStringArray(v);
     else if (f.type === "keyValue") v = normaliseDict(v);
@@ -1621,6 +1654,7 @@ function defaultFor(t: FormFieldType): unknown {
     case "number":
       return "";
     case "chips":
+    case "multiselect":
     case "imageList":
     case "stringList":
       return [];
@@ -1652,7 +1686,12 @@ function clean(
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
-    } else if (f.type === "chips" || f.type === "imageList" || f.type === "stringList") {
+    } else if (
+      f.type === "chips" ||
+      f.type === "multiselect" ||
+      f.type === "imageList" ||
+      f.type === "stringList"
+    ) {
       out[f.name] = (Array.isArray(raw) ? raw : [])
         .map((s) => String(s).trim())
         .filter(Boolean);

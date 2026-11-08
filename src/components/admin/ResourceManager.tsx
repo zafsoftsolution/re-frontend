@@ -41,6 +41,12 @@ interface Props<T> {
   searchAccessor?: (row: T) => string;
   pageSize?: number;
   emptyTitle?: string;
+  emptyDescription?: string;
+  /** Shown under the empty state when the table has no rows at all — e.g. a
+   *  "Load standard list" button. Gets `refresh` to reload after it runs. */
+  emptyAction?: (refresh: () => Promise<void>) => ReactNode;
+  /** Called after a successful create / edit (e.g. to refresh suggestions). */
+  onSaved?: () => void;
   /** Renders inside the row-actions cell, ahead of Edit/Delete. */
   customActions?: (row: T, refresh: () => Promise<void>) => ReactNode;
   /**
@@ -48,7 +54,7 @@ interface Props<T> {
    * the New button. Used for Export CSV, Bulk import, etc. Receives the
    * current row set so callers can decide whether to disable / hide.
    */
-  extraActions?: (rows: T[] | null) => ReactNode;
+  extraActions?: (rows: T[] | null, refresh: () => Promise<void>) => ReactNode;
   /** Filter chip tabs above the table. */
   tabs?: Array<{ key: string; label: string; predicate: (row: T) => boolean }>;
   /**
@@ -79,6 +85,9 @@ export default function ResourceManager<T extends Record<string, unknown>>({
   searchAccessor,
   pageSize = 12,
   emptyTitle,
+  emptyDescription,
+  emptyAction,
+  onSaved,
   customActions,
   extraActions,
   tabs,
@@ -249,7 +258,7 @@ export default function ResourceManager<T extends Record<string, unknown>>({
               />
               Refresh
             </button>
-            {extraActions?.(rows)}
+            {extraActions?.(rows, load)}
             {canCreate && (
               <button
                 onClick={() => setCreating(true)}
@@ -299,6 +308,8 @@ export default function ResourceManager<T extends Record<string, unknown>>({
         searchAccessor={searchAccessor}
         pageSize={pageSize}
         emptyTitle={emptyTitle ?? "Nothing here yet."}
+        emptyDescription={emptyDescription}
+        emptyAction={rows.length === 0 ? emptyAction?.(load) : undefined}
         onRowClick={canEdit ? setEditing : undefined}
       />
 
@@ -320,6 +331,7 @@ export default function ResourceManager<T extends Record<string, unknown>>({
                 setCreating(false);
                 setEditing(null);
                 await load();
+                onSaved?.();
               },
             })
           : fields && (
@@ -349,6 +361,7 @@ export default function ResourceManager<T extends Record<string, unknown>>({
                   setCreating(false);
                   setEditing(null);
                   await load();
+                  onSaved?.();
                 }}
               />
             ))}

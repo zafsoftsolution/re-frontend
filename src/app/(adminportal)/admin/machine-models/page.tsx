@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { djangoAdmin } from "@/lib/django-admin";
 import ResourceManager, { type CrudClient } from "@/components/admin/ResourceManager";
 import type { Column } from "@/components/admin/DataTable";
 import type { FormField } from "@/components/admin/ResourceForm";
 import { MACHINE_TYPES, descriptionFields, seoFields } from "@/lib/admin/catalog-fields";
+import StandardCatalogLoader from "@/components/admin/StandardCatalogLoader";
+import { machineModelSuggestions, useMachineCatalogSuggestions } from "@/lib/admin/machine-catalog";
+
+interface BrandOption {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 interface MachineModel extends Record<string, unknown> {
   id: string;
@@ -56,23 +64,49 @@ const columns: Column<MachineModel>[] = [
 ];
 
 export default function AdminMachineModels() {
-  const [brandOptions, setBrandOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [brands, setBrands] = useState<BrandOption[]>([]);
+  const { data: catalog, reload } = useMachineCatalogSuggestions();
 
+  const loadBrands = useCallback(
+    () =>
+      djangoAdmin.machineBrands
+        .list<{ results?: BrandOption[] } | BrandOption[]>({ page_size: 200 })
+        .then((d) => setBrands(Array.isArray(d) ? d : d.results ?? []))
+        .catch(() => {}),
+    [],
+  );
   useEffect(() => {
-    djangoAdmin.machineBrands
-      .list<{ results?: Array<{ id: string; name: string }> } | Array<{ id: string; name: string }>>({ page_size: 200 })
-      .then((d) => {
-        const rows = Array.isArray(d) ? d : d.results ?? [];
-        setBrandOptions(rows.map((b) => ({ value: b.id, label: b.name })));
-      })
-      .catch(() => {});
-  }, []);
+    loadBrands();
+  }, [loadBrands]);
+
+  const brandOptions = brands.map((b) => ({ value: b.id, label: b.name }));
+  const slugOfBrand = (id: unknown) => brands.find((b) => b.id === id)?.slug;
+  const afterSeed = async (refresh: () => Promise<void>) => {
+    await Promise.all([refresh(), loadBrands(), reload()]);
+  };
 
   const fields: FormField[] = [
     { name: "machine_brand", label: "Machine brand", type: "select", required: true, options: brandOptions },
+    {
+      name: "name",
+      label: "Model name",
+      type: "combobox",
+      required: true,
+      placeholder: "Choose from the list or type a model",
+      hint: "Pick the brand first to see its common models — picking one sets the machine type.",
+      suggestions: (values, mode) =>
+        machineModelSuggestions(catalog, slugOfBrand(values.machine_brand), values, mode),
+    },
     { name: "machine_type", label: "Machine type", type: "select", required: true, options: MACHINE_TYPES },
-    { name: "name", label: "Model name", type: "text", required: true, placeholder: "DDL-8700" },
-    { name: "slug", label: "Slug", type: "slug", required: true, autoFrom: "name" },
+    {
+      name: "slug",
+      label: "Slug",
+      type: "slug",
+      required: true,
+      // "juki-ddl-8700" — model names repeat across brands.
+      autoFrom: ["machine_brand", "name"],
+      autoValue: (v) => (v.name ? `${slugOfBrand(v.machine_brand) ?? ""} ${String(v.name)}` : ""),
+    },
     ...descriptionFields(),
     { name: "image", label: "Image", type: "imageUrl", full: true },
     { name: "order", label: "Sort order", type: "number" },
@@ -92,6 +126,22 @@ export default function AdminMachineModels() {
       columns={columns}
       searchPlaceholder="Search models…"
       searchAccessor={(m) => `${m.name} ${m.machine_brand_name} ${m.machine_type}`}
+      emptyTitle="No machine models yet."
+      emptyDescription="Load the standard brands and their common industrial models (Juki DDL-8700, Brother S-7300A, Pegasus M952…) in one go."
+      emptyAction={(refresh) => (
+        <StandardCatalogLoader target="machines" onDone={() => afterSeed(refresh)} />
+      )}
+      extraActions={(rows, refresh) =>
+        rows && rows.length > 0 ? (
+          <StandardCatalogLoader
+            target="machines"
+            variant="subtle"
+            label="Add missing standard"
+            onDone={() => afterSeed(refresh)}
+          />
+        ) : null
+      }
+      onSaved={reload}
       initialValues={{ is_active: true, order: 0, machine_type: "lockstitch" }}
       fields={fields}
     />
