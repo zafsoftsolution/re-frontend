@@ -1668,6 +1668,10 @@ function defaultFor(t: FormFieldType): unknown {
   }
 }
 
+const TEXT_TYPES = new Set<FormFieldType>([
+  "text", "textarea", "slug", "url", "email", "password", "color", "imageUrl", "combobox",
+]);
+
 function clean(
   fields: FormField[],
   values: Record<string, unknown>,
@@ -1732,7 +1736,10 @@ function clean(
         }
       }
     } else if (raw === "" || raw === null || raw === undefined) {
-      out[f.name] = f.required ? raw : null;
+      // Blank text → "" (Django text columns are blank=True but NOT NULL, and
+      // DRF rejects null for them). null only for typed values: numbers,
+      // dates and selects (FKs).
+      out[f.name] = f.required ? raw : TEXT_TYPES.has(f.type) ? "" : null;
     } else {
       out[f.name] = raw;
     }
