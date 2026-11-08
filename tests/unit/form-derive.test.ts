@@ -27,9 +27,11 @@ const modelFields: DerivableField[] = [
   },
 ];
 
+type State = { values: Record<string, unknown>; touched: Record<string, boolean> };
+
 function change(
   fields: DerivableField[],
-  state: { values: Record<string, unknown>; touched: Record<string, boolean> },
+  state: State,
   name: string,
   value: unknown,
   fill?: Record<string, unknown>,
@@ -49,7 +51,7 @@ describe("deriveSlug", () => {
 
 describe("applyFieldChange", () => {
   it("follows the name until the slug is edited, and clearing hands it back", () => {
-    let s = { values: { name: "", slug: "", country: "" }, touched: {} };
+    let s: State = { values: { name: "", slug: "", country: "" }, touched: {} };
     s = change(brandFields, s, "name", "Juki");
     expect(s.values.slug).toBe("juki");
     s = change(brandFields, s, "slug", "juki-jp");
@@ -62,7 +64,7 @@ describe("applyFieldChange", () => {
   });
 
   it("fills from a picked suggestion on create, unless the user typed there", () => {
-    let s = { values: { name: "", slug: "", country: "" }, touched: {} };
+    let s: State = { values: { name: "", slug: "", country: "" }, touched: {} };
     s = change(brandFields, s, "name", "Siruba", { country: "Taiwan" });
     expect(s.values.country).toBe("Taiwan");
     s = change(brandFields, s, "name", "Jack", { country: "China" });
@@ -73,14 +75,14 @@ describe("applyFieldChange", () => {
   });
 
   it("on edit only fills blank fields", () => {
-    let s = { values: { name: "Juki", slug: "juki", country: "Nippon" }, touched: { slug: true } };
+    let s: State = { values: { name: "Juki", slug: "juki", country: "Nippon" }, touched: { slug: true } };
     s = change(brandFields, s, "name", "Brother", { country: "Japan" }, "edit");
     expect(s.values.country).toBe("Nippon");
     expect(s.values.slug).toBe("juki");
   });
 
   it("builds brand-model slugs from two sources and fills machine type", () => {
-    let s = { values: { machine_brand: "", name: "", machine_type: "lockstitch", slug: "" }, touched: {} };
+    let s: State = { values: { machine_brand: "", name: "", machine_type: "lockstitch", slug: "" }, touched: {} };
     s = change(modelFields, s, "machine_brand", "b1");
     expect(s.values.slug).toBe("");
     s = change(modelFields, s, "name", "MO-6814S", { machine_type: "overlock" });
